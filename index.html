@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Tiere zählen Ultimate v4.2 🐾</title>
+<title>Tiere zählen Ultimate v4.3 (Fix) 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -549,9 +549,32 @@ function loadData() {
         if(vm) viewMode = vm;
 
         updateStorageUsage();
+        
+        // AUTO-FIX: Check if current year history contains wrong dates
+        setTimeout(fixCrossYearData, 500);
     } catch(e) { animals=[]; }
 }
 loadData();
+
+function fixCrossYearData() {
+    let fixed = false;
+    Object.keys(history).forEach(dateStr => {
+        const y = new Date(dateStr).getFullYear();
+        if (y !== currentYear) {
+            // Found a misplaced entry! Move it.
+            const hOther = getHistoryForYear(y);
+            hOther[dateStr] = history[dateStr];
+            saveHistoryForYear(y, hOther);
+            delete history[dateStr];
+            fixed = true;
+        }
+    });
+    if (fixed) {
+        safeSave();
+        renderStats(); // Refresh UI to show corrected years
+        showErrorToast("Daten wurden automatisch repariert (Jahres-Zuordnung)", true);
+    }
+}
 
 const safeSave = () => {
     localStorage.setItem('animals-'+currentYear, JSON.stringify(animals));
@@ -590,7 +613,7 @@ function getAvailableYears() {
             if (!isNaN(y)) years.add(y);
         }
     }
-    return Array.from(years).sort((a,b) => b-a); // Descending
+    return Array.from(years).sort((a,b) => b-a);
 }
 
 function getHistoryForYear(y) {
@@ -599,6 +622,15 @@ function getHistoryForYear(y) {
         const h = localStorage.getItem('history-'+y);
         return h ? JSON.parse(h) : {};
     } catch(e) { return {}; }
+}
+
+function saveHistoryForYear(y, hData) {
+    if (y === currentYear) {
+        history = hData;
+        safeSave();
+    } else {
+        localStorage.setItem('history-'+y, JSON.stringify(hData));
+    }
 }
 
 function getAnimalsForYear(y) {
@@ -657,21 +689,34 @@ function change(i, delta, event){
             }
         }
         
+        // This is always 'today' -> currentYear usually.
         const t = new Date().toISOString().slice(0,10);
-        history[t] = history[t] || { total:0, perAnimal:{} };
-        history[t].perAnimal[i] = history[t].perAnimal[i] || [];
+        
+        // Double check if today is really currentYear (edge case)
+        const dYear = new Date().getFullYear();
+        let targetH = (dYear === currentYear) ? history : getHistoryForYear(dYear);
+        
+        targetH[t] = targetH[t] || { total:0, perAnimal:{} };
+        targetH[t].perAnimal[i] = targetH[t].perAnimal[i] || [];
         
         if(delta > 0){
             playSound('pop');
             const locSel = getEl(viewMode === 'grid' ? 'locSelectGrid'+i : 'locSelect'+i);
-            history[t].perAnimal[i].push({ location: locSel?locSel.value:'', time: new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) });
-            history[t].total++;
+            targetH[t].perAnimal[i].push({ location: locSel?locSel.value:'', time: new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) });
+            targetH[t].total++;
             if(event) {
                 const a = animals[i];
                 spawnParticle(event.clientX, event.clientY, "+1 " + (a.emoji||''));
             }
         }
-        safeSave(); render();
+        
+        if (dYear === currentYear) {
+            history = targetH;
+            safeSave();
+        } else {
+            saveHistoryForYear(dYear, targetH);
+        }
+        render();
     } catch(e) { console.error(e); }
 }
 
@@ -1007,9 +1052,10 @@ function updateDetailChart() {
     html += `<h3>📝 Verlauf ${y}</h3>`;
     const renderRow = (h) => {
         const displayDate = h.date.split('-').reverse().slice(0,2).join('.');
-        // Delete button only active for current year to prevent data corruption
-        const delBtn = (y === currentYear) ? `<button class="icon-btn" onclick="safeRun(deleteHistoryItem, ${i}, '${h.date}', ${h.arrIdx})">🗑️</button>` : '';
-        const editBtn = (y === currentYear) ? `<button class="icon-btn" onclick="safeRun(openNoteModal, ${i}, '${h.date}', ${h.arrIdx})">✏️</button>` : '';
+        // Edit/Delete active for current year OR fix logic for past years (harder, disabling for safety for now)
+        const canEdit = (y === currentYear);
+        const delBtn = canEdit ? `<button class="icon-btn" onclick="safeRun(deleteHistoryItem, ${i}, '${h.date}', ${h.arrIdx})">🗑️</button>` : '';
+        const editBtn = canEdit ? `<button class="icon-btn" onclick="safeRun(openNoteModal, ${i}, '${h.date}', ${h.arrIdx})">✏️</button>` : '';
         return `<div class="hist-item"><div class="hist-date">${displayDate}<br>${h.item.time||''}</div><div class="hist-info">${h.item.location ? `📍 ${h.item.location}` : ''}${h.item.note ? `<br><span class="hist-note">${h.item.note}</span>` : ''}</div><div class="hist-actions">${editBtn}${delBtn}</div></div>`;
     };
 
@@ -1035,10 +1081,15 @@ function openNoteModal(i, date = null, arrIndex = null) {
   const modal = getEl('noteModal'); const sel = getEl('noteLoc'); if(!sel || !modal) return;
   sel.innerHTML = `<option value="">📍 Ort?</option>${locations.map(l=>`<option>${l}</option>`).join('')}`;
   let entry = null;
-  if(date !== null && arrIndex !== null && history[date] && history[date].perAnimal[i]) entry = history[date].perAnimal[i][arrIndex];
+  // If editing, we need to fetch from correct year history
+  if(date !== null && arrIndex !== null) {
+      const year = new Date(date).getFullYear();
+      const h = getHistoryForYear(year);
+      if (h[date] && h[date].perAnimal[i]) entry = h[date].perAnimal[i][arrIndex];
+  }
 
   if (entry) {
-      editMode = { date, arrIndex };
+      editMode = { date, arrIndex, animalIdx: i };
       getEl('noteTitle').innerText = "Sichtung bearbeiten";
       getEl('noteDate').value = date; getEl('noteTime').value = entry.time || '';
       getEl('noteLoc').value = entry.location || ''; getEl('noteText').value = entry.note || '';
@@ -1056,25 +1107,46 @@ function openNoteModal(i, date = null, arrIndex = null) {
 function saveNote(i) {
   const d = getEl('noteDate').value || today(); const t = getEl('noteTime').value || nowTime();
   const l = getEl('noteLoc').value; const n = getEl('noteText').value;
+  
+  // Identify Target Year for saving
+  const targetYear = new Date(d).getFullYear();
+  let targetHistory = (targetYear === currentYear) ? history : getHistoryForYear(targetYear);
 
   if (editMode) {
-      if(history[editMode.date] && history[editMode.date].perAnimal[i]) {
-          const oldList = history[editMode.date].perAnimal[i];
+      const oldYear = new Date(editMode.date).getFullYear();
+      let oldHistory = (oldYear === currentYear) ? history : getHistoryForYear(oldYear);
+      
+      // Remove from old
+      if(oldHistory[editMode.date] && oldHistory[editMode.date].perAnimal[editMode.animalIdx]) {
+          const oldList = oldHistory[editMode.date].perAnimal[editMode.animalIdx];
           oldList.splice(editMode.arrIndex, 1);
-          history[editMode.date].total--;
-          if(oldList.length===0) delete history[editMode.date].perAnimal[i];
-          if(history[editMode.date].total<=0) delete history[editMode.date];
+          oldHistory[editMode.date].total--;
+          if(oldList.length===0) delete oldHistory[editMode.date].perAnimal[editMode.animalIdx];
+          if(oldHistory[editMode.date].total<=0) delete oldHistory[editMode.date];
+          
+          // Save old history modification
+          saveHistoryForYear(oldYear, oldHistory);
       }
-      history[d] = history[d] || { total:0, perAnimal:{} }; history[d].perAnimal[i] = history[d].perAnimal[i] || [];
-      history[d].perAnimal[i].push({ location:l, time:t, note:n }); history[d].total++;
-      openDetail(i);
+      
+      // Refetch target history in case it's same as old and modified
+      targetHistory = (targetYear === currentYear) ? history : getHistoryForYear(targetYear);
   } else {
       playSound('pop');
-      history[d] = history[d] || { total:0, perAnimal:{} }; history[d].perAnimal[i] = history[d].perAnimal[i] || [];
-      history[d].perAnimal[i].push({ location:l, time:t, note:n }); history[d].total++;
-      render();
   }
-  safeSave(); closeModal('noteModal');
+
+  // Add to new
+  targetHistory[d] = targetHistory[d] || { total:0, perAnimal:{} }; 
+  targetHistory[d].perAnimal[i] = targetHistory[d].perAnimal[i] || [];
+  targetHistory[d].perAnimal[i].push({ location:l, time:t, note:n }); 
+  targetHistory[d].total++;
+
+  // Save new/current history
+  saveHistoryForYear(targetYear, targetHistory);
+
+  if (editMode) openDetail(i);
+  else render();
+  
+  closeModal('noteModal');
 }
 
 // === STATS & EXPORT ===
@@ -1083,8 +1155,11 @@ function renderStats(){
   // Year Selector
   const ys = getAvailableYears();
   const yearSelect = getEl('statsYearSelect');
-  if (yearSelect.options.length === 0 || yearSelect.innerHTML === '') {
+  // Rebuild options if needed or init
+  if (yearSelect.options.length !== ys.length) {
+      const oldVal = yearSelect.value;
       yearSelect.innerHTML = ys.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`).join('');
+      if (ys.includes(parseInt(oldVal))) yearSelect.value = oldVal;
   }
   
   const selectedYear = parseInt(yearSelect.value) || currentYear;
@@ -1235,14 +1310,11 @@ function renderStats(){
       html += `</div></details>`;
 
       html += `<details><summary>🔥 30-Tage Heatmap</summary><div class="heatmap-grid">`;
-      // For heatmap, we check history for selected year mostly, but if we are in Jan, we need prev year?
-      // Lets just show ALL data in heatmap for selected year context? Or last 30 days of selected year?
-      // Simplest: If selected year is current, show last 30 days. If past year, show last 30 days of that year (Dec).
+      // Ref Date for Heatmap based on Year
       let refDate = (selectedYear === currentYear) ? new Date() : new Date(selectedYear, 11, 31);
       
       for(let i=27; i>=0; i--){
         const d = new Date(refDate); d.setDate(d.getDate() - i); const iso = d.toISOString().slice(0,10);
-        // We need to fetch from correct history object depending on year of 'd'
         const hY = d.getFullYear();
         const histObj = getHistoryForYear(hY);
         const count = histObj[iso] ? histObj[iso].total : 0;
@@ -1299,22 +1371,31 @@ function confirmImport(action) {
                 });
             }
             if(data.history) {
+                // If importing cross-year, handle properly?
+                // Assuming import is structure {year: YYYY, history: {}}
+                // Best effort merge into current year OR check date keys inside history.
+                // Simple merge for now as per previous logic, but should ideally check years.
                 Object.entries(data.history).forEach(([date, dayData]) => {
-                    if(!history[date]) history[date] = { total: 0, perAnimal: {} };
+                    // Check year of date
+                    const y = new Date(date).getFullYear();
+                    let hTarget = (y === currentYear) ? history : getHistoryForYear(y);
+                    
+                    if(!hTarget[date]) hTarget[date] = { total: 0, perAnimal: {} };
+                    
                     if(dayData.perAnimal) {
                         Object.entries(dayData.perAnimal).forEach(([oldIdxStr, list]) => {
                             const targetIdx = idMap[parseInt(oldIdxStr)];
                             if(targetIdx !== undefined && animals[targetIdx]) {
-                                if(!history[date].perAnimal[targetIdx]) history[date].perAnimal[targetIdx] = [];
+                                if(!hTarget[date].perAnimal[targetIdx]) hTarget[date].perAnimal[targetIdx] = [];
                                 list.forEach(item => {
-                                    const exists = history[date].perAnimal[targetIdx].some(ex => ex.time === item.time && ex.location === item.location && ex.note === item.note);
-                                    if(!exists) history[date].perAnimal[targetIdx].push(item);
+                                    const exists = hTarget[date].perAnimal[targetIdx].some(ex => ex.time === item.time && ex.location === item.location && ex.note === item.note);
+                                    if(!exists) hTarget[date].perAnimal[targetIdx].push(item);
                                 });
                             }
                         });
                     }
+                    saveHistoryForYear(y, hTarget);
                 });
-                Object.keys(history).forEach(d => { let t = 0; if(history[d].perAnimal) Object.values(history[d].perAnimal).forEach(l => t += l.length); history[d].total = t; });
             }
             if(data.locations) data.locations.forEach(l => { if(!locations.includes(l)) locations.push(l); });
             locations.sort();
