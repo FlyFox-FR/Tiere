@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Top Tier 🐾</title>
+<title>Tiere zählen Ultimate v3.3 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -69,22 +69,11 @@ input,select,textarea{padding:10px;font-size:16px;border-radius:10px;border:1px 
 .count{width:24px; text-align:center; font-size:15px; font-weight:bold; margin: 0 2px; flex-shrink:0;}
 
 .row-controls { display:flex; gap:4px; align-items:center; flex-shrink: 0; }
-/* Kleinere Buttons */
 .row-controls button {
-    padding: 0;
-    width: 32px;
-    height: 32px;
-    font-size: 16px; 
-    border-radius: 8px;
+    padding: 0; width: 32px; height: 32px; font-size: 16px; border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
 }
-/* Dropdown kleiner */
-.row-controls select {
-    width: 70px; 
-    padding: 0 4px; 
-    font-size: 11px; 
-    height: 32px;
-}
+.row-controls select { width: 70px; padding: 0 4px; font-size: 11px; height: 32px; }
 
 .add{display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:10px; flex-wrap: wrap;}
 .file-btn { font-size: 24px; cursor: pointer; padding: 0 5px; opacity: 0.8; transition: opacity 0.2s; }
@@ -147,6 +136,12 @@ details[open] summary::after { content: '-'; }
 
 .info-box{display:none;background:var(--card);padding:16px;border-radius:12px;margin-bottom:16px; margin-top: 50px;}
 
+/* Custom Import Modal Buttons */
+.import-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+.btn-merge { background: var(--accent); color: white; padding: 12px; font-weight: bold; }
+.btn-overwrite { background: var(--err-bg); color: var(--err-text); padding: 12px; border: 1px solid var(--err-text); }
+.btn-cancel { background: var(--btn); color: var(--text); padding: 12px; }
+
 /* Switch */
 .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
 .switch input { opacity: 0; width: 0; height: 0; }
@@ -168,7 +163,7 @@ input:checked + .slider:before { transform: translateX(24px); }
   <button class="icon-btn-header info" onclick="safeRun(toggleInfo)" title="Hilfe anzeigen">ℹ️</button>
 </div>
 
-<h1>Top Tier 🐾</h1>
+<h1>Tiere zählen Ult. 🐾</h1>
 
 <!-- VEREINFACHTE INFO BOX FÜR ENDANWENDER -->
 <div id="infoBox" class="info-box">
@@ -314,6 +309,20 @@ input:checked + .slider:before { transform: translateX(24px); }
   </div>
 </div>
 
+<!-- NEW IMPORT MODAL -->
+<div id="importModal" class="modal">
+  <div class="modal-content" style="max-width:350px; text-align:center">
+    <h3>Backup Importieren</h3>
+    <p style="font-size:14px; opacity:0.8; margin-bottom:20px;">Wie möchtest du die Daten importieren?</p>
+    
+    <div class="import-actions">
+        <button class="btn-merge" onclick="safeRun(confirmImport, 'merge')">✨ Zusammenfügen (Merge)<br><small style="font-weight:normal; font-size:11px">Fügt neue Tiere hinzu & behält alte</small></button>
+        <button class="btn-overwrite" onclick="safeRun(confirmImport, 'overwrite')">⚠️ Alles Überschreiben<br><small style="font-weight:normal; font-size:11px">Löscht aktuelle Daten komplett</small></button>
+        <button class="btn-cancel" onclick="safeRun(confirmImport, 'cancel')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
 <div id="iconModal" class="modal">
   <div class="modal-content" style="max-width:320px; text-align:center">
     <span class="close-btn" onclick="closeModal('iconModal')">&times;</span>
@@ -396,6 +405,7 @@ let isMuted = localStorage.getItem('muted') !== 'false';
 let notifyConfig = JSON.parse(localStorage.getItem('notifyConfig')) || { enabled: false, days: 7 };
 let mapInstance = null;
 let mapMarkers = [];
+let tempImportData = null; // Stores imported JSON during modal selection
 
 const today = () => new Date().toISOString().slice(0,10);
 const nowTime = () => new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
@@ -722,7 +732,7 @@ function resizeImage(base64, maxW, cb){
         const s = maxW/img.width;
         c.width=maxW; c.height=img.height*s;
         c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-        cb(c.toDataURL('image/jpeg',0.6)); // Lower quality for storage safety
+        cb(c.toDataURL('image/jpeg',0.6)); 
     }
 }
 function clearImage(){ currentImage=null; getEl('imgPreview').style.display='none'; }
@@ -793,7 +803,6 @@ function openDetail(i){
     }
     html += `</div>`;
     
-    // DELETE BUTTON FOR ANIMAL ADDED HERE (SAFE AREA)
     html += `<div style="margin-top:30px; border-top:1px solid #eee; padding-top:20px; text-align:center"><button onclick="safeRun(removeAnimal, ${i})" style="background:var(--err-bg); color:var(--err-text); font-size:14px; padding:10px 20px;">⚠️ Dieses Tier löschen</button></div>`;
 
     body.innerHTML = html; modal.style.display = 'block';
@@ -886,7 +895,6 @@ function renderStats(){
                 if(!firstSightings[idx] && list.length>0) firstSightings[idx] = { date: dateStr, loc: list[0].location };
                 list.forEach(item => {
                     const loc = item.location; 
-                    // FIX: Empty locations don't count for badges
                     if(loc && loc.trim() !== '' && loc !== 'Unbekannt') distinctLocs.add(loc);
                     if(item.time) {
                         const h = parseInt(item.time.split(':')[0]);
@@ -977,99 +985,98 @@ function generateShareCard() {
     } catch(e) { showErrorToast("Bild-Export Fehler"); }
 }
 
-// === IMPORT FUNCTION WITH MERGE OPTION ===
+// === IMPORT FUNCTION FIXED ===
 function importBackup(event) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
-            const data = JSON.parse(e.target.result);
-            if(!data.animals) throw new Error("Keine Tiere gefunden");
-
-            // UI: Ask for Merge or Overwrite
-            let doMerge = false;
-            if(confirm("Möchtest du die importierten Daten mit deinen aktuellen ZUSAMMENFÜGEN (Merge)?\n\n[OK] = Zusammenfügen\n[Überschreiben] = Komplett Überschreiben (Alles löschen)")) {
-                doMerge = true;
-            } else {
-                if(!confirm("⚠️ ACHTUNG: Klicke OK, um alle deine aktuellen Daten zu LÖSCHEN und durch das Backup zu ersetzen.")) return;
-            }
-
-            if(doMerge) {
-                // MERGE LOGIC
-                // 1. Merge Animals
-                const animalMap = {}; // oldIdx -> newIdx
-                data.animals.forEach((impA, impIdx) => {
-                    const existingIdx = animals.findIndex(a => a.name === impA.name);
-                    if(existingIdx !== -1) {
-                        animalMap[impIdx] = existingIdx;
-                        // Optional: Merge Tags?
-                    } else {
-                        // New animal
-                        const newIdx = animals.push(impA) - 1;
-                        animalMap[impIdx] = newIdx;
-                    }
-                });
-
-                // 2. Merge History
-                if(data.history) {
-                    Object.entries(data.history).forEach(([date, entry]) => {
-                         if(!history[date]) history[date] = { total: 0, perAnimal: {} };
-                         
-                         if(entry.perAnimal) {
-                            Object.entries(entry.perAnimal).forEach(([impIdxStr, list]) => {
-                                const impIdx = parseInt(impIdxStr);
-                                const targetIdx = animalMap[impIdx]; // Map to current animal ID
-                                
-                                if(targetIdx !== undefined) {
-                                    if(!history[date].perAnimal[targetIdx]) history[date].perAnimal[targetIdx] = [];
-                                    
-                                    list.forEach(item => {
-                                        // Check duplicates (Same time, loc, note)
-                                        const exists = history[date].perAnimal[targetIdx].some(ex => 
-                                            ex.time === item.time && ex.location === item.location && ex.note === item.note
-                                        );
-                                        if(!exists) {
-                                            history[date].perAnimal[targetIdx].push(item);
-                                            history[date].total++; // Recalc total later is safer but this works
-                                        }
-                                    });
-                                }
-                            });
-                         }
-                    });
-                    // Re-calculate totals just in case
-                     Object.keys(history).forEach(d => {
-                        let t = 0;
-                        if(history[d].perAnimal) Object.values(history[d].perAnimal).forEach(l => t += l.length);
-                        history[d].total = t;
-                     });
-                }
-
-                // 3. Merge Locations & Colors
-                if(data.locations) data.locations.forEach(l => { if(!locations.includes(l)) locations.push(l); });
-                locations.sort();
-                if(data.locCoords) locCoords = { ...locCoords, ...data.locCoords };
-                // Keep existing colors preferred, add new ones
-                if(data.colors) Object.entries(data.colors).forEach(([k,v]) => {
-                   // Map k (old index) to new index? Tricky.
-                   // Simpler: Just rely on auto-colors or let user re-pick.
-                });
-
-            } else {
-                // OVERWRITE LOGIC
-                if(data.animals) animals = data.animals;
-                if(data.history) history = data.history;
-                if(data.colors) colors = data.colors;
-                if(data.locations) locations = data.locations;
-                if(data.locCoords) locCoords = data.locCoords || {};
-            }
-
-            safeSave(); render();
-            showErrorToast(doMerge ? "Daten erfolgreich zusammengefügt!" : "Daten erfolgreich überschrieben!", true);
-        } catch (err) { console.error(err); showErrorToast("Fehler beim Importieren der Datei."); }
+            tempImportData = JSON.parse(e.target.result);
+            if(!tempImportData.animals) throw new Error("Ungültige Datei");
+            getEl('importModal').style.display = 'block'; // Show options
+        } catch(err) { 
+            console.error(err); showErrorToast("Dateifehler: " + err.message); 
+            getEl('importFile').value = ''; // Reset input
+        }
     };
     reader.readAsText(file);
+}
+
+function confirmImport(action) {
+    getEl('importModal').style.display = 'none';
+    if(action === 'cancel') {
+        tempImportData = null;
+        getEl('importFile').value = '';
+        return;
+    }
+
+    try {
+        const data = tempImportData;
+        if(action === 'merge') {
+            // 1. Create MAP: Import_ID -> Current_ID
+            const idMap = {};
+            data.animals.forEach((impA, impIdx) => {
+                // Find existing animal by name (case insensitive trim)
+                const existIdx = animals.findIndex(a => a.name.trim().toLowerCase() === impA.name.trim().toLowerCase());
+                if(existIdx !== -1) {
+                    idMap[impIdx] = existIdx; // Map old to existing
+                } else {
+                    const newIdx = animals.push(impA) - 1; // Create new
+                    idMap[impIdx] = newIdx; // Map old to new
+                }
+            });
+
+            // 2. Merge History using Map
+            if(data.history) {
+                Object.entries(data.history).forEach(([date, entry]) => {
+                    if(!history[date]) history[date] = { total: 0, perAnimal: {} };
+                    if(entry.perAnimal) {
+                        Object.entries(entry.perAnimal).forEach(([impIdxStr, list]) => {
+                            const targetIdx = idMap[parseInt(impIdxStr)];
+                            if(targetIdx !== undefined) {
+                                if(!history[date].perAnimal[targetIdx]) history[date].perAnimal[targetIdx] = [];
+                                list.forEach(item => {
+                                    // Avoid strict duplicates
+                                    const exists = history[date].perAnimal[targetIdx].some(ex => 
+                                        ex.time === item.time && ex.location === item.location && ex.note === item.note
+                                    );
+                                    if(!exists) history[date].perAnimal[targetIdx].push(item);
+                                });
+                            }
+                        });
+                    }
+                });
+                // Recalculate daily totals
+                Object.keys(history).forEach(d => {
+                    let t = 0;
+                    if(history[d].perAnimal) Object.values(history[d].perAnimal).forEach(l => t += l.length);
+                    history[d].total = t;
+                });
+            }
+            
+            // 3. Merge Locations
+            if(data.locations) data.locations.forEach(l => { if(!locations.includes(l)) locations.push(l); });
+            locations.sort();
+            if(data.locCoords) locCoords = { ...locCoords, ...data.locCoords };
+
+        } else if (action === 'overwrite') {
+            animals = data.animals || [];
+            history = data.history || {};
+            colors = data.colors || {};
+            locations = data.locations || [];
+            locCoords = data.locCoords || {};
+        }
+
+        safeSave(); render();
+        showErrorToast(action === 'merge' ? "Daten erfolgreich zusammengefügt!" : "Daten überschrieben!", true);
+    } catch(e) {
+        console.error(e);
+        showErrorToast("Import fehlgeschlagen.");
+    } finally {
+        tempImportData = null;
+        getEl('importFile').value = '';
+    }
 }
 
 // === UTILS ===
