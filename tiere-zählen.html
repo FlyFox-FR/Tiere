@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tiere zählen Ultimate 🐾</title>
+<meta name="theme-color" content="#121212">
+<style>
+:root{--bg:#f4f4f4;--card:#fff;--text:#000;--btn:#e0e0e0;--hover:#eee;--accent:#2196f3;--warn-bg:#fff3cd;--warn-text:#856404;--err-bg:#f8d7da;--err-text:#721c24;--sub:#666}
+body.dark{--bg:#121212;--card:#1e1e1e;--text:#fff;--btn:#333;--hover:#444;--accent:#64b5f6;--warn-bg:#3d3618;--warn-text:#e8c658;--err-bg:#4c1f24;--err-text:#ff8a96;--sub:#aaa}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);max-width:980px;margin:auto;padding:16px;position:relative}
+
+/* Header & Toggles */
+.header-controls { position:absolute; top:16px; right:16px; display:flex; gap:8px; }
+.icon-btn-header { font-size:18px; background:var(--btn); color:var(--text); border-radius:50%; width:36px; height:36px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.icon-btn-header.info { background:var(--accent); color:#fff; }
+
+.toggle-header { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px; margin: 0 0 10px 0; font-size: 1.1em; opacity: 0.9; padding: 10px 0; border-bottom: 1px solid transparent; }
+.toggle-header:hover { opacity: 1; border-color: var(--btn); }
+.toggle-arrow { display: inline-block; width: 24px; text-align: center; font-weight: bold; }
+
+/* Buttons & Inputs */
+button{font-size:18px;padding:8px 14px;border-radius:12px;border:none;background:var(--btn);color:var(--text);cursor:pointer; transition: background 0.2s, transform 0.1s}
+button:active{transform: scale(0.95);}
+button:hover{background:var(--hover)}
+input,select,textarea{padding:10px;font-size:16px;border-radius:10px;border:1px solid #777;background:var(--card);color:var(--text); width: 100%; box-sizing: border-box; border-color: var(--btn); font-family: inherit;}
+
+/* Main Row Layout */
+.row{display:flex;align-items:center;gap:8px;background:var(--card);padding:10px;margin-bottom:8px;border-radius:14px;box-shadow: 0 2px 5px rgba(0,0,0,0.05); flex-wrap:wrap;}
+
+/* Icon Styles */
+.animal-icon{font-size:30px;width:48px;height:48px;text-align:center;display:flex;align-items:center;justify-content:center; overflow:hidden; border-radius:8px; cursor: pointer; transition: transform 0.2s; border: 1px solid transparent;}
+.animal-icon:hover { transform: scale(1.1); border-color: var(--accent); }
+.animal-icon img {width:100%; height:100%; object-fit:cover;}
+
+.name{flex:1;font-weight:bold; min-width: 240px;}
+.count{width:30px;text-align:center;font-size:20px;font-weight:bold}
+.row-controls { display:flex; gap:6px; align-items:center; }
+
+/* Add Area */
+.add{display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:10px}
+.file-btn { font-size: 24px; cursor: pointer; padding: 0 5px; opacity: 0.8; transition: opacity 0.2s; }
+.file-btn:hover { opacity: 1; }
+
+/* Stats & Visuals */
+.collapsible-content { transition: all 0.3s ease; overflow: visible; } 
+.stats-container { background: var(--card); padding: 16px; border-radius: 14px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+details { margin-bottom: 12px; border-bottom: 1px solid var(--btn); padding-bottom: 12px; }
+summary { font-weight: bold; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
+summary::after { content: '+'; font-size: 18px; opacity: 0.6; }
+details[open] summary::after { content: '-'; }
+
+/* Charts */
+.chart-wrap { display: flex; align-items: flex-end; height: 140px; gap: 6px; padding-top: 25px; margin-top: 10px; }
+.chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+.chart-bar { width: 100%; background: var(--accent); border-radius: 4px 4px 0 0; opacity: 0.9; min-height: 1px; }
+.chart-val { font-size: 10px; margin-bottom: 2px; }
+.chart-label { font-size: 10px; margin-top: 4px; transform: rotate(-45deg); height: 20px; text-align: center; }
+
+/* HORIZONTAL BARS */
+.hbar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; }
+.hbar-label { flex: 1; text-align: left; opacity: 0.9; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.hbar-track { width: 240px; flex: none; background: var(--btn); height: 12px; border-radius: 6px; overflow: hidden; }
+.hbar-fill { height: 100%; background: var(--accent); }
+.hbar-val { font-size: 12px; width: 25px; text-align:right; font-weight:bold; flex:none; }
+
+/* Badges */
+.badge-grid { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.badge { background: var(--btn); padding: 6px 10px; border-radius: 20px; font-size: 12px; display: flex; align-items: center; gap: 5px; opacity: 0.4; filter: grayscale(1); transition: all 0.3s; cursor: pointer; user-select: none; border: 1px solid transparent; }
+.badge:active { transform: scale(0.95); }
+.badge.earned { opacity: 1; filter: grayscale(0); background: rgba(33, 150, 243, 0.15); border-color: var(--accent); color: var(--accent); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.badge-icon { font-size: 16px; }
+
+/* MODALS */
+.modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
+.modal-content { background-color: var(--card); margin: 5% auto; padding: 20px; border-radius: 16px; width: 90%; max-width: 600px; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.close-btn { position: absolute; top: 15px; right: 20px; color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
+.modal-header { text-align: center; border-bottom: 1px solid var(--btn); padding-bottom: 15px; margin-bottom: 15px; }
+.modal-icon img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); }
+.modal-icon { font-size: 60px; line-height: 1; display: block; margin-bottom: 10px; }
+
+/* History Table */
+.history-list { margin-top: 15px; border-top: 1px solid var(--btn); }
+.hist-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--btn); align-items: flex-start; }
+.hist-date { font-size: 12px; opacity: 0.7; width: 70px; flex-shrink: 0; }
+.hist-info { flex: 1; font-size: 14px; }
+.hist-note { background: var(--btn); padding: 2px 6px; border-radius: 4px; font-size: 12px; display: inline-block; margin-top: 4px; }
+.hist-actions { display: flex; gap: 4px; }
+.icon-btn { padding: 4px 8px; font-size: 14px; background: var(--btn); border:none; border-radius:4px; cursor:pointer;}
+
+/* Map Link */
+a.map-link, a.map-link:visited { color: var(--accent); text-decoration: none; border-bottom: 1px dotted currentColor; }
+a.map-link:hover { opacity: 0.8; }
+
+.stat-kpi-row { display:flex; gap:10px; justify-content:space-around; margin-bottom:15px; text-align:center; }
+.stat-kpi { background:var(--bg); padding:10px; border-radius:8px; flex:1; }
+.heatmap-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; max-width: 320px; margin: 10px auto; }
+.heat-cell { aspect-ratio: 1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: transparent; background: var(--btn); }
+
+/* Utilities & Error Toast */
+.info-box{display:none;background:var(--card);padding:16px;border-radius:12px;margin-bottom:16px; margin-top: 50px;}
+.autocomplete-results { position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1px solid #aaa; z-index: 1000; display: none; }
+.suggestion-item { padding: 10px; cursor: pointer; border-bottom: 1px solid var(--btn); }
+
+/* Error Toast Style */
+.error-toast { position: fixed; bottom: 20px; right: 20px; background: var(--err-bg); color: var(--err-text); padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 9999; font-size: 14px; display: none; animation: fadeIn 0.3s; border: 1px solid var(--err-text);}
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+/* Notification Config Style */
+.notify-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+.switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--accent); }
+input:checked + .slider:before { transform: translateX(24px); }
+
+</style>
+</head>
+<body>
+<h1>Tiere zählen Ultimate 🐾</h1>
+
+<!-- Error Toast Container -->
+<div id="errorToast" class="error-toast"></div>
+
+<div class="header-controls">
+  <button class="icon-btn-header" onclick="safeRun(openNotifySettings)" title="Erinnerungen einstellen">🔔</button>
+  <button class="icon-btn-header" onclick="safeRun(toggleMute)" id="muteBtn" title="Ton an/aus">🔇</button>
+  <button class="icon-btn-header info" onclick="safeRun(toggleInfo)" title="Hilfe">ℹ️</button>
+</div>
+
+<div id="infoBox" class="info-box">
+<h3>Anleitung & Funktionen</h3>
+<ul style="line-height:1.6; padding-left:20px;">
+<li><strong>➕ Tier hinzufügen:</strong> Klappe oben "Verwaltung" auf. Wähle ein Emoji oder lade ein 📷 Foto hoch.</li>
+<li><strong>🖼️ Bild ändern:</strong> Klicke einfach auf das Bild/Emoji in der Liste, um es nachträglich zu ändern.</li>
+<li><strong>🔢 Zählen:</strong> Nutze die ➕ und ➖ Buttons in der <strong>📋 Tierliste</strong>.</li>
+<li><strong>📝 Notizen:</strong> Klicke auf das Stift-Symbol 📝, um eine Sichtung mit Notiz hinzuzufügen.</li>
+<li><strong>📈 Tier-Details & Verlauf:</strong> Klicke auf das Chart-Symbol neben einem Tier.</li>
+</ul>
+<div style="background:var(--warn-bg);color:var(--warn-text);padding:15px;border-radius:8px;margin-top:15px;border:1px solid currentColor">
+  ⚠️ <strong>Daten sind nur lokal gespeichert.</strong> Nutze regelmäßig <strong>"💾 Backup"</strong>!
+</div>
+</div>
+
+<!-- 1. Verwaltung -->
+<div class="section">
+  <h3 class="toggle-header" onclick="safeRun(toggleSection, 'adminContent', 'adminArrow')">
+    <span id="adminArrow" class="toggle-arrow">▾</span> 🛠️ Verwaltung & Suche
+  </h3>
+  <div id="adminContent" class="collapsible-content" style="display:block;">
+    <input style="margin-bottom:10px" id="searchInput" placeholder="🔍 Tier suchen..." oninput="safeRun(render)">
+    <div class="add">
+      <!-- Standard Upload (Galerie) -->
+      <label class="file-btn" for="fileUpload" title="Aus Galerie wählen">🖼️</label>
+      <input type="file" id="fileUpload" hidden accept="image/*" onchange="safeRun(handleImageUpload, this)">
+      
+      <!-- Kamera Direkt (Mobile) -->
+      <label class="file-btn" for="cameraUpload" title="Foto aufnehmen">📷</label>
+      <input type="file" id="cameraUpload" hidden accept="image/*" capture="environment" onchange="safeRun(handleImageUpload, this)">
+
+      <input id="emojiInput" placeholder="🦁" size="3" style="width:60px; text-align:center">
+      <input id="nameInput" placeholder="Name">
+      <button onclick="safeRun(addAnimal)">➕</button>
+    </div>
+    <div id="imgPreview" style="text-align:center; display:none; margin-bottom:10px;">
+        <img id="previewEl" src="" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid var(--accent)">
+        <br><small style="cursor:pointer; color:red" onclick="safeRun(clearImage)">Bild entfernen ✖</small>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Liste -->
+<div class="section">
+  <h3 class="toggle-header" onclick="safeRun(toggleSection, 'listContent', 'listArrow')">
+    <span id="listArrow" class="toggle-arrow">▾</span> 📋 Meine Tierliste
+  </h3>
+  <div id="listContent" class="collapsible-content" style="display:block;">
+    <div id="list"></div>
+  </div>
+</div>
+
+<!-- 3. Orte -->
+<div class="section">
+  <h3 class="toggle-header" onclick="safeRun(toggleSection, 'locContent', 'locArrow')">
+    <span id="locArrow" class="toggle-arrow">▸</span> 📍 Orte verwalten (OSM)
+  </h3>
+  <div id="locContent" class="collapsible-content" style="display:none;">
+    <div style="display:flex; gap:8px; align-items:flex-start; position:relative;">
+      <div class="autocomplete-container">
+        <input id="osmInput" placeholder="Ort suchen (z.B. Berlin Zoo)">
+        <div id="osmResults" class="autocomplete-results"></div>
+      </div>
+      <button onclick="safeRun(addManualLocation)">➕</button>
+    </div>
+    <div style="margin-top:8px; font-size:13px; opacity:0.7">
+      Gespeicherte Orte: <span id="locationListDisplay">Keine</span>
+    </div>
+  </div>
+</div>
+
+<!-- Controls -->
+<div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:20px;">
+  <button onclick="safeRun(toggleStats)">📊 Statistik</button>
+  <button onclick="safeRun(toggleDarkMode)">🌙 Dark</button>
+  <button onclick="safeRun(downloadBackup)">💾 Backup</button>
+  <button onclick="safeRun(exportCSV)">📤 CSV</button>
+  <input type="file" id="importFile" accept="application/json" hidden onchange="safeRun(importBackup, event)">
+  <button onclick="document.getElementById('importFile').click()">📂 Import</button>
+</div>
+
+<!-- Global Stats -->
+<div id="statsContainer" class="stats-container" style="display:none; margin-top:20px;">
+  <div id="statsContent"></div>
+  <div style="text-align:center; margin-top:20px">
+    <button onclick="safeRun(generateShareCard)">🎨 Social Card erstellen</button>
+  </div>
+</div>
+
+<!-- ANIMAL DETAIL MODAL -->
+<div id="detailModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeModal('detailModal')">&times;</span>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- NOTE / EDIT MODAL -->
+<div id="noteModal" class="modal">
+  <div class="modal-content" style="max-width:400px">
+    <span class="close-btn" onclick="closeModal('noteModal')">&times;</span>
+    <h3 id="noteTitle">Sichtung notieren</h3>
+    <input type="date" id="noteDate" style="margin-bottom:8px">
+    <input type="time" id="noteTime" style="margin-bottom:8px">
+    <select id="noteLoc" style="margin-bottom:8px"></select>
+    <textarea id="noteText" placeholder="Notiz (z.B. 'Hat geschlafen')" rows="3" style="margin-bottom:10px"></textarea>
+    <button id="noteSaveBtn" style="width:100%; background:var(--accent); color:#fff">Speichern</button>
+  </div>
+</div>
+
+<!-- NEW: ICON EDIT MODAL -->
+<div id="iconModal" class="modal">
+  <div class="modal-content" style="max-width:320px; text-align:center">
+    <span class="close-btn" onclick="closeModal('iconModal')">&times;</span>
+    <h3>Bild bearbeiten</h3>
+    
+    <div style="margin:20px 0; display:flex; gap:10px; justify-content:center">
+       <!-- Galerie Button -->
+       <label for="editFileInput" class="file-btn" style="border:1px solid var(--btn); border-radius:8px; padding:10px; font-size:16px; flex:1">
+          🖼️ Galerie
+       </label>
+       <input type="file" id="editFileInput" hidden accept="image/*" onchange="safeRun(handleEditFile, this)">
+       
+       <!-- Kamera Button -->
+       <label for="editCameraInput" class="file-btn" style="border:1px solid var(--btn); border-radius:8px; padding:10px; font-size:16px; flex:1">
+          📷 Kamera
+       </label>
+       <input type="file" id="editCameraInput" hidden accept="image/*" capture="environment" onchange="safeRun(handleEditFile, this)">
+    </div>
+
+    <div id="editPreviewContainer" style="margin-bottom:15px; display:none">
+        <img id="editPreviewImg" src="" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid var(--accent)">
+        <br><small style="color:red; cursor:pointer" onclick="safeRun(removeEditImage)">Foto entfernen</small>
+    </div>
+    <div style="margin-bottom:20px">
+       <label>Oder Emoji:</label><br>
+       <input id="editEmoji" style="width:60px; font-size:30px; text-align:center" placeholder="🦁">
+    </div>
+    <button onclick="safeRun(saveIconEdit)" style="width:100%; background:var(--accent); color:#fff">Speichern</button>
+  </div>
+</div>
+
+<!-- NEW: NOTIFICATION SETTINGS MODAL -->
+<div id="notifyModal" class="modal">
+  <div class="modal-content" style="max-width:350px;">
+    <span class="close-btn" onclick="closeModal('notifyModal')">&times;</span>
+    <h3>🔔 Erinnerungen</h3>
+    
+    <div class="notify-row">
+        <span>Aktivieren:</span>
+        <label class="switch">
+            <input type="checkbox" id="notifyToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div class="notify-row">
+        <span>Tage Inaktivität:</span>
+        <input type="number" id="notifyDays" value="7" min="1" max="365" style="width:70px; text-align:center">
+    </div>
+
+    <p style="font-size:12px; opacity:0.7; margin-bottom:20px;">
+        Du erhältst eine Nachricht, wenn du länger als die eingestellte Zeit nichts eingetragen hast.<br>
+        <em>Hinweis: Funktioniert am besten, wenn der Browser im Hintergrund offen ist.</em>
+    </p>
+
+    <div style="display:flex; gap:10px">
+        <button onclick="safeRun(saveNotifySettings)" style="flex:1; background:var(--accent); color:#fff">Speichern</button>
+        <button onclick="safeRun(testNotification)" style="flex:1; background:var(--bg)">Testen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// === DEFENSIVE HELPERS (Stability Layer) ===
+function showErrorToast(msg, isInfo = false) {
+    const t = document.getElementById('errorToast');
+    if(!t) return;
+    t.innerText = (isInfo ? "ℹ️ " : "⚠️ ") + msg;
+    t.style.background = isInfo ? "var(--accent)" : "var(--err-bg)";
+    t.style.color = isInfo ? "#fff" : "var(--err-text)";
+    t.style.border = isInfo ? "none" : "1px solid var(--err-text)";
+    t.style.display = 'block';
+    if(!isInfo) console.error(msg);
+    setTimeout(() => { t.style.display = 'none'; }, 5000);
+}
+
+window.onerror = function(message, source, lineno, colno, error) {
+    showErrorToast("Unerwarteter Fehler: " + message);
+    return true; 
+};
+
+function safeRun(func, ...args) {
+    try {
+        func(...args);
+    } catch (e) {
+        showErrorToast("Fehler bei Aktion: " + e.message);
+    }
+}
+
+const getEl = (id) => {
+    const el = document.getElementById(id);
+    if (!el) console.warn("Element not found: " + id);
+    return el;
+};
+
+// === Globals ===
+const year = new Date().getFullYear();
+let animals = [], history = {}, colors = {}, locations = [];
+let dark = false;
+let currentImage = null; 
+let isMuted = localStorage.getItem('muted') !== 'false';
+let notifyConfig = JSON.parse(localStorage.getItem('notifyConfig')) || { enabled: false, days: 7 };
+
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+try {
+    audioCtx = new AudioContext();
+} catch(e) { console.warn("Audio Context not supported"); }
+
+function toggleMute(){
+    isMuted = !isMuted;
+    localStorage.setItem('muted', isMuted);
+    updateMuteBtn();
+}
+function updateMuteBtn(){
+    const btn = getEl('muteBtn');
+    if(btn) btn.innerText = isMuted ? '🔇' : '🔊';
+}
+setTimeout(updateMuteBtn, 100);
+
+function playSound(type) {
+  if(isMuted || !audioCtx) return;
+  try {
+      if (audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if(type === 'pop') {
+        [1046.50, 1318.51, 1567.98].forEach((freq, i) => {
+           const o = audioCtx.createOscillator();
+           const g = audioCtx.createGain();
+           o.connect(g); g.connect(audioCtx.destination);
+           o.type = 'sine';
+           o.frequency.value = freq;
+           const start = now + i * 0.06;
+           g.gain.setValueAtTime(0.05, start);
+           g.gain.exponentialRampToValueAtTime(0.001, start + 0.3);
+           o.start(start); o.stop(start + 0.3);
+        });
+      } else if(type === 'fanfare') {
+        [523.25, 659.25, 783.99].forEach((freq, i) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = 'sine'; 
+            o.connect(g); g.connect(audioCtx.destination);
+            o.frequency.value = freq;
+            g.gain.setValueAtTime(0, now + i*0.1);
+            g.gain.linearRampToValueAtTime(0.1, now + i*0.1 + 0.1);
+            g.gain.exponentialRampToValueAtTime(0.001, now + i*0.1 + 0.6);
+            o.start(now + i*0.1); o.stop(now + i*0.1 + 0.6);
+        });
+      } else if(type === 'delete') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+      }
+  } catch(e) { console.warn('Sound Error', e); }
+}
+
+// === Load Safe ===
+function loadData() {
+    try {
+        const a = localStorage.getItem('animals-'+year);
+        if(a) animals = JSON.parse(a); else animals = [];
+        
+        const h = localStorage.getItem('history-'+year);
+        if(h) history = JSON.parse(h); else history = {};
+        
+        const c = localStorage.getItem('colors-'+year);
+        if(c) colors = JSON.parse(c); else colors = {};
+        
+        const l = localStorage.getItem('locations-'+year);
+        if(l) locations = JSON.parse(l); else locations = [];
+        
+        dark = localStorage.getItem('darkmode')==='true';
+    } catch(e) {
+        showErrorToast("Datenbankfehler. Starte mit leeren Daten.");
+        console.error(e);
+        animals=[]; history={};
+    }
+}
+loadData();
+
+if(dark) document.body.classList.add('dark');
+
+// === Safe Save ===
+const safeSave = () => {
+  try {
+      if(!Array.isArray(animals)) throw new Error("Animals corrupted");
+      localStorage.setItem('animals-'+year, JSON.stringify(animals));
+      localStorage.setItem('history-'+year, JSON.stringify(history));
+      localStorage.setItem('colors-'+year, JSON.stringify(colors));
+      localStorage.setItem('locations-'+year, JSON.stringify(locations));
+      renderLocationList();
+  } catch(e) {
+      showErrorToast("Speichern fehlgeschlagen!");
+      console.error(e);
+  }
+};
+
+const today = () => new Date().toISOString().slice(0,10);
+const nowTime = () => new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+
+// === NOTIFICATION SETTINGS LOGIC ===
+function openNotifySettings() {
+    getEl('notifyToggle').checked = notifyConfig.enabled;
+    getEl('notifyDays').value = notifyConfig.days;
+    getEl('notifyModal').style.display = 'block';
+}
+
+function saveNotifySettings() {
+    const isEnabled = getEl('notifyToggle').checked;
+    const days = parseInt(getEl('notifyDays').value) || 7;
+    notifyConfig = { enabled: isEnabled, days: days };
+    localStorage.setItem('notifyConfig', JSON.stringify(notifyConfig));
+    if (isEnabled && "Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
+    closeModal('notifyModal');
+    showErrorToast("Einstellungen gespeichert", true);
+}
+
+function sendSysNotification(title, body) {
+    if (!notifyConfig.enabled) return;
+    try {
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification(title, { body: body, icon: "" });
+        } else {
+            showErrorToast("🔔 " + body, true);
+        }
+    } catch (e) {
+        console.log("System notification failed, falling back to toast.");
+        showErrorToast("🔔 " + body, true);
+    }
+}
+
+function testNotification() {
+    if (!notifyConfig.enabled) {
+        alert("Bitte erst 'Aktivieren' einschalten.");
+        return;
+    }
+    if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission().then(res => {
+            if (res === "granted") sendSysNotification("Test", "Das ist ein Test!");
+        });
+    } else {
+        sendSysNotification("Test", "Das ist ein Test!");
+    }
+}
+
+function checkInactivity() {
+    if (!notifyConfig.enabled) return;
+    const dates = Object.keys(history).sort();
+    let lastDate = new Date(); 
+    if (dates.length > 0) lastDate = new Date(dates[dates.length - 1]);
+    else return;
+    const now = new Date();
+    const diffTime = Math.abs(now - lastDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+    if (diffDays > notifyConfig.days) {
+        if (!sessionStorage.getItem('notifiedToday')) {
+            sendSysNotification("Lange nicht gesehen!", `Du hast seit ${diffDays} Tagen kein Tier eingetragen.`);
+            sessionStorage.setItem('notifiedToday', 'true');
+        }
+    }
+}
+
+// === Image Handling ===
+function handleImageUpload(input){
+    if(input.files && input.files[0]){
+        const reader = new FileReader();
+        reader.onload = function(e){
+            try {
+                resizeImage(e.target.result, 100, (resizedData)=>{
+                    currentImage = resizedData;
+                    const p = getEl('previewEl');
+                    if(p) p.src = currentImage;
+                    const div = getEl('imgPreview');
+                    if(div) div.style.display = 'block';
+                    const em = getEl('emojiInput');
+                    if(em) em.style.display = 'none';
+                });
+            } catch(err){ showErrorToast("Bildfehler"); }
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+function resizeImage(base64Str, maxWidth, callback){
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+        try {
+            const canvas = document.createElement('canvas');
+            const scale = maxWidth / img.width;
+            canvas.width = maxWidth;
+            canvas.height = img.height * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            callback(canvas.toDataURL('image/jpeg', 0.7));
+        } catch(e) { console.error("Resize Error", e); }
+    };
+    img.onerror = () => showErrorToast("Ungültiges Bildformat");
+}
+function clearImage(){
+    currentImage = null;
+    const div = getEl('imgPreview');
+    if(div) div.style.display = 'none';
+    const em = getEl('emojiInput');
+    if(em) em.style.display = 'block';
+    const f1 = getEl('fileUpload'); if(f1) f1.value = '';
+    const f2 = getEl('cameraUpload'); if(f2) f2.value = '';
+}
+
+// === ICON EDIT LOGIC ===
+let editingIdx = null;
+let editingImgTemp = null;
+
+function openIconEdit(i){
+    editingIdx = i;
+    if(!animals[i]) return;
+    const a = animals[i];
+    editingImgTemp = a.image; 
+    
+    const emIn = getEl('editEmoji');
+    if(emIn) emIn.value = a.emoji || '';
+    updateEditPreview();
+    
+    const m = getEl('iconModal');
+    if(m) m.style.display = 'block';
+}
+
+function handleEditFile(input){
+    if(input.files && input.files[0]){
+        const reader = new FileReader();
+        reader.onload = function(e){
+             resizeImage(e.target.result, 100, (resizedData)=>{
+                editingImgTemp = resizedData;
+                updateEditPreview();
+            });
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function removeEditImage(){
+    editingImgTemp = null;
+    updateEditPreview();
+    const f1 = getEl('editFileInput'); if(f1) f1.value = ''; 
+    const f2 = getEl('editCameraInput'); if(f2) f2.value = '';
+}
+
+function updateEditPreview(){
+    const cont = getEl('editPreviewContainer');
+    const img = getEl('editPreviewImg');
+    if(!cont || !img) return;
+    if(editingImgTemp){
+        img.src = editingImgTemp;
+        cont.style.display = 'block';
+    } else {
+        cont.style.display = 'none';
+    }
+}
+
+function saveIconEdit(){
+    if(editingIdx === null || !animals[editingIdx]) return;
+    const emojiVal = getEl('editEmoji').value;
+    
+    animals[editingIdx].image = editingImgTemp;
+    animals[editingIdx].emoji = emojiVal || '📸'; 
+    
+    safeSave();
+    render();
+    closeModal('iconModal');
+}
+
+// === Core Logic ===
+function addAnimal(){
+  const em = getEl('emojiInput').value;
+  const nm = getEl('nameInput').value;
+  if(!nm || (!em && !currentImage)) {
+      showErrorToast("Bitte Name und Bild/Emoji eingeben.");
+      return;
+  }
+  animals.push({ emoji: em || '📸', name: nm, image: currentImage });
+  getEl('nameInput').value=''; getEl('emojiInput').value=''; clearImage();
+  safeSave(); render();
+}
+
+function removeAnimal(i){
+  if(!confirm('Löschen?')) return;
+  if(animals[i]) {
+      animals.splice(i,1);
+      safeSave(); render(); 
+  }
+}
+
+function change(i,delta){
+  try {
+      const t = today();
+      history[t] = history[t] || { total:0, perAnimal:{} };
+      // FIX: Ensure it is an array
+      if(!Array.isArray(history[t].perAnimal[i])) history[t].perAnimal[i] = [];
+
+      if(delta>0){
+        playSound('pop');
+        const locSel = getEl('locSelect'+i);
+        history[t].perAnimal[i].push({ location: locSel ? locSel.value : '', time: nowTime(), note:'' });
+        history[t].total++;
+      } else {
+        if(history[t].perAnimal[i].length===0) return;
+        playSound('delete');
+        history[t].perAnimal[i].pop();
+        history[t].total--;
+        if(history[t].perAnimal[i].length===0) delete history[t].perAnimal[i];
+        if(history[t].total<=0) delete history[t];
+      }
+      safeSave(); render();
+      if(getEl('statsContainer').style.display === 'block') renderStats();
+  } catch(e) { showErrorToast("Zählfehler"); console.error(e); }
+}
+
+// === NOTES ===
+let editMode = null; 
+function openNoteModal(i, date = null, arrIndex = null) {
+  const modal = getEl('noteModal');
+  const sel = getEl('noteLoc');
+  if(!sel || !modal) return;
+  
+  sel.innerHTML = `<option value="">📍 Ort?</option>${locations.map(l=>`<option>${l}</option>`).join('')}`;
+  
+  let entry = null;
+  if(date !== null && arrIndex !== null) {
+      if(history[date] && Array.isArray(history[date].perAnimal[i]) && history[date].perAnimal[i][arrIndex]) {
+          entry = history[date].perAnimal[i][arrIndex];
+      }
+  }
+
+  if (entry) {
+      editMode = { date, arrIndex };
+      getEl('noteTitle').innerText = "Sichtung bearbeiten";
+      getEl('noteDate').value = date;
+      getEl('noteTime').value = entry.time || '';
+      getEl('noteLoc').value = entry.location || '';
+      getEl('noteText').value = entry.note || '';
+      getEl('noteDate').disabled = false;
+  } else {
+      editMode = null;
+      getEl('noteTitle').innerText = "Sichtung mit Notiz";
+      getEl('noteDate').value = today();
+      getEl('noteTime').value = nowTime();
+      const rowLoc = getEl('locSelect'+i)?.value;
+      getEl('noteLoc').value = rowLoc || '';
+      getEl('noteText').value = '';
+      getEl('noteDate').disabled = true;
+  }
+  
+  const btn = getEl('noteSaveBtn');
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+  newBtn.onclick = () => safeRun(saveNote, i);
+
+  modal.style.display = 'block';
+}
+
+function saveNote(i) {
+  const d = getEl('noteDate').value || today();
+  const t = getEl('noteTime').value || nowTime();
+  const l = getEl('noteLoc').value;
+  const n = getEl('noteText').value;
+
+  // Ensure data structure exists (FIX)
+  history[d] = history[d] || { total:0, perAnimal:{} };
+  if(!Array.isArray(history[d].perAnimal[i])) history[d].perAnimal[i] = [];
+
+  if (editMode) {
+      if(history[editMode.date] && Array.isArray(history[editMode.date].perAnimal[i])) {
+          const oldList = history[editMode.date].perAnimal[i];
+          oldList.splice(editMode.arrIndex, 1);
+          history[editMode.date].total--;
+          if(oldList.length===0) delete history[editMode.date].perAnimal[i];
+          if(history[editMode.date].total<=0) delete history[editMode.date];
+      }
+      history[d].perAnimal[i].push({ location:l, time:t, note:n });
+      history[d].total++;
+      openDetail(i);
+  } else {
+      playSound('pop');
+      history[d].perAnimal[i].push({ location:l, time:t, note:n });
+      history[d].total++;
+      render();
+  }
+  safeSave(); closeModal('noteModal');
+}
+
+// === SAFE RENDER LIST ===
+function render(){
+  const searchEl = getEl('searchInput');
+  const f = searchEl ? searchEl.value.toLowerCase() : '';
+  const list = getEl('list');
+  if(!list) return;
+  list.innerHTML = '';
+
+  if(!Array.isArray(animals)) { animals = []; }
+
+  animals.forEach((a,i)=>{
+    try {
+        if(!a || !a.name) return; 
+        if(!a.name.toLowerCase().includes(f)) return;
+        
+        colors[i] = colors[i] || `hsl(${i*57%360},70%,50%)`;
+        
+        let count = 0;
+        Object.values(history).forEach(h => { 
+            // FIX: Check if it is array before length check
+            if(h && h.perAnimal && Array.isArray(h.perAnimal[i])) count += h.perAnimal[i].length; 
+        });
+
+        const r = document.createElement('div');
+        r.className = 'row';
+        
+        const iconHTML = a.image 
+            ? `<div class="animal-icon" onclick="safeRun(openIconEdit, ${i})" title="Bild ändern"><img src="${a.image}"></div>` 
+            : `<div class="animal-icon" onclick="safeRun(openIconEdit, ${i})" title="Bild ändern">${a.emoji}</div>`;
+
+        let locHTML = locations.length 
+            ? `<select id="locSelect${i}" style="width:90px; margin:0; font-size:13px"><option value="">📍 Ort?</option>${locations.map(l=>`<option>${l}</option>`).join('')}</select>` 
+            : '';
+
+        r.innerHTML = `
+        ${iconHTML}
+        <div class="name">${a.name}</div>
+        <input type="color" value="${colors[i]}" onchange="colors[${i}]=this.value;safeSave()" style="width:25px;height:25px;border:none;background:none;padding:0;cursor:pointer">
+        <div class="row-controls">
+            ${locHTML}
+            <button onclick="safeRun(change,${i},1)">➕</button>
+            <div class="count">${isNaN(count) ? 0 : count}</div>
+            <button onclick="safeRun(change,${i},-1)">➖</button>
+            <button onclick="safeRun(openNoteModal,${i})" style="background:var(--bg);" title="Notiz">📝</button>
+            <button onclick="safeRun(openDetail,${i})" style="background:var(--bg);" title="Details">📈</button>
+            <button onclick="safeRun(removeAnimal,${i})" style="opacity:0.5;font-size:16px">🗑️</button>
+        </div>
+        `;
+        list.appendChild(r);
+    } catch(err) {
+        console.error("Row render error", err);
+    }
+  });
+
+  if(getEl('statsContainer').style.display !== 'none') safeRun(renderStats);
+  renderLocationList();
+}
+
+// === SAFE RENDER DETAIL ===
+function openDetail(i){
+    const a = animals[i];
+    if(!a) return;
+    const modal = getEl('detailModal');
+    const body = getEl('modalBody');
+    const col = colors[i] || '#2196f3';
+
+    let total = 0;
+    let locs = {};
+    let times = { 'Morgens':0, 'Mittags':0, 'Abends':0, 'Nachts':0 };
+    let months = new Array(12).fill(0);
+    let historyList = [];
+
+    Object.entries(history).forEach(([dateStr, entry]) => {
+        try {
+            const d = new Date(dateStr);
+            if(d.getFullYear() !== year) return;
+            
+            // FIX: Array check
+            if(entry && entry.perAnimal && Array.isArray(entry.perAnimal[i])){
+                const list = entry.perAnimal[i];
+                total += list.length;
+                months[d.getMonth()] += list.length;
+                list.forEach((item, arrIdx) => {
+                    historyList.push({ date:dateStr, item, arrIdx });
+                    const l = item.location || 'Unbekannt';
+                    locs[l] = (locs[l]||0)+1;
+                    if(item.time){
+                        const h = parseInt(item.time.split(':')[0]);
+                        if(!isNaN(h)) {
+                             if(h >= 5 && h < 11) times['Morgens']++;
+                             else if(h >= 11 && h < 14) times['Mittags']++;
+                             else if(h >= 14 && h < 22) times['Abends']++;
+                             else times['Nachts']++;
+                        }
+                    }
+                });
+            }
+        } catch(e) { console.error(e); }
+    });
+
+    historyList.sort((a,b) => {
+        if(b.date !== a.date) return b.date.localeCompare(a.date);
+        const timeA = a.item.time || '00:00';
+        const timeB = b.item.time || '00:00';
+        return timeB.localeCompare(timeA);
+    });
+
+    const icon = a.image ? `<img src="${a.image}">` : a.emoji;
+    
+    let html = `
+        <div class="modal-header">
+            <div class="modal-icon" style="border-color:${col}">${icon}</div>
+            <h2 style="margin:0">${a.name}</h2>
+            <div style="opacity:0.6">Gesamt: <strong>${total}</strong></div>
+        </div>
+        <div style="margin-bottom:20px;">
+    `;
+
+    const sortedLocs = Object.entries(locs).sort((a,b)=>b[1]-a[1]);
+    html += `<h4>📍 Orte</h4>`;
+    if(sortedLocs.length===0) html+='<small>Keine</small>';
+    else {
+        const maxL = sortedLocs[0][1];
+        sortedLocs.slice(0,3).forEach(([name, val])=>{
+                const pct = (val/maxL)*100;
+                const linkLabel = name !== 'Unbekannt' 
+                    ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}" target="_blank" class="map-link">${name} ↗</a>` 
+                    : name;
+                html += `<div class="hbar-row">
+                <div class="hbar-label">${linkLabel}</div>
+                <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%; background:${col}"></div></div>
+                <div class="hbar-val">${val}</div>
+                </div>`;
+        });
+    }
+
+    html += `<h4>⏱️ Zeit</h4>`;
+    const maxT = Math.max(...Object.values(times), 1);
+    Object.entries(times).filter(x=>x[1]>0).forEach(([k,v])=>{
+        const pct = (v/maxT)*100;
+        html += `<div class="hbar-row">
+            <div class="hbar-label">${k}</div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%; background:${col}; opacity:0.7"></div></div>
+            <div class="hbar-val">${v}</div>
+        </div>`;
+    });
+    
+    html += `<h4>🗓️ Jahrestrend</h4><div class="chart-wrap" style="height:100px; padding-top:15px">`;
+    const maxM = Math.max(...months, 1);
+    const mN = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+    months.forEach((v, idx)=>{
+            html += `<div class="chart-col">
+            ${v>0?`<div class="chart-val">${v}</div>`:''}
+            <div class="chart-bar" style="height:${v===0?1:(v/maxM)*100}%; background:${col}; opacity:${v===0?0.1:1}"></div>
+            <div class="chart-label">${mN[idx]}</div>
+            </div>`;
+    });
+    html += `</div></div>`;
+
+    html += `<h3>📝 Verlauf (Letzte 2) & Bearbeiten</h3><div class="history-list">`;
+    if(historyList.length === 0) html += '<p style="text-align:center; opacity:0.5">Keine Einträge</p>';
+    else {
+        const limitedList = historyList.slice(0, 2);
+        limitedList.forEach(h => {
+            const displayDate = h.date.split('-').reverse().slice(0,2).join('.');
+            html += `
+            <div class="hist-item">
+                <div class="hist-date">${displayDate}<br>${h.item.time||''}</div>
+                <div class="hist-info">
+                    ${h.item.location ? `📍 ${h.item.location}` : ''}
+                    ${h.item.note ? `<br><span class="hist-note">${h.item.note}</span>` : ''}
+                </div>
+                <div class="hist-actions">
+                    <button class="icon-btn" onclick="safeRun(openNoteModal, ${i}, '${h.date}', ${h.arrIdx})">✏️</button>
+                    <button class="icon-btn" onclick="safeRun(deleteHistoryItem, ${i}, '${h.date}', ${h.arrIdx})">🗑️</button>
+                </div>
+            </div>`;
+        });
+        if(historyList.length > 2) html += `<div style="text-align:center; padding:10px; font-size:12px; opacity:0.5">... und ${historyList.length - 2} ältere (im Backup)</div>`;
+    }
+    html += `</div>`;
+
+    body.innerHTML = html;
+    modal.style.display = 'block';
+}
+
+function deleteHistoryItem(i, date, arrIdx){
+    if(!confirm('Diesen Eintrag löschen?')) return;
+    const list = history[date].perAnimal[i];
+    list.splice(arrIdx, 1);
+    history[date].total--;
+    if(list.length===0) delete history[date].perAnimal[i];
+    if(history[date].total<=0) delete history[date];
+    safeSave();
+    openDetail(i); 
+    render(); 
+}
+
+function closeModal(id){ getEl(id).style.display='none'; }
+window.onclick = function(event) { if (event.target.classList.contains('modal')) event.target.style.display='none'; }
+
+// === SAFE STATS ===
+function renderStats(){
+  const container = getEl('statsContent');
+  if(!container) return;
+
+  try {
+      let totalSights = 0, activeDays = 0, maxDayCount = 0;
+      let countsPerMonth = new Array(12).fill(0);
+      let countsPerAnimal = new Array(animals.length).fill(0);
+      let timeOfDay = { 'Morgens (5-11)':0, 'Mittags (11-14)':0, 'Abends (14-22)':0, 'Nachts (22-5)':0 };
+      let distinctAnimals = new Set();
+      let distinctLocs = new Set();
+      let nightCounts = 0;
+      let earlyCounts = 0;
+      let lunchCounts = 0;
+      let weekendCounts = 0;
+      let hasPhoto = false;
+      let firstSightings = {};
+
+      const sortedDates = Object.keys(history).sort((a,b)=>new Date(b)-new Date(a));
+      let streak = 0;
+      if(sortedDates.length > 0) {
+          const todayStr = today();
+          const lastEntry = new Date(sortedDates[0]);
+          const diffHours = (new Date(todayStr) - lastEntry) / (1000 * 60 * 60);
+          if(diffHours <= 48){
+              streak = 1;
+              for(let i=0; i<sortedDates.length-1; i++){
+                  const d1 = new Date(sortedDates[i]);
+                  const d2 = new Date(sortedDates[i+1]);
+                  if(Math.round((d1-d2)/(1000*60*60*24)) === 1) streak++; else break;
+              }
+          }
+      }
+
+      Object.entries(history).forEach(([dateStr, entry]) => {
+        const date = new Date(dateStr);
+        if(date.getFullYear() !== year) return;
+        activeDays++;
+        totalSights += (entry.total||0);
+        if(entry.total > maxDayCount) maxDayCount = entry.total;
+        countsPerMonth[date.getMonth()] += (entry.total||0);
+
+        const day = date.getDay();
+        if(day === 0 || day === 6) weekendCounts += entry.total;
+
+        if(entry.perAnimal){
+          Object.entries(entry.perAnimal).forEach(([idxStr, list]) => {
+            const idx = parseInt(idxStr);
+            if(animals[idx]) {
+                // FIX: Check if list is array to fix forEach error
+                if(Array.isArray(list)) {
+                    countsPerAnimal[idx] += list.length;
+                    distinctAnimals.add(idx);
+                    if(animals[idx].image) hasPhoto = true;
+                    if(!firstSightings[idx] && list.length>0) firstSightings[idx] = { date: dateStr, loc: list[0].location };
+
+                    list.forEach(item => {
+                        const loc = item.location;
+                        if(loc && loc !== '' && loc !== 'Unbekannt') distinctLocs.add(loc);
+                        if(item.time) {
+                            const h = parseInt(item.time.split(':')[0]);
+                            if(h >= 5 && h < 11) { timeOfDay['Morgens (5-11)']++; earlyCounts++; }
+                            else if(h >= 11 && h < 14) { timeOfDay['Mittags (11-14)']++; lunchCounts++; }
+                            else if(h >= 14 && h < 22) timeOfDay['Abends (14-22)']++;
+                            else { timeOfDay['Nachts (22-5)']++; nightCounts++; }
+                        }
+                    });
+                }
+            }
+          });
+        }
+      });
+
+      if(totalSights === 0) { container.innerHTML = '<div style="text-align:center; padding:20px">Noch keine Daten.</div>'; return; }
+
+      const badges = [
+          { id:'start', icon:'🐣', name:'Starter', desc:'Erste Sichtung', condition: totalSights >= 1 },
+          { id:'bronze', icon:'🥉', name:'Sammler', desc:'50 Sichtungen', condition: totalSights >= 50 },
+          { id:'silver', icon:'🥈', name:'Profi', desc:'100 Sichtungen', condition: totalSights >= 100 },
+          { id:'gold', icon:'👑', name:'Legende', desc:'250 Sichtungen', condition: totalSights >= 250 },
+          { id:'titan', icon:'🪐', name:'Titan', desc:'1.000 Sichtungen', condition: totalSights >= 1000 },
+          { id:'streak', icon:'🔥', name:'On Fire', desc:'3 Tage Strähne', condition: streak >= 3 },
+          { id:'marathon', icon:'⚡', name:'Marathon', desc:'7 Tage Strähne', condition: streak >= 7 },
+          { id:'weekend', icon:'📅', name:'Weekend', desc:'Wochenend-Sichtung', condition: weekendCounts > 0 },
+          { id:'lunch', icon:'🍱', name:'Mittag', desc:'Sichtung 11-14 Uhr', condition: lunchCounts > 0 },
+          { id:'zoo', icon:'🌈', name:'Arche', desc:'10 Tierarten', condition: distinctAnimals.size >= 10 },
+          { id:'darwin', icon:'🧬', name:'Darwin', desc:'25 Tierarten', condition: distinctAnimals.size >= 25 },
+          { id:'expl', icon:'🌍', name:'Entdecker', desc:'3 Orte', condition: distinctLocs.size >= 3 },
+          { id:'globe', icon:'🗺️', name:'Globetrotter', desc:'10 Orte', condition: distinctLocs.size >= 10 },
+          { id:'cam', icon:'📸', name:'Paparazzi', desc:'Foto-Upload', condition: hasPhoto },
+          { id:'night', icon:'🦉', name:'Nachteule', desc:'Sichtung nachts', condition: nightCounts > 0 },
+          { id:'early', icon:'🐓', name:'Früh', desc:'Sichtung morgens', condition: earlyCounts > 0 }
+      ];
+
+      if([1, 50, 100, 250, 1000].includes(totalSights)) playSound('fanfare');
+
+      let html = `<details open><summary>🏆 Trophäen</summary><div class="badge-grid">`;
+      badges.forEach(b => {
+          html += `<div class="badge ${b.condition?'earned':''}" onclick="alert('${b.icon} ${b.name}\\n${b.desc}')"><span class="badge-icon">${b.icon}</span> ${b.name}</div>`;
+      });
+      html += `</div></details>`;
+      
+      const sortedAnimals = animals.map((a,i)=>({name:a.name, emoji:a.emoji, count:countsPerAnimal[i], color:colors[i]})).sort((a,b)=>b.count-a.count).filter(a=>a.count>0);
+      html += `<details><summary>🏆 Top 5 Tiere</summary><div style="padding-top:10px">`;
+      sortedAnimals.slice(0,5).forEach(a => {
+        const pct = (a.count / totalSights) * 100;
+        html += `<div class="hbar-row"><div class="hbar-label">${a.emoji} ${a.name}</div><div class="hbar-track"><div class="hbar-fill" style="width:${pct}%; background:${a.color}"></div></div><div class="hbar-val">${a.count}</div></div>`;
+      });
+      html += `</div></details>`;
+
+      const maxTime = Math.max(...Object.values(timeOfDay), 1);
+      html += `<details><summary>⏱️ Tageszeiten (Gesamt)</summary><div style="padding-top:10px">`;
+      Object.entries(timeOfDay).forEach(([label, val]) => {
+          const pct = (val/maxTime)*100;
+          html += `<div class="hbar-row"><div class="hbar-label" style="width:110px">${label}</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%; opacity:0.8"></div></div>
+          <div class="hbar-val">${val}</div></div>`;
+      });
+      html += `</div></details>`;
+
+      const maxMonthVal = Math.max(...countsPerMonth, 1);
+      const mNames = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+      html += `<details><summary>🗓️ Jahres-Verlauf</summary><div class="chart-wrap">`;
+      countsPerMonth.forEach((val, i) => {
+        html += `<div class="chart-col">
+            ${val>0?`<div class="chart-val">${val}</div>`:''}
+            <div class="chart-bar" style="height:${val===0?1:(val/maxMonthVal)*100}%; opacity:${val===0?0.1:0.9}"></div>
+            <div class="chart-label">${mNames[i]}</div>
+          </div>`;
+      });
+      html += `</div></details>`;
+
+      html += `<details><summary>🔥 30-Tage Heatmap</summary><div class="heatmap-grid">`;
+      const todayDate = new Date();
+      for(let i=27; i>=0; i--){
+        const d = new Date();
+        d.setDate(todayDate.getDate() - i);
+        const iso = d.toISOString().slice(0,10);
+        const count = history[iso] ? history[iso].total : 0;
+        const opacity = count > 0 ? Math.min(count * 0.2 + 0.2, 1) : 0;
+        const bg = count > 0 ? `rgba(33, 150, 243, ${opacity})` : 'var(--btn)';
+        html += `<div class="heat-cell" style="background:${bg}; color:${count?'#fff':'transparent'}" title="${iso}: ${count}">${count||0}</div>`;
+      }
+      html += `</div></details>`;
+
+      html += `<details><summary>🐣 Erste Begegnungen</summary><div style="padding-top:10px">`;
+      const foundAnimals = animals.map((a,i)=>({idx:i, ...a})).filter(a => firstSightings[a.idx]);
+      if(foundAnimals.length===0) html += '<small>Leer</small>';
+      else {
+          foundAnimals.forEach(a => {
+              const fs = firstSightings[a.idx];
+              const mapLink = fs.loc ? `<a class="map-link" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fs.loc)}" target="_blank">📍 ${fs.loc}</a>` : '';
+              html += `<div style="border-bottom:1px solid #eee; padding:6px 0; font-size:14px; display:flex; justify-content:space-between;">
+                <span>${a.emoji||'📸'} <strong>${a.name}</strong></span>
+                <span style="font-size:12px; text-align:right; color:var(--sub)">${fs.date}<br>${mapLink}</span>
+              </div>`;
+          });
+      }
+      html += `</div></details>`;
+      
+      container.innerHTML = html;
+      
+  } catch(e) {
+      container.innerHTML = `<div style="color:red; text-align:center; padding:20px;">Fehler beim Laden der Statistik.<br><small>${e.message}</small></div>`;
+      console.error(e);
+  }
+}
+
+// === SHARE CARD ===
+function generateShareCard() {
+    try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 600; canvas.height = 400;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = dark ? '#1e1e1e' : '#f4f4f4';
+        ctx.fillRect(0,0,600,400);
+        ctx.fillStyle = dark ? '#fff' : '#000';
+        ctx.font = 'bold 30px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Meine Tiersammlung ${year}`, 300, 50);
+        let total = Object.values(history).reduce((a,b)=>a+(b.total||0),0);
+        
+        let topAnimal = null;
+        if(animals.length) {
+            topAnimal = animals.map((a,i)=>{
+                let c=0; Object.values(history).forEach(h=>{if(h&&h.perAnimal&&h.perAnimal[i] && Array.isArray(h.perAnimal[i]))c+=h.perAnimal[i].length});
+                return {n:a.name, c:c, e:a.emoji};
+            }).sort((a,b)=>b.c-a.c)[0];
+        }
+
+        ctx.font = 'bold 60px system-ui';
+        ctx.fillStyle = '#2196f3';
+        ctx.fillText(total, 300, 150);
+        ctx.font = '20px system-ui';
+        ctx.fillStyle = dark ? '#bbb' : '#555';
+        ctx.fillText("Sichtungen Gesamt", 300, 180);
+        if(topAnimal && topAnimal.c > 0) {
+            ctx.fillStyle = dark ? '#fff' : '#000';
+            ctx.font = '30px system-ui';
+            ctx.fillText(`🏆 Top Tier: ${topAnimal.e} ${topAnimal.n} (${topAnimal.c})`, 300, 250);
+        }
+        ctx.font = 'italic 16px system-ui';
+        ctx.fillStyle = '#888';
+        ctx.fillText("Erstellt mit Tier-Tracker Ultimate", 300, 370);
+        const link = document.createElement('a');
+        link.download = `tier-stats-${year}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+    } catch(e) { showErrorToast("Bild-Export Fehler"); }
+}
+
+// === Toggles & Exports ===
+function toggleInfo(){ const b=getEl('infoBox'); if(b) b.style.display=b.style.display==='none'?'block':'none'; }
+function toggleSection(cid, aid){
+  const c=getEl(cid), a=getEl(aid);
+  if(!c)return;
+  const isHidden = c.style.display==='none';
+  c.style.display = isHidden ? 'block' : 'none';
+  if(a) a.innerText = isHidden ? '▾' : '▸';
+}
+function toggleStats(){ 
+    const s=getEl('statsContainer'); 
+    if(s) {
+        s.style.display=s.style.display==='none'?'block':'none'; 
+        if(s.style.display==='block') safeRun(renderStats); 
+    }
+}
+function toggleDarkMode(){ dark=!dark; document.body.classList.toggle('dark'); localStorage.setItem('darkmode',dark); }
+
+function downloadBackup(){
+  const blob = new Blob([JSON.stringify({year,animals,history,colors,locations},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`tiere-ultimate-${year}.json`; a.click();
+}
+function importBackup(e){
+  const r = new FileReader();
+  r.onload=()=>{ if(!confirm('Alles überschreiben?')) return; try{const d=JSON.parse(r.result); animals=d.animals||[]; history=d.history||{}; colors=d.colors||{}; locations=d.locations||[]; safeSave(); render();}catch(err){showErrorToast('Datei ungültig');}};
+  r.readAsText(e.target.files[0]);
+}
+function exportCSV(){
+  let csv = "Datum,Uhrzeit,Tier,Ort,Notiz\n";
+  Object.entries(history).forEach(([d, v]) => { if(v.perAnimal){ Object.entries(v.perAnimal).forEach(([idx, list]) => { const n = animals[idx] ? animals[idx].name : "Unbekannt"; if(Array.isArray(list)) { list.forEach(s => csv += `${d},${s.time||''},${n},${s.location||''},${s.note||''}\n`); } }); } });
+  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download=`tiere-${year}.csv`; a.click();
+}
+
+// === OSM ===
+function addManualLocation(){ const el=getEl('osmInput'); if(el) { addLocation(el.value); el.value=''; } }
+function addLocation(val){ if(!val||locations.includes(val))return; locations.push(val); locations.sort(); safeSave(); render(); }
+function renderLocationList(){ const el=getEl('locationListDisplay'); if(el) el.textContent = locations.length ? locations.join(', ') : "Keine"; }
+const osmIn = getEl('osmInput'), osmRes = getEl('osmResults');
+if(osmIn && osmRes){
+  let debounce;
+  osmIn.addEventListener('input', e => { clearTimeout(debounce); if(e.target.value.length<3){osmRes.style.display='none';return;} debounce=setTimeout(()=>{ fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(e.target.value)}`).then(r=>r.json()).then(d=>{ osmRes.innerHTML=''; if(!d.length)return; osmRes.style.display='block'; d.slice(0,5).forEach(p=>{ const div=document.createElement('div'); div.className='suggestion-item'; div.innerText=p.display_name.split(',').slice(0,2).join(','); div.onclick=()=>{ addLocation(div.innerText); osmIn.value=''; osmRes.style.display='none'; }; osmRes.appendChild(div); }); }).catch(e=>console.log(e)); }, 250); });
+  document.addEventListener('click', e => { if(e.target!==osmIn) osmRes.style.display='none'; });
+}
+
+// Initial Safe Render
+safeRun(render);
+setTimeout(() => safeRun(checkInactivity), 2000);
+</script>
+</body>
+</html>
