@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Top Tier</title>
+<title>Tiere zählen Ultimate v3.2 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -254,6 +254,7 @@ input:checked + .slider:before { transform: translateX(24px); }
       <button onclick="safeRun(toggleDarkMode)">🌙 Design</button>
       <button onclick="safeRun(downloadBackup)">💾 Backup</button>
       <button onclick="safeRun(exportCSV)">📤 Liste (CSV)</button>
+      <!-- IMPORT WITH MERGE -->
       <input type="file" id="importFile" accept="application/json" hidden onchange="safeRun(importBackup, event)">
       <button onclick="document.getElementById('importFile').click()">📂 Import</button>
   </div>
@@ -595,9 +596,6 @@ function render(){
 function removeAnimal(i){ 
     if(confirm("Dieses Tier und alle Statistiken unwiderruflich löschen?")) { 
         animals.splice(i,1); 
-        // Cleanup history for this index would be complex due to shift, simpler to just save array.
-        // In a real app we would use IDs. Here we accept potential index shift issues on delete or need to rebuild.
-        // Quick fix: We won't clean history to avoid shifting wrong data to other animals.
         safeSave(); 
         closeModal('detailModal');
         render(); 
@@ -888,7 +886,7 @@ function renderStats(){
                 if(!firstSightings[idx] && list.length>0) firstSightings[idx] = { date: dateStr, loc: list[0].location };
                 list.forEach(item => {
                     const loc = item.location; 
-                    // FIX: Empty locations don't count
+                    // FIX: Empty locations don't count for badges
                     if(loc && loc.trim() !== '' && loc !== 'Unbekannt') distinctLocs.add(loc);
                     if(item.time) {
                         const h = parseInt(item.time.split(':')[0]);
@@ -979,22 +977,96 @@ function generateShareCard() {
     } catch(e) { showErrorToast("Bild-Export Fehler"); }
 }
 
-// === IMPORT FUNCTION ===
+// === IMPORT FUNCTION WITH MERGE OPTION ===
 function importBackup(event) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
-            if(!confirm('Achtung: Alle aktuellen Daten werden überschrieben! Fortfahren?')) return;
             const data = JSON.parse(e.target.result);
-            if(data.animals) animals = data.animals;
-            if(data.history) history = data.history;
-            if(data.colors) colors = data.colors;
-            if(data.locations) locations = data.locations;
-            if(data.locCoords) locCoords = data.locCoords || {};
+            if(!data.animals) throw new Error("Keine Tiere gefunden");
+
+            // UI: Ask for Merge or Overwrite
+            let doMerge = false;
+            if(confirm("Möchtest du die importierten Daten mit deinen aktuellen ZUSAMMENFÜGEN (Merge)?\n\n[OK] = Zusammenfügen\n[Abbrechen] = Komplett Überschreiben (Alles löschen)")) {
+                doMerge = true;
+            } else {
+                if(!confirm("⚠️ ACHTUNG: Klicke OK, um alle deine aktuellen Daten zu LÖSCHEN und durch das Backup zu ersetzen.")) return;
+            }
+
+            if(doMerge) {
+                // MERGE LOGIC
+                // 1. Merge Animals
+                const animalMap = {}; // oldIdx -> newIdx
+                data.animals.forEach((impA, impIdx) => {
+                    const existingIdx = animals.findIndex(a => a.name === impA.name);
+                    if(existingIdx !== -1) {
+                        animalMap[impIdx] = existingIdx;
+                        // Optional: Merge Tags?
+                    } else {
+                        // New animal
+                        const newIdx = animals.push(impA) - 1;
+                        animalMap[impIdx] = newIdx;
+                    }
+                });
+
+                // 2. Merge History
+                if(data.history) {
+                    Object.entries(data.history).forEach(([date, entry]) => {
+                         if(!history[date]) history[date] = { total: 0, perAnimal: {} };
+                         
+                         if(entry.perAnimal) {
+                            Object.entries(entry.perAnimal).forEach(([impIdxStr, list]) => {
+                                const impIdx = parseInt(impIdxStr);
+                                const targetIdx = animalMap[impIdx]; // Map to current animal ID
+                                
+                                if(targetIdx !== undefined) {
+                                    if(!history[date].perAnimal[targetIdx]) history[date].perAnimal[targetIdx] = [];
+                                    
+                                    list.forEach(item => {
+                                        // Check duplicates (Same time, loc, note)
+                                        const exists = history[date].perAnimal[targetIdx].some(ex => 
+                                            ex.time === item.time && ex.location === item.location && ex.note === item.note
+                                        );
+                                        if(!exists) {
+                                            history[date].perAnimal[targetIdx].push(item);
+                                            history[date].total++; // Recalc total later is safer but this works
+                                        }
+                                    });
+                                }
+                            });
+                         }
+                    });
+                    // Re-calculate totals just in case
+                     Object.keys(history).forEach(d => {
+                        let t = 0;
+                        if(history[d].perAnimal) Object.values(history[d].perAnimal).forEach(l => t += l.length);
+                        history[d].total = t;
+                     });
+                }
+
+                // 3. Merge Locations & Colors
+                if(data.locations) data.locations.forEach(l => { if(!locations.includes(l)) locations.push(l); });
+                locations.sort();
+                if(data.locCoords) locCoords = { ...locCoords, ...data.locCoords };
+                // Keep existing colors preferred, add new ones
+                if(data.colors) Object.entries(data.colors).forEach(([k,v]) => {
+                   // Map k (old index) to new index? Tricky.
+                   // Simpler: Just rely on auto-colors or let user re-pick.
+                });
+
+            } else {
+                // OVERWRITE LOGIC
+                if(data.animals) animals = data.animals;
+                if(data.history) history = data.history;
+                if(data.colors) colors = data.colors;
+                if(data.locations) locations = data.locations;
+                if(data.locCoords) locCoords = data.locCoords || {};
+            }
+
             safeSave(); render();
-            showErrorToast("Daten erfolgreich importiert", true);
+            showErrorToast(doMerge ? "Daten erfolgreich zusammengefügt!" : "Daten erfolgreich überschrieben!", true);
         } catch (err) { console.error(err); showErrorToast("Fehler beim Importieren der Datei."); }
     };
     reader.readAsText(file);
