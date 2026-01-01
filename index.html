@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Top Tier 🐾</title>
+<title>Tiere zählen Ultimate v3.6 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -163,7 +163,7 @@ input:checked + .slider:before { transform: translateX(24px); }
   <button class="icon-btn-header info" onclick="safeRun(toggleInfo)" title="Hilfe anzeigen">ℹ️</button>
 </div>
 
-<h1>Top Tier 🐾</h1>
+<h1>Tiere zählen Ult. 🐾</h1>
 
 <!-- VEREINFACHTE INFO BOX FÜR ENDANWENDER -->
 <div id="infoBox" class="info-box">
@@ -252,6 +252,14 @@ input:checked + .slider:before { transform: translateX(24px); }
       <!-- IMPORT WITH MERGE -->
       <input type="file" id="importFile" accept="application/json" hidden onchange="safeRun(importBackup, event)">
       <button onclick="document.getElementById('importFile').click()">📂 Import</button>
+  </div>
+
+  <!-- GEFAHRENZONE -->
+  <div style="margin-top:40px; border-top:2px dashed #ccc; padding-top:20px; text-align:center">
+      <p style="color:red; font-weight:bold; font-size:12px; margin-bottom:10px">⚠️ GEFAHRENZONE</p>
+      <button onclick="safeRun(hardReset)" style="background:#d32f2f; color:white; font-weight:bold; width:100%; padding:15px; border:2px solid #b71c1c;">
+          🧨 ALLE DATEN LÖSCHEN
+      </button>
   </div>
 </div>
 
@@ -648,6 +656,23 @@ function removeAnimal(i){
     closeModal('detailModal');
     render(); 
     showErrorToast("Tier komplett gelöscht", true);
+}
+
+// === HARD RESET FUNCTION ===
+function hardReset() {
+    if(!confirm("⚠️ ACHTUNG: Möchtest du wirklich ALLE deine Daten (Tiere, Statistiken, Orte) unwiderruflich löschen?")) return;
+    if(!confirm("☠️ LETZTE WARNUNG: Dies kann nicht rückgängig gemacht werden! Wirklich alles löschen?")) return;
+
+    // Reset Vars
+    animals = [];
+    history = {};
+    colors = {};
+    locations = [];
+    locCoords = {};
+
+    safeSave();
+    render();
+    showErrorToast("Alles gelöscht. Tabula rasa!", true);
 }
 
 // === MAP LOGIC ===
