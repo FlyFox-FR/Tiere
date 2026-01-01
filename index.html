@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Top Tier 🐾</title>
+<title>Tiere zählen Ultimate v3.7 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -163,7 +163,7 @@ input:checked + .slider:before { transform: translateX(24px); }
   <button class="icon-btn-header info" onclick="safeRun(toggleInfo)" title="Hilfe anzeigen">ℹ️</button>
 </div>
 
-<h1>Top Tier 🐾</h1>
+<h1>Tiere zählen Ult. 🐾</h1>
 
 <!-- VEREINFACHTE INFO BOX FÜR ENDANWENDER -->
 <div id="infoBox" class="info-box">
@@ -854,16 +854,42 @@ function openDetail(i){
     });
     html += `</div></div>`;
 
-    html += `<h3>📝 Verlauf (Letzte 2)</h3><div class="history-list">`;
-    if(historyList.length === 0) html += '<p style="text-align:center; opacity:0.5">Keine Einträge</p>';
-    else {
-        historyList.slice(0, 2).forEach(h => {
-            const displayDate = h.date.split('-').reverse().slice(0,2).join('.');
-            html += `<div class="hist-item"><div class="hist-date">${displayDate}<br>${h.item.time||''}</div><div class="hist-info">${h.item.location ? `📍 ${h.item.location}` : ''}${h.item.note ? `<br><span class="hist-note">${h.item.note}</span>` : ''}</div><div class="hist-actions"><button class="icon-btn" onclick="safeRun(openNoteModal, ${i}, '${h.date}', ${h.arrIdx})">✏️</button><button class="icon-btn" onclick="safeRun(deleteHistoryItem, ${i}, '${h.date}', ${h.arrIdx})">🗑️</button></div></div>`;
-        });
-        if(historyList.length > 2) html += `<div style="text-align:center; padding:10px; font-size:12px; opacity:0.5">... und ${historyList.length - 2} ältere (im Backup)</div>`;
+    // === ÄNDERUNG HIER START: KOMBINATION AUS "LETZTE 2" UND "ALLE ANZEIGEN" ===
+    html += `<h3>📝 Verlauf</h3>`;
+    
+    // Helper Funktion um Code-Duplizierung zu vermeiden (nur hier im String Template Kontext)
+    const renderRow = (h) => {
+        const displayDate = h.date.split('-').reverse().slice(0,2).join('.');
+        return `<div class="hist-item">
+            <div class="hist-date">${displayDate}<br>${h.item.time||''}</div>
+            <div class="hist-info">${h.item.location ? `📍 ${h.item.location}` : ''}${h.item.note ? `<br><span class="hist-note">${h.item.note}</span>` : ''}</div>
+            <div class="hist-actions">
+                <button class="icon-btn" onclick="safeRun(openNoteModal, ${i}, '${h.date}', ${h.arrIdx})">✏️</button>
+                <button class="icon-btn" onclick="safeRun(deleteHistoryItem, ${i}, '${h.date}', ${h.arrIdx})">🗑️</button>
+            </div>
+        </div>`;
+    };
+
+    if(historyList.length === 0) {
+        html += '<p style="text-align:center; opacity:0.5">Keine Einträge</p>';
+    } else {
+        // 1. Die gewohnte "Letzte 2" Ansicht (statisch)
+        html += `<div class="history-list">`;
+        historyList.slice(0, 2).forEach(h => html += renderRow(h));
+        html += `</div>`;
+
+        // 2. Darunter ein aufklappbares Element für die gesamte Liste
+        html += `<details style="margin-top:10px; border:none; background:transparent; padding:0;">
+                    <summary style="font-size:14px; opacity:0.8; margin-bottom:5px">📜 Alle Einträge anzeigen (${historyList.length})</summary>
+                    <div class="history-list" style="max-height:300px; overflow-y:auto; border-top:1px solid var(--btn); margin-top:0;">`;
+        
+        // Hier rendern wir ALLE
+        historyList.forEach(h => html += renderRow(h));
+        
+        html += `   </div>
+                 </details>`;
     }
-    html += `</div>`;
+    // === ÄNDERUNG ENDE ===
     
     html += `<div style="margin-top:30px; border-top:1px solid #eee; padding-top:20px; text-align:center"><button onclick="safeRun(removeAnimal, ${i})" style="background:var(--err-bg); color:var(--err-text); font-size:14px; padding:10px 20px;">⚠️ Dieses Tier löschen</button></div>`;
 
