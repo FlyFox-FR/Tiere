@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Tiere zählen Ultimate v3.9 🐾</title>
+<title>Tiere zählen Ultimate v4.0 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -60,7 +60,19 @@ button:active{transform: scale(0.95);}
 button:hover{background:var(--hover)}
 input,select,textarea{padding:10px;font-size:16px;border-radius:10px;border:1px solid #777;background:var(--card);color:var(--text); width: 100%; box-sizing: border-box; border-color: var(--btn); font-family: inherit;}
 
-/* === OPTIMIERTE LISTE (KOMPAKT) === */
+/* === GRID VIEW STYLES === */
+.grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; padding-bottom: 20px; }
+.grid-item { background: var(--card); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; transition: transform 0.1s; border: 1px solid transparent; }
+.grid-item:active { transform: scale(0.98); }
+.grid-img-wrap { width: 70px; height: 70px; border-radius: 35px; overflow: hidden; margin-bottom: 8px; border: 3px solid var(--bg); box-shadow: 0 4px 8px rgba(0,0,0,0.1); cursor: pointer; display:flex; align-items:center; justify-content:center; font-size:35px; background:var(--btn); }
+.grid-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.grid-name { font-weight: bold; font-size: 14px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+.grid-count { background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: bold; margin-bottom: 8px; }
+.grid-actions { display: flex; gap: 6px; width: 100%; justify-content: center; }
+.grid-btn { padding: 8px; border-radius: 8px; background: var(--btn); font-size: 14px; flex: 1; display:flex; align-items:center; justify-content:center; }
+.grid-btn.add { background: var(--accent); color: white; flex: 1.5; font-size: 18px; }
+
+/* === LIST VIEW STYLES (Existing) === */
 .row{display:flex;align-items:center;gap:6px;background:var(--card);padding:6px 8px;margin-bottom:6px;border-radius:12px;box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-wrap:nowrap;}
 .animal-icon{font-size:24px;width:40px;height:40px;flex-shrink:0;text-align:center;display:flex;align-items:center;justify-content:center; overflow:hidden; border-radius:8px; cursor: pointer; transition: transform 0.2s; border: 1px solid transparent;}
 .animal-icon:hover { transform: scale(1.1); border-color: var(--accent); }
@@ -69,10 +81,7 @@ input,select,textarea{padding:10px;font-size:16px;border-radius:10px;border:1px 
 .count{width:30px; text-align:right; font-size:15px; font-weight:bold; margin-right: 6px; flex-shrink:0;}
 
 .row-controls { display:flex; gap:4px; align-items:center; flex-shrink: 0; }
-.row-controls button {
-    padding: 0; width: 32px; height: 32px; font-size: 16px; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-}
+.row-controls button { padding: 0; width: 32px; height: 32px; font-size: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 .row-controls select { width: 70px; padding: 0 4px; font-size: 11px; height: 32px; }
 
 /* === CARD SECTIONS (ADMIN) === */
@@ -84,6 +93,14 @@ input,select,textarea{padding:10px;font-size:16px;border-radius:10px;border:1px 
 .file-btn:hover { opacity: 1; }
 
 /* === STATISTIK & BADGES STYLES === */
+.level-card { background: linear-gradient(135deg, #2196f3, #673ab7); color: white; padding: 20px; border-radius: 16px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3); }
+.level-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-bottom: 5px; }
+.level-num { font-size: 36px; font-weight: bold; margin: 5px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.level-name { font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+.xp-bar-bg { background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; overflow: hidden; margin-top: 10px; }
+.xp-bar-fill { background: #fff; height: 100%; width: 0%; transition: width 1s ease-out; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+.xp-text { font-size: 11px; margin-top: 6px; opacity: 0.9; }
+
 .chart-wrap { display: flex; align-items: flex-end; height: 140px; gap: 6px; padding-top: 25px; margin-top: 10px; }
 .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
 .chart-bar { width: 100%; background: var(--accent); border-radius: 4px 4px 0 0; opacity: 0.9; min-height: 1px; }
@@ -96,14 +113,12 @@ input,select,textarea{padding:10px;font-size:16px;border-radius:10px;border:1px 
 .badge.earned { opacity: 1; filter: grayscale(0); background: rgba(33, 150, 243, 0.15); border-color: var(--accent); color: var(--accent); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 .badge-icon { font-size: 16px; }
 
-/* Heatmap Grid */
 .heatmap-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; max-width: 320px; margin: 10px auto; }
 .heat-cell { aspect-ratio: 1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: transparent; background: var(--btn); }
 
 .stat-kpi-row { display:flex; gap:10px; justify-content:space-around; margin-bottom:15px; text-align:center; }
 .stat-kpi { background:var(--card); padding:10px; border-radius:8px; flex:1; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-/* Horizontal Bars for Stats */
 .hbar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; }
 .hbar-label { flex: 1; text-align: left; opacity: 0.9; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .hbar-track { width: 40%; flex: none; background: var(--btn); height: 12px; border-radius: 6px; overflow: hidden; }
@@ -192,7 +207,9 @@ input:checked + .slider:before { transform: translateX(24px); }
   <!-- Controls -->
   <div class="list-header">
       <input id="listSearch" class="search-bar" placeholder="🔍 Tier suchen..." oninput="safeRun(render)">
-      <button class="sort-btn" onclick="safeRun(cycleSort)" id="sortBtn">🔤</button>
+      <!-- TOGGLE VIEW BUTTON -->
+      <button class="sort-btn" onclick="safeRun(toggleViewMode)" id="viewToggleBtn" title="Ansicht wechseln">📜</button>
+      <button class="sort-btn" onclick="safeRun(cycleSort)" id="sortBtn" title="Sortieren">🔤</button>
   </div>
 
   <!-- Tag Filters -->
@@ -436,6 +453,7 @@ let dark = false;
 let currentImage = null;
 let currentFilter = 'ALL';
 let sortMode = 'name'; // name, count, recent
+let viewMode = 'list'; // 'list' or 'grid'
 let isMuted = localStorage.getItem('muted') !== 'false';
 let notifyConfig = JSON.parse(localStorage.getItem('notifyConfig')) || { enabled: false, days: 7 };
 let mapInstance = null;
@@ -444,6 +462,30 @@ let tempImportData = null; // Stores imported JSON during modal selection
 
 const today = () => new Date().toISOString().slice(0,10);
 const nowTime = () => new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+
+// === LEVEL CONFIGURATION ===
+const levels = [
+    { xp: 0, name: "Garten-Gucker" },
+    { xp: 100, name: "Park-Besucher" },
+    { xp: 250, name: "Spuren-Sucher" },
+    { xp: 500, name: "Wald-Wanderer" },
+    { xp: 800, name: "Hobby-Beobachter" },
+    { xp: 1200, name: "Fernglas-Profi" },
+    { xp: 1700, name: "Vogel-Versteher" },
+    { xp: 2300, name: "Pfadfinder" },
+    { xp: 3000, name: "Natur-Freund" },
+    { xp: 3800, name: "Feld-Forscher" }, // 10
+    { xp: 4700, name: "Tier-Flüsterer" },
+    { xp: 5700, name: "Wildnis-Entdecker" },
+    { xp: 6800, name: "Fährtenleser" },
+    { xp: 8000, name: "Dschungel-Guide" },
+    { xp: 9500, name: "Ökosystem-Experte" }, // 15
+    { xp: 11500, name: "Wald-Ranger" },
+    { xp: 14000, name: "Meister-Biologe" },
+    { xp: 17000, name: "Nationalpark-Direktor" },
+    { xp: 20000, name: "Tier-Orakel" },
+    { xp: 25000, name: "Hüter der Wildnis" } // 20
+];
 
 // === SOUND ===
 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -483,6 +525,10 @@ function loadData() {
         
         dark = localStorage.getItem('darkmode')==='true';
         if(dark) document.body.classList.add('dark');
+        
+        const vm = localStorage.getItem('viewMode');
+        if(vm) viewMode = vm;
+
         updateStorageUsage();
     } catch(e) { animals=[]; }
 }
@@ -504,7 +550,6 @@ function updateStorageUsage() {
         for (let x in localStorage) {
             if (localStorage.hasOwnProperty(x)) total += ((localStorage[x].length * 2) / 1024 / 1024);
         }
-        // Assuming ~5MB limit which is standard
         const pct = Math.min((total / 5) * 100, 100).toFixed(1);
         const bar = getEl('storageBar');
         const txt = getEl('storageText');
@@ -556,7 +601,7 @@ function change(i, delta, event){
     try {
         // === CHECK LOCATION IF ADDING ===
         if (delta > 0) {
-            const locSel = getEl('locSelect'+i);
+            const locSel = getEl(viewMode === 'grid' ? 'locSelectGrid'+i : 'locSelect'+i);
             const locationValue = locSel ? locSel.value : '';
             // If locations exist AND none is selected -> Confirm
             if (locations.length > 0 && locationValue === '') {
@@ -572,7 +617,7 @@ function change(i, delta, event){
         
         if(delta > 0){
             playSound('pop');
-            const locSel = getEl('locSelect'+i);
+            const locSel = getEl(viewMode === 'grid' ? 'locSelectGrid'+i : 'locSelect'+i);
             history[t].perAnimal[i].push({ location: locSel?locSel.value:'', time: new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) });
             history[t].total++;
             if(event) {
@@ -604,9 +649,19 @@ function cycleSort(){
     else if(sortMode==='count') { sortMode='name'; getEl('sortBtn').innerText='🔤'; }
     render();
 }
+function toggleViewMode() {
+    viewMode = viewMode === 'list' ? 'grid' : 'list';
+    localStorage.setItem('viewMode', viewMode);
+    getEl('viewToggleBtn').innerText = viewMode === 'list' ? '📜' : '▦';
+    render();
+}
 
 function render(){
     const list = getEl('list'); list.innerHTML = '';
+    
+    // Update Toggle Icon based on state
+    getEl('viewToggleBtn').innerText = viewMode === 'list' ? '📜' : '▦';
+
     const searchVal = getEl('listSearch').value.toLowerCase();
     
     // Tag Filters
@@ -637,37 +692,72 @@ function render(){
     if(sortMode === 'name') displayList.sort((a,b) => a.name.localeCompare(b.name));
     else if(sortMode === 'count') displayList.sort((a,b) => b.count - a.count);
 
-    displayList.forEach(item => {
-        const i = item.idx;
-        colors[i] = colors[i] || `hsl(${i*57%360},70%,50%)`;
+    if (viewMode === 'grid') {
+        // === GRID VIEW RENDER ===
+        const gridCont = document.createElement('div');
+        gridCont.className = 'grid-container';
         
-        const div = document.createElement('div'); div.className = 'row';
-        const iconHTML = item.image 
-            ? `<div class="animal-icon" onclick="safeRun(openIconEdit, ${i})"><img src="${item.image}"></div>` 
-            : `<div class="animal-icon" onclick="safeRun(openIconEdit, ${i})">${item.emoji}</div>`;
-        
-        let locHTML = locations.length 
-            ? `<select id="locSelect${i}"><option value="">📍 Ort?</option>${locations.map(l=>`<option>${l}</option>`).join('')}</select>` 
+        displayList.forEach(item => {
+            const i = item.idx;
+            colors[i] = colors[i] || `hsl(${i*57%360},70%,50%)`;
+            
+            const card = document.createElement('div'); card.className = 'grid-item';
+            
+            const imgContent = item.image 
+                ? `<img src="${item.image}">` 
+                : `<div style="font-size:30px">${item.emoji}</div>`;
+            
+            let locHTML = locations.length 
+            ? `<select id="locSelectGrid${i}" style="width:100%; margin-bottom:6px; font-size:11px; padding:2px"><option value="">📍 Ort?</option>${locations.map(l=>`<option>${l}</option>`).join('')}</select>` 
             : '';
 
-        div.innerHTML = `
-            ${iconHTML}
-            <div class="name">
-                ${item.name} 
-                ${item.tags && item.tags.length ? `<span style="font-size:10px; opacity:0.6; display:block">${item.tags.join(', ')}</span>` : ''}
-            </div>
-            <div class="row-controls">
+            card.innerHTML = `
+                <div class="grid-img-wrap" onclick="safeRun(openIconEdit, ${i})">${imgContent}</div>
+                <div class="grid-name">${item.name}</div>
+                <div class="grid-count">${item.count}</div>
                 ${locHTML}
-                
-                <div class="count">${item.count}</div>
-                <button onclick="safeRun(change,${i},1, event)" style="background:var(--accent);color:#fff; width:36px; height:36px">➕</button>
-                
-                <button onclick="safeRun(openNoteModal,${i})" style="background:var(--bg)">📝</button>
-                <button onclick="safeRun(openDetail,${i})" style="background:var(--bg)">📈</button>
-            </div>
-        `;
-        list.appendChild(div);
-    });
+                <div class="grid-actions">
+                    <button class="grid-btn" onclick="safeRun(openDetail,${i})">📈</button>
+                    <button class="grid-btn add" onclick="safeRun(change,${i},1, event)">+</button>
+                    <button class="grid-btn" onclick="safeRun(openNoteModal,${i})">📝</button>
+                </div>
+            `;
+            gridCont.appendChild(card);
+        });
+        list.appendChild(gridCont);
+
+    } else {
+        // === LIST VIEW RENDER ===
+        displayList.forEach(item => {
+            const i = item.idx;
+            colors[i] = colors[i] || `hsl(${i*57%360},70%,50%)`;
+            
+            const div = document.createElement('div'); div.className = 'row';
+            const iconHTML = item.image 
+                ? `<div class="animal-icon" onclick="safeRun(openIconEdit, ${i})"><img src="${item.image}"></div>` 
+                : `<div class="animal-icon" onclick="safeRun(openIconEdit, ${i})">${item.emoji}</div>`;
+            
+            let locHTML = locations.length 
+                ? `<select id="locSelect${i}"><option value="">📍 Ort?</option>${locations.map(l=>`<option>${l}</option>`).join('')}</select>` 
+                : '';
+
+            div.innerHTML = `
+                ${iconHTML}
+                <div class="name">
+                    ${item.name} 
+                    ${item.tags && item.tags.length ? `<span style="font-size:10px; opacity:0.6; display:block">${item.tags.join(', ')}</span>` : ''}
+                </div>
+                <div class="row-controls">
+                    ${locHTML}
+                    <div class="count">${item.count}</div>
+                    <button onclick="safeRun(change,${i},1, event)" style="background:var(--accent);color:#fff; width:36px; height:36px">➕</button>
+                    <button onclick="safeRun(openNoteModal,${i})" style="background:var(--bg)">📝</button>
+                    <button onclick="safeRun(openDetail,${i})" style="background:var(--bg)">📈</button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
     renderLocationList();
 }
 
@@ -1049,6 +1139,7 @@ function renderStats(){
       let countsPerMonth=new Array(12).fill(0), countsPerAnimal=new Array(animals.length).fill(0);
       let timeOfDay={'Morgens (5-11)':0,'Mittags (11-14)':0,'Abends (14-22)':0,'Nachts (22-5)':0};
       let distinctAnimals=new Set(), distinctLocs=new Set(), firstSightings={};
+      let animalsWithPhotos = 0;
 
       const sortedDates = Object.keys(history).sort((a,b)=>new Date(b)-new Date(a));
       if(sortedDates.length > 0) {
@@ -1067,11 +1158,9 @@ function renderStats(){
             const idx = parseInt(idxStr);
             if(animals[idx]) {
                 countsPerAnimal[idx] += list.length; distinctAnimals.add(idx);
-                if(animals[idx].image) hasPhoto = true;
                 if(!firstSightings[idx] && list.length>0) firstSightings[idx] = { date: dateStr, loc: list[0].location };
                 list.forEach(item => {
                     const loc = item.location; 
-                    // FIX: Empty locations don't count for badges
                     if(loc && loc.trim() !== '' && loc !== 'Unbekannt') distinctLocs.add(loc);
                     if(item.time) {
                         const h = parseInt(item.time.split(':')[0]);
@@ -1083,8 +1172,49 @@ function renderStats(){
           });
         }
       });
+      
+      // Calculate Photo Stats
+      animals.forEach(a => { if(a.image) { hasPhoto = true; animalsWithPhotos++; } });
 
-      if(totalSights === 0) { container.innerHTML = '<div style="text-align:center; padding:20px">Noch keine Daten.</div>'; return; }
+      // === CALCULATE XP & LEVEL ===
+      // 10 XP per Sighting, 50 XP per Animal created, 100 XP per Photo, 25 XP per Location
+      const currentXP = (totalSights * 10) + (animals.length * 50) + (animalsWithPhotos * 100) + (distinctLocs.size * 25);
+      
+      let currentLevelObj = levels[0];
+      let nextLevelObj = null;
+
+      for (let i = 0; i < levels.length; i++) {
+          if (currentXP >= levels[i].xp) {
+              currentLevelObj = levels[i];
+              nextLevelObj = levels[i+1] || null; // Null if max level
+          } else {
+              break;
+          }
+      }
+
+      const levelIdx = levels.indexOf(currentLevelObj) + 1;
+      let progressPct = 100;
+      let nextXPNeeded = 0;
+      
+      if(nextLevelObj) {
+          const range = nextLevelObj.xp - currentLevelObj.xp;
+          const val = currentXP - currentLevelObj.xp;
+          progressPct = Math.min((val / range) * 100, 100);
+          nextXPNeeded = nextLevelObj.xp - currentXP;
+      }
+
+      // === RENDER LEVEL CARD ===
+      let html = `
+      <div class="level-card">
+        <div class="level-title">Dein Rang - Level ${levelIdx}</div>
+        <div class="level-num">${currentLevelObj.name}</div>
+        <div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${progressPct}%"></div></div>
+        <div class="xp-text">${currentXP} XP ${nextLevelObj ? `(noch ${nextXPNeeded} XP bis ${nextLevelObj.name})` : '(Maximales Level erreicht!)'}</div>
+      </div>
+      `;
+
+      if(totalSights === 0) { html += '<div style="text-align:center; padding:20px">Noch keine Daten für weitere Statistiken.</div>'; container.innerHTML = html; return; }
+
       const badges = [
           { id:'start', icon:'🐣', name:'Starter', desc:'Erste Sichtung', condition: totalSights >= 1 },
           { id:'bronze', icon:'🥉', name:'Sammler', desc:'50 Sichtungen', condition: totalSights >= 50 },
@@ -1105,7 +1235,7 @@ function renderStats(){
       ];
       if([1, 50, 100, 250, 1000].includes(totalSights)) playSound('fanfare');
 
-      let html = `<div class="stat-kpi-row">
+      html += `<div class="stat-kpi-row">
         <div class="stat-kpi"><div style="font-size:20px;font-weight:bold">${totalSights}</div><div style="font-size:10px;opacity:0.7">Sichtungen</div></div>
         <div class="stat-kpi"><div style="font-size:20px;font-weight:bold">${distinctAnimals.size} <span style="font-size:12px;opacity:0.5">/ ${animals.length}</span></div><div style="font-size:10px;opacity:0.7">Gesehene Arten</div></div>
         <div class="stat-kpi"><div style="font-size:20px;font-weight:bold">${streak}</div><div style="font-size:10px;opacity:0.7">Tage Strähne</div></div>
