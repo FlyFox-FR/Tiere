@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Tiere zählen Ultimate v4.1 🐾</title>
+<title>Tiere zählen Ultimate v4.2 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -325,6 +325,9 @@ input:checked + .slider:before { transform: translateX(24px); }
 
 <!-- === VIEW: STATS (Statistik) === -->
 <div id="view-stats" class="view-section">
+  <div style="text-align:right; margin-bottom:10px;">
+      <select id="statsYearSelect" onchange="safeRun(renderStats)" style="width:auto; display:inline-block; font-weight:bold;"></select>
+  </div>
   <div id="statsContainer">
     <div id="statsContent"></div>
     <div style="text-align:center; margin-top:20px">
@@ -354,7 +357,15 @@ input:checked + .slider:before { transform: translateX(24px); }
 </div>
 
 <!-- MODALS (Hidden) -->
-<div id="detailModal" class="modal"><div class="modal-content"><span class="close-btn" onclick="closeModal('detailModal')">&times;</span><div id="modalBody"></div></div></div>
+<div id="detailModal" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--btn); padding-bottom:10px; margin-bottom:10px;">
+            <button class="icon-btn" onclick="closeModal('detailModal')" style="font-size:20px;">✖</button>
+            <select id="detailYearSelect" onchange="safeRun(updateDetailChart)" style="width:auto; font-size:12px;"></select>
+        </div>
+        <div id="modalBody"></div>
+    </div>
+</div>
 
 <div id="noteModal" class="modal">
   <div class="modal-content" style="max-width:400px">
@@ -450,22 +461,23 @@ function safeRun(func, ...args) {
 const getEl = (id) => document.getElementById(id);
 
 // === GLOBALS ===
-const year = new Date().getFullYear();
-let animals = []; // { name, emoji, image, tags:[] }
-let history = {};
+const currentYear = new Date().getFullYear();
+let animals = []; 
+let history = {}; // Current year history for writing
 let colors = {};
-let locations = []; // Array of strings (names)
-let locCoords = {}; // Object: { "Name": {lat: 12.3, lon: 45.6} }
+let locations = [];
+let locCoords = {};
 let dark = false;
 let currentImage = null;
 let currentFilter = 'ALL';
-let sortMode = 'name'; // name, count, recent
-let viewMode = 'list'; // 'list' or 'grid'
+let sortMode = 'name';
+let viewMode = 'list';
 let isMuted = localStorage.getItem('muted') !== 'false';
 let notifyConfig = JSON.parse(localStorage.getItem('notifyConfig')) || { enabled: false, days: 7 };
 let mapInstance = null;
 let mapMarkers = [];
-let tempImportData = null; // Stores imported JSON during modal selection
+let tempImportData = null;
+let detailAnimalIdx = null; // Store currently viewed animal for details
 
 const today = () => new Date().toISOString().slice(0,10);
 const nowTime = () => new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
@@ -481,17 +493,17 @@ const levels = [
     { xp: 1700, name: "Vogel-Versteher" },
     { xp: 2300, name: "Pfadfinder" },
     { xp: 3000, name: "Natur-Freund" },
-    { xp: 3800, name: "Feld-Forscher" }, // 10
+    { xp: 3800, name: "Feld-Forscher" },
     { xp: 4700, name: "Tier-Flüsterer" },
     { xp: 5700, name: "Wildnis-Entdecker" },
     { xp: 6800, name: "Fährtenleser" },
     { xp: 8000, name: "Dschungel-Guide" },
-    { xp: 9500, name: "Ökosystem-Experte" }, // 15
+    { xp: 9500, name: "Ökosystem-Experte" },
     { xp: 11500, name: "Wald-Ranger" },
     { xp: 14000, name: "Meister-Biologe" },
     { xp: 17000, name: "Nationalpark-Direktor" },
     { xp: 20000, name: "Tier-Orakel" },
-    { xp: 25000, name: "Hüter der Wildnis" } // 20
+    { xp: 25000, name: "Hüter der Wildnis" }
 ];
 
 // === SOUND ===
@@ -522,13 +534,13 @@ function playSound(type){
 // === LOAD / SAVE ===
 function loadData() {
     try {
-        const a = localStorage.getItem('animals-'+year); animals = a ? JSON.parse(a) : [];
+        const a = localStorage.getItem('animals-'+currentYear); animals = a ? JSON.parse(a) : [];
         animals.forEach(an => { if(!an.tags) an.tags = []; });
         
-        const h = localStorage.getItem('history-'+year); history = h ? JSON.parse(h) : {};
-        const c = localStorage.getItem('colors-'+year); colors = c ? JSON.parse(c) : {};
-        const l = localStorage.getItem('locations-'+year); locations = l ? JSON.parse(l) : [];
-        const lc = localStorage.getItem('locCoords-'+year); locCoords = lc ? JSON.parse(lc) : {};
+        const h = localStorage.getItem('history-'+currentYear); history = h ? JSON.parse(h) : {};
+        const c = localStorage.getItem('colors-'+currentYear); colors = c ? JSON.parse(c) : {};
+        const l = localStorage.getItem('locations-'+currentYear); locations = l ? JSON.parse(l) : [];
+        const lc = localStorage.getItem('locCoords-'+currentYear); locCoords = lc ? JSON.parse(lc) : {};
         
         dark = localStorage.getItem('darkmode')==='true';
         if(dark) document.body.classList.add('dark');
@@ -542,11 +554,11 @@ function loadData() {
 loadData();
 
 const safeSave = () => {
-    localStorage.setItem('animals-'+year, JSON.stringify(animals));
-    localStorage.setItem('history-'+year, JSON.stringify(history));
-    localStorage.setItem('colors-'+year, JSON.stringify(colors));
-    localStorage.setItem('locations-'+year, JSON.stringify(locations));
-    localStorage.setItem('locCoords-'+year, JSON.stringify(locCoords));
+    localStorage.setItem('animals-'+currentYear, JSON.stringify(animals));
+    localStorage.setItem('history-'+currentYear, JSON.stringify(history));
+    localStorage.setItem('colors-'+currentYear, JSON.stringify(colors));
+    localStorage.setItem('locations-'+currentYear, JSON.stringify(locations));
+    localStorage.setItem('locCoords-'+currentYear, JSON.stringify(locCoords));
     renderLocationList();
     updateStorageUsage();
 };
@@ -566,6 +578,35 @@ function updateStorageUsage() {
             txt.innerText = pct + '% (' + total.toFixed(2) + ' MB)';
         }
     } catch(e) {}
+}
+
+// === HELPER: MULTI-YEAR SUPPORT ===
+function getAvailableYears() {
+    let years = new Set([currentYear]);
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('history-')) {
+            const y = parseInt(key.replace('history-', ''));
+            if (!isNaN(y)) years.add(y);
+        }
+    }
+    return Array.from(years).sort((a,b) => b-a); // Descending
+}
+
+function getHistoryForYear(y) {
+    if (y === currentYear) return history;
+    try {
+        const h = localStorage.getItem('history-'+y);
+        return h ? JSON.parse(h) : {};
+    } catch(e) { return {}; }
+}
+
+function getAnimalsForYear(y) {
+    if (y === currentYear) return animals;
+    try {
+        const a = localStorage.getItem('animals-'+y);
+        return a ? JSON.parse(a) : [];
+    } catch(e) { return []; }
 }
 
 // === NAVIGATION ===
@@ -606,11 +647,9 @@ function addAnimal(){
 
 function change(i, delta, event){
     try {
-        // === CHECK LOCATION IF ADDING ===
         if (delta > 0) {
             const locSel = getEl(viewMode === 'grid' ? 'locSelectGrid'+i : 'locSelect'+i);
             const locationValue = locSel ? locSel.value : '';
-            // If locations exist AND none is selected -> Confirm
             if (locations.length > 0 && locationValue === '') {
                 if (!confirm("⚠️ Kein Ort ausgewählt.\n\nTrotzdem ohne Ort hinzufügen?")) {
                     return; 
@@ -631,13 +670,6 @@ function change(i, delta, event){
                 const a = animals[i];
                 spawnParticle(event.clientX, event.clientY, "+1 " + (a.emoji||''));
             }
-        } else {
-            if(history[t].perAnimal[i].length === 0) return;
-            history[t].perAnimal[i].pop();
-            history[t].total--;
-            if(history[t].perAnimal[i].length===0) delete history[t].perAnimal[i];
-            if(history[t].total<=0) delete history[t];
-            if(event) spawnParticle(event.clientX, event.clientY, "-1", "red");
         }
         safeSave(); render();
     } catch(e) { console.error(e); }
@@ -665,10 +697,7 @@ function toggleViewMode() {
 
 function render(){
     const list = getEl('list'); list.innerHTML = '';
-    
-    // Update Toggle Icon based on state
     getEl('viewToggleBtn').innerText = viewMode === 'list' ? '📜' : '▦';
-
     const searchVal = getEl('listSearch').value.toLowerCase();
     
     // Tag Filters
@@ -700,139 +729,60 @@ function render(){
     else if(sortMode === 'count') displayList.sort((a,b) => b.count - a.count);
 
     if (viewMode === 'grid') {
-        // === GRID VIEW RENDER ===
-        const gridCont = document.createElement('div');
-        gridCont.className = 'grid-container';
-        
+        const gridCont = document.createElement('div'); gridCont.className = 'grid-container';
         displayList.forEach(item => {
             const i = item.idx;
             colors[i] = colors[i] || `hsl(${i*57%360},70%,50%)`;
-            
             const card = document.createElement('div'); card.className = 'grid-item';
-            
-            const imgContent = item.image 
-                ? `<img src="${item.image}">` 
-                : `<div style="font-size:30px">${item.emoji}</div>`;
-            
-            let locHTML = locations.length 
-            ? `<select id="locSelectGrid${i}" style="width:100%; margin-bottom:6px; font-size:11px; padding:2px"><option value="">📍 Ort?</option>${locations.map(l=>`<option>${l}</option>`).join('')}</select>` 
-            : '';
-
-            card.innerHTML = `
-                <div class="grid-img-wrap" onclick="safeRun(openIconEdit, ${i})">${imgContent}</div>
-                <div class="grid-name">${item.name}</div>
-                <div class="grid-count">${item.count}</div>
-                ${locHTML}
-                <div class="grid-actions">
-                    <button class="grid-btn" onclick="safeRun(openDetail,${i})">📈</button>
-                    <button class="grid-btn add" onclick="safeRun(change,${i},1, event)">+</button>
-                    <button class="grid-btn" onclick="safeRun(openNoteModal,${i})">📝</button>
-                </div>
-            `;
+            const imgContent = item.image ? `<img src="${item.image}">` : `<div style="font-size:30px">${item.emoji}</div>`;
+            let locHTML = locations.length ? `<select id="locSelectGrid${i}" style="width:100%; margin-bottom:6px; font-size:11px; padding:2px"><option value="">📍 Ort?</option>${locations.map(l=>`<option>${l}</option>`).join('')}</select>` : '';
+            card.innerHTML = `<div class="grid-img-wrap" onclick="safeRun(openIconEdit, ${i})">${imgContent}</div><div class="grid-name">${item.name}</div><div class="grid-count">${item.count}</div>${locHTML}<div class="grid-actions"><button class="grid-btn" onclick="safeRun(openDetail,${i})">📈</button><button class="grid-btn add" onclick="safeRun(change,${i},1, event)">+</button><button class="grid-btn" onclick="safeRun(openNoteModal,${i})">📝</button></div>`;
             gridCont.appendChild(card);
         });
         list.appendChild(gridCont);
-
     } else {
-        // === LIST VIEW RENDER ===
         displayList.forEach(item => {
             const i = item.idx;
             colors[i] = colors[i] || `hsl(${i*57%360},70%,50%)`;
-            
             const div = document.createElement('div'); div.className = 'row';
-            const iconHTML = item.image 
-                ? `<div class="animal-icon" onclick="safeRun(openIconEdit, ${i})"><img src="${item.image}"></div>` 
-                : `<div class="animal-icon" onclick="safeRun(openIconEdit, ${i})">${item.emoji}</div>`;
-            
-            let locHTML = locations.length 
-                ? `<select id="locSelect${i}"><option value="">📍 Ort?</option>${locations.map(l=>`<option>${l}</option>`).join('')}</select>` 
-                : '';
-
-            div.innerHTML = `
-                ${iconHTML}
-                <div class="name">
-                    ${item.name} 
-                    ${item.tags && item.tags.length ? `<span style="font-size:10px; opacity:0.6; display:block">${item.tags.join(', ')}</span>` : ''}
-                </div>
-                <div class="row-controls">
-                    ${locHTML}
-                    <div class="count">${item.count}</div>
-                    <button onclick="safeRun(change,${i},1, event)" style="background:var(--accent);color:#fff; width:36px; height:36px">➕</button>
-                    <button onclick="safeRun(openNoteModal,${i})" style="background:var(--bg)">📝</button>
-                    <button onclick="safeRun(openDetail,${i})" style="background:var(--bg)">📈</button>
-                </div>
-            `;
+            const iconHTML = item.image ? `<div class="animal-icon" onclick="safeRun(openIconEdit, ${i})"><img src="${item.image}"></div>` : `<div class="animal-icon" onclick="safeRun(openIconEdit, ${i})">${item.emoji}</div>`;
+            let locHTML = locations.length ? `<select id="locSelect${i}"><option value="">📍 Ort?</option>${locations.map(l=>`<option>${l}</option>`).join('')}</select>` : '';
+            div.innerHTML = `${iconHTML}<div class="name">${item.name} ${item.tags && item.tags.length ? `<span style="font-size:10px; opacity:0.6; display:block">${item.tags.join(', ')}</span>` : ''}</div><div class="row-controls">${locHTML}<div class="count">${item.count}</div><button onclick="safeRun(change,${i},1, event)" style="background:var(--accent);color:#fff; width:36px; height:36px">➕</button><button onclick="safeRun(openNoteModal,${i})" style="background:var(--bg)">📝</button><button onclick="safeRun(openDetail,${i})" style="background:var(--bg)">📈</button></div>`;
             list.appendChild(div);
         });
     }
     renderLocationList();
 }
 
-// === FIX: COMPLETELY REMOVE ANIMAL & HISTORY AND SHIFT INDICES ===
 function removeAnimal(i){ 
     if(!confirm("Dieses Tier und alle Statistiken unwiderruflich löschen?")) return;
-
-    // 1. Remove from animals array
     animals.splice(i, 1);
-
-    // 2. Rebuild history for EVERY day
+    // Only cleanup current year history
     Object.keys(history).forEach(date => {
         const dayData = history[date];
         if (!dayData.perAnimal) return;
-
         const newPerAnimal = {};
         let newTotal = 0;
-
-        // Iterate old indices
         Object.entries(dayData.perAnimal).forEach(([idxStr, sightings]) => {
             const idx = parseInt(idxStr);
-            if (idx === i) {
-                // DELETE: Do not copy to new object
-            } else if (idx > i) {
-                // SHIFT DOWN: Index 5 becomes 4
-                newPerAnimal[idx - 1] = sightings;
-                newTotal += sightings.length;
-            } else {
-                // KEEP: Indices lower than i stay same
-                newPerAnimal[idx] = sightings;
-                newTotal += sightings.length;
-            }
+            if (idx > i) { newPerAnimal[idx - 1] = sightings; newTotal += sightings.length; } 
+            else if (idx < i) { newPerAnimal[idx] = sightings; newTotal += sightings.length; }
         });
-
-        // Save corrected data
         dayData.perAnimal = newPerAnimal;
         dayData.total = newTotal;
-
-        // Remove empty days
-        if (newTotal === 0 && Object.keys(newPerAnimal).length === 0) {
-            delete history[date];
-        }
+        if (newTotal === 0 && Object.keys(newPerAnimal).length === 0) delete history[date];
     });
-
-    safeSave(); 
-    closeModal('detailModal');
-    render(); 
-    showErrorToast("Tier komplett gelöscht", true);
+    safeSave(); closeModal('detailModal'); render(); 
+    showErrorToast("Tier gelöscht", true);
 }
 
-// === HARD RESET FUNCTION ===
 function hardReset() {
     if(!confirm("⚠️ ACHTUNG: Möchtest du wirklich ALLE deine Daten (Tiere, Statistiken, Orte) unwiderruflich löschen?")) return;
     if(!confirm("☠️ LETZTE WARNUNG: Dies kann nicht rückgängig gemacht werden! Wirklich alles löschen?")) return;
-
-    // Reset Vars
-    animals = [];
-    history = {};
-    colors = {};
-    locations = [];
-    locCoords = {};
-
-    safeSave();
-    render();
-    showErrorToast("Alles gelöscht. Tabula rasa!", true);
+    animals = []; history = {}; colors = {}; locations = []; locCoords = {};
+    safeSave(); render(); showErrorToast("Alles gelöscht. Tabula rasa!", true);
 }
 
-// === MAP LOGIC ===
 function initMap() {
     if(mapInstance) { mapInstance.invalidateSize(); renderMapMarkers(); return; }
     let center = [51.165, 10.451]; 
@@ -877,33 +827,24 @@ function locateMe() {
     showErrorToast("Standort wird ermittelt...", true);
     navigator.geolocation.getCurrentPosition(pos => {
         const { latitude, longitude } = pos.coords;
-        // Reverse Geocoding via Nominatim
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`, {
             headers: { 'User-Agent': 'TiereZaehlenApp/3.0' }
         })
         .then(r => r.json())
         .then(data => {
             if(data && data.address) {
-                // Construct a readable name
                 const addr = data.address;
                 const city = addr.city || addr.town || addr.village || addr.municipality;
                 const road = addr.road || addr.pedestrian || addr.suburb;
                 let text = road ? (road + (city ? ", " + city : "")) : (city || "Unbekannter Ort");
-                if(data.name && data.name !== text) text = data.name + ", " + text; // If specific building name exists
-                
+                if(data.name && data.name !== text) text = data.name + ", " + text;
                 osmIn.value = text;
                 showErrorToast("Adresse gefunden: " + text, true);
-                
-                // Optional: Save coords immediately for this text so map works
                 locCoords[text] = { lat: parseFloat(latitude), lon: parseFloat(longitude) };
-            } else {
-                showErrorToast("Adresse nicht gefunden.");
-            }
+            } else { showErrorToast("Adresse nicht gefunden."); }
         })
         .catch(e => showErrorToast("Fehler bei Adresssuche"));
-    }, err => {
-        showErrorToast("GPS Fehler: " + err.message);
-    });
+    }, err => { showErrorToast("GPS Fehler: " + err.message); });
 }
 
 if(osmIn){
@@ -940,7 +881,6 @@ function addManualLocation() {
 }
 function renderLocationList(){ getEl('locationListDisplay').textContent = locations.length ? locations.join(', ') : "Keine"; }
 
-// === EDIT MODAL ===
 let editIdx = null; let editImgTemp = null;
 function openIconEdit(i){
     editIdx=i; editImgTemp = animals[i].image;
@@ -971,7 +911,6 @@ function saveIconEdit(){
     safeSave(); render(); closeModal('iconModal');
 }
 
-// === IMAGE HANDLING (COMPRESSED) ===
 function handleImageUpload(input){
     if(input.files && input.files[0]){
         const reader = new FileReader();
@@ -991,18 +930,45 @@ function resizeImage(base64, maxW, cb){
 }
 function clearImage(){ currentImage=null; getEl('imgPreview').style.display='none'; }
 
-// === DETAIL & NOTE MODALS ===
+// === DETAIL MODAL WITH MULTI-YEAR ===
 function openDetail(i){
-    const a = animals[i]; if(!a) return;
-    const modal = getEl('detailModal'); const body = getEl('modalBody'); const col = colors[i] || '#2196f3';
+    detailAnimalIdx = i; // Global save
+    const modal = getEl('detailModal');
+    // Populate Year Dropdown for Detail
+    const ys = getAvailableYears();
+    const sel = getEl('detailYearSelect');
+    sel.innerHTML = ys.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`).join('');
+    updateDetailChart();
+    modal.style.display = 'block';
+}
+
+function updateDetailChart() {
+    const i = detailAnimalIdx;
+    if (i === null) return;
+    const y = parseInt(getEl('detailYearSelect').value);
+    const targetHistory = getHistoryForYear(y);
+    const body = getEl('modalBody');
+    const a = animals[i]; 
+    if(!a) return;
+    const col = colors[i] || '#2196f3';
+
+    // Find the ID of this animal in the target year (by name match)
+    // If it's the current year, use 'i'. If past, scan past animals.
+    let targetIdx = i;
+    if (y !== currentYear) {
+        const pastAnimals = getAnimalsForYear(y);
+        targetIdx = pastAnimals.findIndex(pa => pa.name === a.name);
+    }
+
     let total = 0; let locs = {}; let times = { 'Morgens':0, 'Mittags':0, 'Abends':0, 'Nachts':0 };
     let months = new Array(12).fill(0); let historyList = [];
 
-    Object.entries(history).forEach(([dateStr, entry]) => {
-        try {
-            const d = new Date(dateStr); if(d.getFullYear() !== year) return;
-            if(entry && entry.perAnimal && entry.perAnimal[i]){
-                const list = entry.perAnimal[i]; total += list.length; months[d.getMonth()] += list.length;
+    if (targetIdx !== -1 && targetHistory) {
+        Object.entries(targetHistory).forEach(([dateStr, entry]) => {
+            if(entry && entry.perAnimal && entry.perAnimal[targetIdx]){
+                const list = entry.perAnimal[targetIdx]; 
+                const d = new Date(dateStr);
+                total += list.length; months[d.getMonth()] += list.length;
                 list.forEach((item, arrIdx) => {
                     historyList.push({ date:dateStr, item, arrIdx });
                     const l = item.location || 'Unbekannt'; locs[l] = (locs[l]||0)+1;
@@ -1012,53 +978,39 @@ function openDetail(i){
                     }
                 });
             }
-        } catch(e) {}
-    });
+        });
+    }
 
     historyList.sort((a,b) => { if(b.date !== a.date) return b.date.localeCompare(a.date); return (b.item.time||'').localeCompare(a.item.time||''); });
 
     const icon = a.image ? `<img src="${a.image}">` : a.emoji;
-    let html = `<div class="modal-header"><div class="modal-icon" style="border-color:${col}">${icon}</div><h2 style="margin:0">${a.name}</h2><div style="opacity:0.6">Gesamt: <strong>${total}</strong></div></div><div style="margin-bottom:20px;">`;
+    let html = `<div class="modal-header"><div class="modal-icon" style="border-color:${col}">${icon}</div><h2 style="margin:0">${a.name}</h2><div style="opacity:0.6">Sichtungen ${y}: <strong>${total}</strong></div></div><div style="margin-bottom:20px;">`;
 
     const sortedLocs = Object.entries(locs).sort((a,b)=>b[1]-a[1]);
-    html += `<h4>📍 Orte</h4>`;
+    html += `<h4>📍 Orte (${y})</h4>`;
     if(sortedLocs.length===0) html+='<small>Keine</small>';
     else {
         const maxL = sortedLocs[0][1];
         sortedLocs.slice(0,3).forEach(([name, val])=>{
             const pct = (val/maxL)*100;
-            const linkLabel = name !== 'Unbekannt' ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}" target="_blank" class="map-link">${name} ↗</a>` : name;
-            html += `<div class="hbar-row"><div class="hbar-label">${linkLabel}</div><div class="hbar-track"><div class="hbar-fill" style="width:${pct}%; background:${col}"></div></div><div class="hbar-val">${val}</div></div>`;
+            html += `<div class="hbar-row"><div class="hbar-label">${name}</div><div class="hbar-track"><div class="hbar-fill" style="width:${pct}%; background:${col}"></div></div><div class="hbar-val">${val}</div></div>`;
         });
     }
 
-    html += `<h4>⏱️ Zeit</h4>`;
-    const maxT = Math.max(...Object.values(times), 1);
-    Object.entries(times).filter(x=>x[1]>0).forEach(([k,v])=>{
-        const pct = (v/maxT)*100;
-        html += `<div class="hbar-row"><div class="hbar-label">${k}</div><div class="hbar-track"><div class="hbar-fill" style="width:${pct}%; background:${col}; opacity:0.7"></div></div><div class="hbar-val">${v}</div></div>`;
-    });
-    
-    html += `<h4>🗓️ Jahrestrend</h4><div class="chart-wrap" style="height:100px; padding-top:15px">`;
+    html += `<h4>🗓️ Jahrestrend ${y}</h4><div class="chart-wrap" style="height:100px; padding-top:15px">`;
     const maxM = Math.max(...months, 1); const mN = ['J','F','M','A','M','J','J','A','S','O','N','D'];
     months.forEach((v, idx)=>{
         html += `<div class="chart-col">${v>0?`<div class="chart-val">${v}</div>`:''}<div class="chart-bar" style="height:${v===0?1:(v/maxM)*100}%; background:${col}; opacity:${v===0?0.1:1}"></div><div class="chart-label">${mN[idx]}</div></div>`;
     });
     html += `</div></div>`;
 
-    // === KOMBINATION AUS "LETZTE 2" UND "ALLE ANZEIGEN" ===
-    html += `<h3>📝 Verlauf</h3>`;
-    
+    html += `<h3>📝 Verlauf ${y}</h3>`;
     const renderRow = (h) => {
         const displayDate = h.date.split('-').reverse().slice(0,2).join('.');
-        return `<div class="hist-item">
-            <div class="hist-date">${displayDate}<br>${h.item.time||''}</div>
-            <div class="hist-info">${h.item.location ? `📍 ${h.item.location}` : ''}${h.item.note ? `<br><span class="hist-note">${h.item.note}</span>` : ''}</div>
-            <div class="hist-actions">
-                <button class="icon-btn" onclick="safeRun(openNoteModal, ${i}, '${h.date}', ${h.arrIdx})">✏️</button>
-                <button class="icon-btn" onclick="safeRun(deleteHistoryItem, ${i}, '${h.date}', ${h.arrIdx})">🗑️</button>
-            </div>
-        </div>`;
+        // Delete button only active for current year to prevent data corruption
+        const delBtn = (y === currentYear) ? `<button class="icon-btn" onclick="safeRun(deleteHistoryItem, ${i}, '${h.date}', ${h.arrIdx})">🗑️</button>` : '';
+        const editBtn = (y === currentYear) ? `<button class="icon-btn" onclick="safeRun(openNoteModal, ${i}, '${h.date}', ${h.arrIdx})">✏️</button>` : '';
+        return `<div class="hist-item"><div class="hist-date">${displayDate}<br>${h.item.time||''}</div><div class="hist-info">${h.item.location ? `📍 ${h.item.location}` : ''}${h.item.note ? `<br><span class="hist-note">${h.item.note}</span>` : ''}</div><div class="hist-actions">${editBtn}${delBtn}</div></div>`;
     };
 
     if(historyList.length === 0) {
@@ -1066,29 +1018,16 @@ function openDetail(i){
     } else {
         html += `<div class="history-list">`;
         historyList.slice(0, 2).forEach(h => html += renderRow(h));
-        html += `</div>`;
-
-        html += `<details style="margin-top:10px; border:none; background:transparent; padding:0;">
-                    <summary style="font-size:14px; opacity:0.8; margin-bottom:5px">📜 Alle Einträge anzeigen (${historyList.length})</summary>
-                    <div class="history-list" style="max-height:300px; overflow-y:auto; border-top:1px solid var(--btn); margin-top:0;">`;
+        html += `</div><details style="margin-top:10px; border:none; background:transparent; padding:0;"><summary style="font-size:14px; opacity:0.8; margin-bottom:5px">📜 Alle anzeigen (${historyList.length})</summary><div class="history-list" style="max-height:300px; overflow-y:auto; border-top:1px solid var(--btn); margin-top:0;">`;
         historyList.forEach(h => html += renderRow(h));
-        html += `   </div>
-                 </details>`;
+        html += `</div></details>`;
     }
     
-    html += `<div style="margin-top:30px; border-top:1px solid #eee; padding-top:20px; text-align:center"><button onclick="safeRun(removeAnimal, ${i})" style="background:var(--err-bg); color:var(--err-text); font-size:14px; padding:10px 20px;">⚠️ Dieses Tier löschen</button></div>`;
+    if (y === currentYear) {
+        html += `<div style="margin-top:30px; border-top:1px solid #eee; padding-top:20px; text-align:center"><button onclick="safeRun(removeAnimal, ${i})" style="background:var(--err-bg); color:var(--err-text); font-size:14px; padding:10px 20px;">⚠️ Dieses Tier löschen</button></div>`;
+    }
 
-    body.innerHTML = html; modal.style.display = 'block';
-}
-
-function deleteHistoryItem(i, date, arrIdx){
-    if(!confirm('Diesen Eintrag löschen?')) return;
-    const list = history[date].perAnimal[i];
-    list.splice(arrIdx, 1);
-    history[date].total--;
-    if(list.length===0) delete history[date].perAnimal[i];
-    if(history[date].total<=0) delete history[date];
-    safeSave(); openDetail(i); render(); 
+    body.innerHTML = html;
 }
 
 let editMode = null; 
@@ -1141,38 +1080,69 @@ function saveNote(i) {
 // === STATS & EXPORT ===
 function renderStats(){
   const container = getEl('statsContent'); if(!container) return;
+  // Year Selector
+  const ys = getAvailableYears();
+  const yearSelect = getEl('statsYearSelect');
+  if (yearSelect.options.length === 0 || yearSelect.innerHTML === '') {
+      yearSelect.innerHTML = ys.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`).join('');
+  }
+  
+  const selectedYear = parseInt(yearSelect.value) || currentYear;
+  
   try {
-      let totalSights=0, maxDayCount=0, streak=0, weekendCounts=0, lunchCounts=0, nightCounts=0, earlyCounts=0, hasPhoto=false;
-      let countsPerMonth=new Array(12).fill(0), countsPerAnimal=new Array(animals.length).fill(0);
-      let timeOfDay={'Morgens (5-11)':0,'Mittags (11-14)':0,'Abends (14-22)':0,'Nachts (22-5)':0};
-      let distinctAnimals=new Set(), distinctLocs=new Set(), firstSightings={};
-      let animalsWithPhotos = 0;
-      let notesCount = 0; // NEW: Count Notes
+      // === AGGREGATE TOTALS (ALL YEARS) ===
+      let grandTotalSights = 0;
+      let grandTotalNotes = 0;
+      let grandDistinctLocs = new Set();
+      
+      ys.forEach(y => {
+          const h = getHistoryForYear(y);
+          Object.values(h).forEach(entry => {
+              if (entry.total) grandTotalSights += entry.total;
+              if (entry.perAnimal) {
+                  Object.values(entry.perAnimal).forEach(list => {
+                      list.forEach(item => {
+                          if (item.note) grandTotalNotes++;
+                          if (item.location && item.location !== 'Unbekannt') grandDistinctLocs.add(item.location);
+                      });
+                  });
+              }
+          });
+      });
 
-      const sortedDates = Object.keys(history).sort((a,b)=>new Date(b)-new Date(a));
+      // === CALCULATE CURRENT YEAR STATS (For Charts) ===
+      const targetHistory = getHistoryForYear(selectedYear);
+      const targetAnimals = getAnimalsForYear(selectedYear); // Need names from that year
+      
+      let yearSights=0, maxDayCount=0, streak=0, weekendCounts=0, lunchCounts=0, nightCounts=0, earlyCounts=0, hasPhoto=false;
+      let countsPerMonth=new Array(12).fill(0);
+      let countsPerAnimalMap = {}; // name -> count
+      let timeOfDay={'Morgens (5-11)':0,'Mittags (11-14)':0,'Abends (14-22)':0,'Nachts (22-5)':0};
+      let distinctAnimalsYear=new Set();
+      let firstSightings={};
+
+      const sortedDates = Object.keys(targetHistory).sort((a,b)=>new Date(b)-new Date(a));
       if(sortedDates.length > 0) {
           const diffHours = (new Date(today()) - new Date(sortedDates[0])) / 36e5;
           if(diffHours <= 48){ streak = 1; for(let i=0; i<sortedDates.length-1; i++){ if(Math.round((new Date(sortedDates[i])-new Date(sortedDates[i+1]))/864e5) === 1) streak++; else break; } }
       }
 
-      Object.entries(history).forEach(([dateStr, entry]) => {
-        const date = new Date(dateStr); if(date.getFullYear() !== year) return;
-        totalSights += (entry.total||0); if(entry.total > maxDayCount) maxDayCount = entry.total;
-        countsPerMonth[date.getMonth()] += (entry.total||0);
-        if(date.getDay() === 0 || date.getDay() === 6) weekendCounts += entry.total;
+      Object.entries(targetHistory).forEach(([dateStr, entry]) => {
+        yearSights += (entry.total||0); if(entry.total > maxDayCount) maxDayCount = entry.total;
+        const d = new Date(dateStr); countsPerMonth[d.getMonth()] += (entry.total||0);
+        if(d.getDay() === 0 || d.getDay() === 6) weekendCounts += entry.total;
 
         if(entry.perAnimal){
           Object.entries(entry.perAnimal).forEach(([idxStr, list]) => {
             const idx = parseInt(idxStr);
-            if(animals[idx]) {
-                countsPerAnimal[idx] += list.length; distinctAnimals.add(idx);
-                if(!firstSightings[idx] && list.length>0) firstSightings[idx] = { date: dateStr, loc: list[0].location };
+            const aName = targetAnimals[idx] ? targetAnimals[idx].name : '???';
+            
+            if(targetAnimals[idx]) {
+                countsPerAnimalMap[aName] = (countsPerAnimalMap[aName] || 0) + list.length;
+                distinctAnimalsYear.add(aName);
+                if(!firstSightings[aName] && list.length>0) firstSightings[aName] = { date: dateStr, loc: list[0].location };
+                
                 list.forEach(item => {
-                    // Count Notes
-                    if(item.note && item.note.trim().length > 0) notesCount++;
-                    
-                    const loc = item.location; 
-                    if(loc && loc.trim() !== '' && loc !== 'Unbekannt') distinctLocs.add(loc);
                     if(item.time) {
                         const h = parseInt(item.time.split(':')[0]);
                         if(h>=5&&h<11) {timeOfDay['Morgens (5-11)']++;earlyCounts++;} else if(h>=11&&h<14) {timeOfDay['Mittags (11-14)']++;lunchCounts++;}
@@ -1184,29 +1154,19 @@ function renderStats(){
         }
       });
       
-      // Calculate Photo Stats
+      let animalsWithPhotos = 0;
       animals.forEach(a => { if(a.image) { hasPhoto = true; animalsWithPhotos++; } });
 
-      // === CALCULATE XP & LEVEL ===
-      // 40 XP per Sighting, 75 XP per Note, 50 XP per Animal created, 100 XP per Photo, 25 XP per Location, 100 XP per streak day
-      const currentXP = (totalSights * 40) + (notesCount * 75) + (animals.length * 50) + (animalsWithPhotos * 100) + (distinctLocs.size * 25) + (streak * 100);
+      // XP CALC (ALL YEARS)
+      const currentXP = (grandTotalSights * 40) + (grandTotalNotes * 75) + (animals.length * 50) + (animalsWithPhotos * 100) + (grandDistinctLocs.size * 25) + (streak * 100);
       
       let currentLevelObj = levels[0];
       let nextLevelObj = null;
-
       for (let i = 0; i < levels.length; i++) {
-          if (currentXP >= levels[i].xp) {
-              currentLevelObj = levels[i];
-              nextLevelObj = levels[i+1] || null; // Null if max level
-          } else {
-              break;
-          }
+          if (currentXP >= levels[i].xp) { currentLevelObj = levels[i]; nextLevelObj = levels[i+1] || null; } else { break; }
       }
-
       const levelIdx = levels.indexOf(currentLevelObj) + 1;
-      let progressPct = 100;
-      let nextXPNeeded = 0;
-      
+      let progressPct = 100; let nextXPNeeded = 0;
       if(nextLevelObj) {
           const range = nextLevelObj.xp - currentLevelObj.xp;
           const val = currentXP - currentLevelObj.xp;
@@ -1214,105 +1174,101 @@ function renderStats(){
           nextXPNeeded = nextLevelObj.xp - currentXP;
       }
 
-      // === RENDER LEVEL CARD ===
       let html = `
       <div class="level-card">
         <div class="level-title">Dein Rang - Level ${levelIdx}</div>
         <div class="level-num">${currentLevelObj.name}</div>
         <div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${progressPct}%"></div></div>
-        <div class="xp-text">${currentXP} XP ${nextLevelObj ? `(noch ${nextXPNeeded} XP bis ${nextLevelObj.name})` : '(Maximales Level erreicht!)'}</div>
+        <div class="xp-text">${currentXP} XP (Gesamt) ${nextLevelObj ? `(noch ${nextXPNeeded} XP)` : ''}</div>
       </div>
       `;
 
-      // === RENDER LEVEL TABLE (COLLAPSIBLE) ===
       html += `<details style="margin-bottom:20px; border:1px solid var(--btn); border-radius:12px; padding:10px;"><summary>ℹ️ Level-Übersicht & XP</summary>`;
-      html += `<div style="max-height:250px; overflow-y:auto; margin-top:10px;"><table class="level-table"><tr><th>Lvl</th><th>Name</th><th>Benötigte XP</th></tr>`;
-      levels.forEach((lvl, i) => {
-          const isCurrent = (i+1) === levelIdx;
-          html += `<tr class="${isCurrent ? 'current-level' : ''}"><td>${i+1}</td><td>${lvl.name} ${isCurrent?'(Du)':''}</td><td>${lvl.xp}</td></tr>`;
-      });
-      html += `</table></div><div style="font-size:11px; margin-top:10px; opacity:0.7">XP Quellen: Sichtung (40), Notiz (75), Tier (50), Foto (100), Ort (25), Streak-Tag (100)</div></details>`;
+      html += `<div style="max-height:250px; overflow-y:auto; margin-top:10px;"><table class="level-table"><tr><th>Lvl</th><th>Name</th><th>XP</th></tr>`;
+      levels.forEach((lvl, i) => { const isCurrent = (i+1) === levelIdx; html += `<tr class="${isCurrent ? 'current-level' : ''}"><td>${i+1}</td><td>${lvl.name} ${isCurrent?'(Du)':''}</td><td>${lvl.xp}</td></tr>`; });
+      html += `</table></div><div style="font-size:11px; margin-top:10px; opacity:0.7">XP Quellen: Sichtung (40), Notiz (75), Tier (50), Foto (100), Ort (25), Streak (100)</div></details>`;
 
-      if(totalSights === 0) { html += '<div style="text-align:center; padding:20px">Noch keine Daten für weitere Statistiken.</div>'; container.innerHTML = html; return; }
+      if(grandTotalSights === 0) { html += '<div style="text-align:center; padding:20px">Noch keine Daten.</div>'; container.innerHTML = html; return; }
 
       const badges = [
-          { id:'start', icon:'🐣', name:'Starter', desc:'Erste Sichtung', condition: totalSights >= 1 },
-          { id:'bronze', icon:'🥉', name:'Sammler', desc:'50 Sichtungen', condition: totalSights >= 50 },
-          { id:'silver', icon:'🥈', name:'Profi', desc:'100 Sichtungen', condition: totalSights >= 100 },
-          { id:'gold', icon:'👑', name:'Legende', desc:'250 Sichtungen', condition: totalSights >= 250 },
-          { id:'titan', icon:'🪐', name:'Titan', desc:'1.000 Sichtungen', condition: totalSights >= 1000 },
+          { id:'start', icon:'🐣', name:'Starter', desc:'Erste Sichtung', condition: grandTotalSights >= 1 },
+          { id:'bronze', icon:'🥉', name:'Sammler', desc:'50 Sichtungen', condition: grandTotalSights >= 50 },
+          { id:'silver', icon:'🥈', name:'Profi', desc:'100 Sichtungen', condition: grandTotalSights >= 100 },
+          { id:'gold', icon:'👑', name:'Legende', desc:'250 Sichtungen', condition: grandTotalSights >= 250 },
+          { id:'titan', icon:'🪐', name:'Titan', desc:'1.000 Sichtungen', condition: grandTotalSights >= 1000 },
           { id:'streak', icon:'🔥', name:'On Fire', desc:'3 Tage Strähne', condition: streak >= 3 },
           { id:'marathon', icon:'⚡', name:'Marathon', desc:'7 Tage Strähne', condition: streak >= 7 },
           { id:'weekend', icon:'📅', name:'Weekend', desc:'Wochenend-Sichtung', condition: weekendCounts > 0 },
           { id:'lunch', icon:'🍱', name:'Mittag', desc:'Sichtung 11-14 Uhr', condition: lunchCounts > 0 },
-          { id:'zoo', icon:'🌈', name:'Arche', desc:'10 Tierarten entdeckt', condition: distinctAnimals.size >= 10 },
-          { id:'darwin', icon:'🧬', name:'Darwin', desc:'25 Tierarten entdeckt', condition: distinctAnimals.size >= 25 },
-          { id:'expl', icon:'🌍', name:'Entdecker', desc:'3 Orte', condition: distinctLocs.size >= 3 },
-          { id:'globe', icon:'🗺️', name:'Globetrotter', desc:'10 Orte', condition: distinctLocs.size >= 10 },
+          { id:'zoo', icon:'🌈', name:'Arche', desc:'10 Tierarten entdeckt', condition: distinctAnimalsYear.size >= 10 },
+          { id:'darwin', icon:'🧬', name:'Darwin', desc:'25 Tierarten entdeckt', condition: distinctAnimalsYear.size >= 25 },
+          { id:'expl', icon:'🌍', name:'Entdecker', desc:'3 Orte', condition: grandDistinctLocs.size >= 3 },
+          { id:'globe', icon:'🗺️', name:'Globetrotter', desc:'10 Orte', condition: grandDistinctLocs.size >= 10 },
           { id:'cam', icon:'📸', name:'Paparazzi', desc:'Foto-Upload', condition: hasPhoto },
           { id:'night', icon:'🦉', name:'Nachteule', desc:'Sichtung nachts', condition: nightCounts > 0 },
           { id:'early', icon:'🐓', name:'Früh', desc:'Sichtung morgens', condition: earlyCounts > 0 }
       ];
-      if([1, 50, 100, 250, 1000].includes(totalSights)) playSound('fanfare');
+      if([1, 50, 100, 250, 1000].includes(yearSights) && selectedYear === currentYear) playSound('fanfare');
 
       html += `<div class="stat-kpi-row">
-        <div class="stat-kpi"><div style="font-size:20px;font-weight:bold">${totalSights}</div><div style="font-size:10px;opacity:0.7">Sichtungen</div></div>
-        <div class="stat-kpi"><div style="font-size:20px;font-weight:bold">${distinctAnimals.size} <span style="font-size:12px;opacity:0.5">/ ${animals.length}</span></div><div style="font-size:10px;opacity:0.7">Gesehene Arten</div></div>
+        <div class="stat-kpi"><div style="font-size:20px;font-weight:bold">${yearSights}</div><div style="font-size:10px;opacity:0.7">Sichtungen ${selectedYear}</div></div>
+        <div class="stat-kpi"><div style="font-size:20px;font-weight:bold">${distinctAnimalsYear.size}</div><div style="font-size:10px;opacity:0.7">Arten ${selectedYear}</div></div>
         <div class="stat-kpi"><div style="font-size:20px;font-weight:bold">${streak}</div><div style="font-size:10px;opacity:0.7">Tage Strähne</div></div>
       </div>`;
-      html += `<details open><summary>🏆 Trophäen</summary><div class="badge-grid">`;
+      html += `<details open><summary>🏆 Trophäen (Gesamt)</summary><div class="badge-grid">`;
       badges.forEach(b => html += `<div class="badge ${b.condition?'earned':''}" onclick="alert('${b.icon} ${b.name}\\n${b.desc}')"><span class="badge-icon">${b.icon}</span> ${b.name}</div>`);
       html += `</div></details>`;
       
-      animals.forEach((_,i)=> { if(!colors[i]) colors[i] = `hsl(${i*57%360},70%,50%)`; });
-      const sortedAnimals = animals.map((a,i)=>({name:a.name, emoji:a.emoji, count:countsPerAnimal[i], color:colors[i]})).sort((a,b)=>b.count-a.count).filter(a=>a.count>0);
-      html += `<details><summary>🏆 Top 5 Tiere</summary><div style="padding-top:10px">`;
-      sortedAnimals.slice(0,5).forEach(a => html += `<div class="hbar-row"><div class="hbar-label">${a.emoji} ${a.name}</div><div class="hbar-track"><div class="hbar-fill" style="width:${(a.count/totalSights)*100}%; background:${a.color}"></div></div><div class="hbar-val">${a.count}</div></div>`);
+      const sortedAnimals = Object.entries(countsPerAnimalMap).map(([n, c]) => ({name:n, count:c})).sort((a,b)=>b.count-a.count);
+      html += `<details><summary>🏆 Top 5 Tiere (${selectedYear})</summary><div style="padding-top:10px">`;
+      sortedAnimals.slice(0,5).forEach(a => html += `<div class="hbar-row"><div class="hbar-label">${a.name}</div><div class="hbar-track"><div class="hbar-fill" style="width:${(a.count/yearSights)*100}%; background:var(--accent)"></div></div><div class="hbar-val">${a.count}</div></div>`);
       html += `</div></details>`;
 
       const maxTime = Math.max(...Object.values(timeOfDay), 1);
-      html += `<details><summary>⏱️ Tageszeiten (Gesamt)</summary><div style="padding-top:10px">`;
+      html += `<details><summary>⏱️ Tageszeiten (${selectedYear})</summary><div style="padding-top:10px">`;
       Object.entries(timeOfDay).forEach(([label, val]) => html += `<div class="hbar-row"><div class="hbar-label" style="width:110px">${label}</div><div class="hbar-track"><div class="hbar-fill" style="width:${(val/maxTime)*100}%; opacity:0.8"></div></div><div class="hbar-val">${val}</div></div>`);
       html += `</div></details>`;
 
-      html += `<details><summary>🗓️ Jahres-Verlauf</summary><div class="chart-wrap">`;
+      html += `<details><summary>🗓️ Jahres-Verlauf (${selectedYear})</summary><div class="chart-wrap">`;
       const mNames = ['J','F','M','A','M','J','J','A','S','O','N','D']; const maxMonthVal = Math.max(...countsPerMonth, 1);
       countsPerMonth.forEach((val, i) => html += `<div class="chart-col">${val>0?`<div class="chart-val">${val}</div>`:''}<div class="chart-bar" style="height:${val===0?1:(val/maxMonthVal)*100}%; opacity:${val===0?0.1:0.9}"></div><div class="chart-label">${mNames[i]}</div></div>`);
       html += `</div></details>`;
 
       html += `<details><summary>🔥 30-Tage Heatmap</summary><div class="heatmap-grid">`;
+      // For heatmap, we check history for selected year mostly, but if we are in Jan, we need prev year?
+      // Lets just show ALL data in heatmap for selected year context? Or last 30 days of selected year?
+      // Simplest: If selected year is current, show last 30 days. If past year, show last 30 days of that year (Dec).
+      let refDate = (selectedYear === currentYear) ? new Date() : new Date(selectedYear, 11, 31);
+      
       for(let i=27; i>=0; i--){
-        const d = new Date(); d.setDate(new Date().getDate() - i); const iso = d.toISOString().slice(0,10);
-        const count = history[iso] ? history[iso].total : 0;
+        const d = new Date(refDate); d.setDate(d.getDate() - i); const iso = d.toISOString().slice(0,10);
+        // We need to fetch from correct history object depending on year of 'd'
+        const hY = d.getFullYear();
+        const histObj = getHistoryForYear(hY);
+        const count = histObj[iso] ? histObj[iso].total : 0;
         html += `<div class="heat-cell" style="background:${count>0?`rgba(33, 150, 243, ${Math.min(count*0.2+0.2,1)})`:'var(--btn)'}; color:${count?'#fff':'transparent'}" title="${iso}: ${count}">${count||0}</div>`;
       }
       html += `</div></details>`;
 
-      html += `<details><summary>🐣 Erste Begegnungen</summary><div style="padding-top:10px">`;
-      const foundAnimals = animals.map((a,i)=>({idx:i, ...a})).filter(a => firstSightings[a.idx]);
-      if(foundAnimals.length===0) html += '<small>Leer</small>';
-      else foundAnimals.forEach(a => html += `<div style="border-bottom:1px solid #eee; padding:6px 0; font-size:14px; display:flex; justify-content:space-between;"><span>${a.emoji||'📸'} <strong>${a.name}</strong></span><span style="font-size:12px; text-align:right; color:var(--sub)">${firstSightings[a.idx].date}<br>${firstSightings[a.idx].loc||''}</span></div>`);
-      html += `</div></details>`;
       container.innerHTML = html;
-  } catch(e) { container.innerHTML = `<div style="color:red; text-align:center; padding:20px;">Fehler beim Laden der Statistik.<br><small>${e.message}</small></div>`; }
+  } catch(e) { console.error(e); container.innerHTML = `<div style="color:red; text-align:center; padding:20px;">Fehler beim Laden der Statistik.<br><small>${e.message}</small></div>`; }
 }
 
 function generateShareCard() {
     try {
         const canvas = document.createElement('canvas'); canvas.width = 600; canvas.height = 400; const ctx = canvas.getContext('2d');
         ctx.fillStyle = dark ? '#1e1e1e' : '#f4f4f4'; ctx.fillRect(0,0,600,400);
-        ctx.fillStyle = dark ? '#fff' : '#000'; ctx.font = 'bold 30px system-ui'; ctx.textAlign = 'center'; ctx.fillText(`Meine Tiersammlung ${year}`, 300, 50);
+        ctx.fillStyle = dark ? '#fff' : '#000'; ctx.font = 'bold 30px system-ui'; ctx.textAlign = 'center'; ctx.fillText(`Meine Tiersammlung ${currentYear}`, 300, 50);
         let total = Object.values(history).reduce((a,b)=>a+(b.total||0),0);
         let topAnimal = null; if(animals.length) topAnimal = animals.map((a,i)=>{ let c=0; Object.values(history).forEach(h=>{if(h&&h.perAnimal&&h.perAnimal[i])c+=h.perAnimal[i].length}); return {n:a.name, c:c, e:a.emoji}; }).sort((a,b)=>b.c-a.c)[0];
         ctx.font = 'bold 60px system-ui'; ctx.fillStyle = '#2196f3'; ctx.fillText(total, 300, 150);
         ctx.font = '20px system-ui'; ctx.fillStyle = dark ? '#bbb' : '#555'; ctx.fillText("Sichtungen Gesamt", 300, 180);
         if(topAnimal && topAnimal.c > 0) { ctx.fillStyle = dark ? '#fff' : '#000'; ctx.font = '30px system-ui'; ctx.fillText(`🏆 Top Tier: ${topAnimal.e} ${topAnimal.n} (${topAnimal.c})`, 300, 250); }
         ctx.font = 'italic 16px system-ui'; ctx.fillStyle = '#888'; ctx.fillText("Erstellt mit Tier-Tracker Ultimate v3", 300, 370);
-        const link = document.createElement('a'); link.download = `tier-stats-${year}.png`; link.href = canvas.toDataURL(); link.click();
+        const link = document.createElement('a'); link.download = `tier-stats-${currentYear}.png`; link.href = canvas.toDataURL(); link.click();
     } catch(e) { showErrorToast("Bild-Export Fehler"); }
 }
 
-// === FIXED IMPORT FUNCTION WITH NAME MAPPING ===
 function importBackup(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -1322,22 +1278,14 @@ function importBackup(event) {
             tempImportData = JSON.parse(e.target.result);
             if(!tempImportData.animals) throw new Error("Ungültige Datei");
             getEl('importModal').style.display = 'block'; 
-        } catch(err) { 
-            console.error(err); showErrorToast("Dateifehler: " + err.message); 
-            getEl('importFile').value = ''; 
-        }
+        } catch(err) { console.error(err); showErrorToast("Dateifehler: " + err.message); getEl('importFile').value = ''; }
     };
     reader.readAsText(file);
 }
 
 function confirmImport(action) {
     getEl('importModal').style.display = 'none';
-    if(action === 'cancel') {
-        tempImportData = null;
-        getEl('importFile').value = '';
-        return;
-    }
-
+    if(action === 'cancel') { tempImportData = null; getEl('importFile').value = ''; return; }
     try {
         const data = tempImportData;
         if(action === 'merge') {
@@ -1346,13 +1294,10 @@ function confirmImport(action) {
                 data.animals.forEach((impA, impIdx) => {
                     const normName = impA.name.trim().toLowerCase();
                     let existIdx = animals.findIndex(a => a.name.trim().toLowerCase() === normName);
-                    if(existIdx === -1) {
-                        existIdx = animals.push(impA) - 1; 
-                    }
+                    if(existIdx === -1) existIdx = animals.push(impA) - 1; 
                     idMap[impIdx] = existIdx; 
                 });
             }
-
             if(data.history) {
                 Object.entries(data.history).forEach(([date, dayData]) => {
                     if(!history[date]) history[date] = { total: 0, perAnimal: {} };
@@ -1362,45 +1307,26 @@ function confirmImport(action) {
                             if(targetIdx !== undefined && animals[targetIdx]) {
                                 if(!history[date].perAnimal[targetIdx]) history[date].perAnimal[targetIdx] = [];
                                 list.forEach(item => {
-                                    const exists = history[date].perAnimal[targetIdx].some(ex => 
-                                        ex.time === item.time && ex.location === item.location && ex.note === item.note
-                                    );
+                                    const exists = history[date].perAnimal[targetIdx].some(ex => ex.time === item.time && ex.location === item.location && ex.note === item.note);
                                     if(!exists) history[date].perAnimal[targetIdx].push(item);
                                 });
                             }
                         });
                     }
                 });
-                Object.keys(history).forEach(d => {
-                    let t = 0;
-                    if(history[d].perAnimal) Object.values(history[d].perAnimal).forEach(l => t += l.length);
-                    history[d].total = t;
-                });
+                Object.keys(history).forEach(d => { let t = 0; if(history[d].perAnimal) Object.values(history[d].perAnimal).forEach(l => t += l.length); history[d].total = t; });
             }
             if(data.locations) data.locations.forEach(l => { if(!locations.includes(l)) locations.push(l); });
             locations.sort();
             if(data.locCoords) locCoords = { ...locCoords, ...data.locCoords };
-
         } else if (action === 'overwrite') {
-            animals = data.animals || [];
-            history = data.history || {};
-            colors = data.colors || {};
-            locations = data.locations || [];
-            locCoords = data.locCoords || {};
+            animals = data.animals || []; history = data.history || {}; colors = data.colors || {}; locations = data.locations || []; locCoords = data.locCoords || {};
         }
-
-        safeSave(); render();
-        showErrorToast(action === 'merge' ? "Daten erfolgreich zusammengefügt!" : "Daten überschrieben!", true);
-    } catch(e) {
-        console.error(e);
-        showErrorToast("Import fehlgeschlagen.");
-    } finally {
-        tempImportData = null;
-        getEl('importFile').value = '';
-    }
+        safeSave(); render(); showErrorToast(action === 'merge' ? "Import erfolgreich!" : "Überschrieben!", true);
+    } catch(e) { console.error(e); showErrorToast("Import fehlgeschlagen."); } 
+    finally { tempImportData = null; getEl('importFile').value = ''; }
 }
 
-// === EXPORT CSV FIX (Semicolon) ===
 function exportCSV() {
     let csv = "Datum;Uhrzeit;Tier;Ort;Notiz\n";
     Object.entries(history).forEach(([d, v]) => {
@@ -1408,37 +1334,24 @@ function exportCSV() {
             Object.entries(v.perAnimal).forEach(([idx, list]) => {
                 const n = animals[idx] ? animals[idx].name : "Unbekannt";
                 list.forEach(s => {
-                    // Safe field handling for CSV (quotes if needed)
-                    const safe = (val) => {
-                        val = val || '';
-                        if (val.includes(';') || val.includes('"') || val.includes('\n')) {
-                            return `"${val.replace(/"/g, '""')}"`;
-                        }
-                        return val;
-                    };
+                    const safe = (val) => { val = val || ''; if (val.includes(';') || val.includes('"') || val.includes('\n')) { return `"${val.replace(/"/g, '""')}"`; } return val; };
                     csv += `${d};${s.time || ''};${safe(n)};${safe(s.location)};${safe(s.note)}\n`;
                 });
             });
         }
     });
-    const a = document.createElement('a');
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    a.download = `tiere-${year}.csv`;
-    a.click();
+    const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv); a.download = `tiere-${currentYear}.csv`; a.click();
 }
 
-// === UTILS ===
 function toggleInfo(){ getEl('infoBox').style.display = getEl('infoBox').style.display==='none'?'block':'none'; }
 function toggleDarkMode(){ dark=!dark; document.body.classList.toggle('dark'); localStorage.setItem('darkmode',dark); }
-function downloadBackup(){ const b = new Blob([JSON.stringify({year,animals,history,locations,locCoords},null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`tiere-v3-${year}.json`; a.click(); }
+function downloadBackup(){ const b = new Blob([JSON.stringify({year: currentYear,animals,history,locations,locCoords},null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`tiere-v3-${currentYear}.json`; a.click(); }
 function openNotifySettings(){ getEl('notifyModal').style.display='block'; }
 function closeModal(id){ getEl(id).style.display='none'; }
 window.onclick = e => { if(e.target.classList.contains('modal')) e.target.style.display='none'; }
 
-// Init
 safeRun(render);
 setTimeout(() => getEl('muteBtn').innerText = isMuted ? '🔇' : '🔊', 100);
-
 </script>
 </body>
 </html>
