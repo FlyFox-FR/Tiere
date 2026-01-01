@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Tiere zählen Ultimate v3.8 🐾</title>
+<title>Tiere zählen Ultimate v3.9 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -75,6 +75,10 @@ input,select,textarea{padding:10px;font-size:16px;border-radius:10px;border:1px 
 }
 .row-controls select { width: 70px; padding: 0 4px; font-size: 11px; height: 32px; }
 
+/* === CARD SECTIONS (ADMIN) === */
+.card-section { background:var(--card); padding:15px; border-radius:12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+.card-section h3 { margin-top: 0; margin-bottom: 15px; font-size: 1.1em; border-bottom: 1px solid var(--btn); padding-bottom: 10px; }
+
 .add{display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:10px; flex-wrap: wrap;}
 .file-btn { font-size: 24px; cursor: pointer; padding: 0 5px; opacity: 0.8; transition: opacity 0.2s; }
 .file-btn:hover { opacity: 1; }
@@ -142,6 +146,11 @@ details[open] summary::after { content: '-'; }
 .btn-overwrite { background: var(--err-bg); color: var(--err-text); padding: 12px; border: 1px solid var(--err-text); }
 .btn-cancel { background: var(--btn); color: var(--text); padding: 12px; }
 
+/* Storage Bar */
+.storage-wrap { margin-top: 15px; font-size: 11px; opacity: 0.8; }
+.storage-track { width: 100%; height: 6px; background: var(--btn); border-radius: 3px; margin-top: 5px; overflow: hidden; }
+.storage-fill { height: 100%; background: var(--accent); transition: width 0.5s; }
+
 /* Switch */
 .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
 .switch input { opacity: 0; width: 0; height: 0; }
@@ -201,8 +210,10 @@ input:checked + .slider:before { transform: translateX(24px); }
 
 <!-- === VIEW: VERWALTEN (Ehemals Admin) === -->
 <div id="view-admin" class="view-section">
-  <h3>🐾 Neues Tier anlegen</h3>
-  <div class="stats-container" style="background:var(--card); padding:15px; border-radius:12px;">
+  
+  <!-- BUBBLE 1: NEUES TIER -->
+  <div class="card-section">
+    <h3>🐾 Neues Tier anlegen</h3>
     <div class="add">
       <label class="file-btn" for="fileUpload" title="Aus Galerie wählen">🖼️</label>
       <input type="file" id="fileUpload" hidden accept="image/*" onchange="safeRun(handleImageUpload, this)">
@@ -231,27 +242,43 @@ input:checked + .slider:before { transform: translateX(24px); }
     </div>
   </div>
 
-  <h3>📍 Orte & Suche</h3>
-  <p style="font-size:12px; opacity:0.7">Füge hier Orte hinzu, damit sie später auf der Karte erscheinen.</p>
-  <div style="display:flex; gap:8px; align-items:flex-start; position:relative;">
-      <div class="autocomplete-container">
-        <input id="osmInput" placeholder="Ort suchen (z.B. Berlin Zoo)...">
-        <div id="osmResults" class="autocomplete-results"></div>
-      </div>
-      <button onclick="safeRun(addManualLocation)" style="min-width:40px;">💾</button>
-  </div>
-  <div style="margin-top:10px; font-size:13px; opacity:0.8">
-      Gespeicherte Orte: <span id="locationListDisplay">Keine</span>
+  <!-- BUBBLE 2: ORTE -->
+  <div class="card-section">
+    <h3>📍 Orte & Suche</h3>
+    <p style="font-size:12px; opacity:0.7; margin-bottom:10px">Suche Orte oder nutze GPS, um die Adresse automatisch zu finden.</p>
+    <div style="display:flex; gap:8px; align-items:flex-start; position:relative;">
+        <div class="autocomplete-container">
+          <input id="osmInput" placeholder="Ort suchen (z.B. Berlin Zoo)...">
+          <div id="osmResults" class="autocomplete-results"></div>
+        </div>
+        <button onclick="safeRun(locateMe)" title="Mein Standort" style="background:var(--card); border:1px solid var(--btn); min-width:40px">📍 GPS</button>
+        <button onclick="safeRun(addManualLocation)" style="min-width:40px;">💾</button>
+    </div>
+    <div style="margin-top:10px; font-size:13px; opacity:0.8">
+        Gespeicherte Orte: <span id="locationListDisplay">Keine</span>
+    </div>
   </div>
 
-  <h3>💾 Daten & Sicherung</h3>
-  <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:10px;">
-      <button onclick="safeRun(toggleDarkMode)">🌙 Design</button>
-      <button onclick="safeRun(downloadBackup)">💾 Backup</button>
-      <button onclick="safeRun(exportCSV)">📤 Liste (CSV)</button>
-      <!-- IMPORT WITH MERGE -->
-      <input type="file" id="importFile" accept="application/json" hidden onchange="safeRun(importBackup, event)">
-      <button onclick="document.getElementById('importFile').click()">📂 Import</button>
+  <!-- BUBBLE 3: DATEN -->
+  <div class="card-section">
+    <h3>💾 Daten & Sicherung</h3>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:10px;">
+        <button onclick="safeRun(toggleDarkMode)">🌙 Design</button>
+        <button onclick="safeRun(downloadBackup)">💾 Backup</button>
+        <button onclick="safeRun(exportCSV)">📤 Liste (CSV)</button>
+        <!-- IMPORT WITH MERGE -->
+        <input type="file" id="importFile" accept="application/json" hidden onchange="safeRun(importBackup, event)">
+        <button onclick="document.getElementById('importFile').click()">📂 Import</button>
+    </div>
+    
+    <!-- Speicher Anzeige -->
+    <div class="storage-wrap">
+        <div style="display:flex; justify-content:space-between">
+            <span>Browser Speicher:</span>
+            <span id="storageText">0%</span>
+        </div>
+        <div class="storage-track"><div id="storageBar" class="storage-fill" style="width:0%"></div></div>
+    </div>
   </div>
 
   <!-- GEFAHRENZONE -->
@@ -456,6 +483,7 @@ function loadData() {
         
         dark = localStorage.getItem('darkmode')==='true';
         if(dark) document.body.classList.add('dark');
+        updateStorageUsage();
     } catch(e) { animals=[]; }
 }
 loadData();
@@ -467,7 +495,26 @@ const safeSave = () => {
     localStorage.setItem('locations-'+year, JSON.stringify(locations));
     localStorage.setItem('locCoords-'+year, JSON.stringify(locCoords));
     renderLocationList();
+    updateStorageUsage();
 };
+
+function updateStorageUsage() {
+    try {
+        let total = 0;
+        for (let x in localStorage) {
+            if (localStorage.hasOwnProperty(x)) total += ((localStorage[x].length * 2) / 1024 / 1024);
+        }
+        // Assuming ~5MB limit which is standard
+        const pct = Math.min((total / 5) * 100, 100).toFixed(1);
+        const bar = getEl('storageBar');
+        const txt = getEl('storageText');
+        if(bar && txt) {
+            bar.style.width = pct + '%';
+            bar.style.background = pct > 90 ? 'var(--err-text)' : (pct > 70 ? 'var(--warn-text)' : 'var(--accent)');
+            txt.innerText = pct + '% (' + total.toFixed(2) + ' MB)';
+        }
+    } catch(e) {}
+}
 
 // === NAVIGATION ===
 function switchView(viewId, btn) {
@@ -724,9 +771,44 @@ function renderMapMarkers() {
     });
 }
 
-// === LOCATION SEARCH ===
+// === LOCATION SEARCH & GPS ===
 const osmIn = getEl('osmInput'), osmRes = getEl('osmResults');
 let debounce;
+
+function locateMe() {
+    if(!navigator.geolocation) return showErrorToast("GPS nicht verfügbar");
+    showErrorToast("Standort wird ermittelt...", true);
+    navigator.geolocation.getCurrentPosition(pos => {
+        const { latitude, longitude } = pos.coords;
+        // Reverse Geocoding via Nominatim
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`, {
+            headers: { 'User-Agent': 'TiereZaehlenApp/3.0' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if(data && data.address) {
+                // Construct a readable name
+                const addr = data.address;
+                const city = addr.city || addr.town || addr.village || addr.municipality;
+                const road = addr.road || addr.pedestrian || addr.suburb;
+                let text = road ? (road + (city ? ", " + city : "")) : (city || "Unbekannter Ort");
+                if(data.name && data.name !== text) text = data.name + ", " + text; // If specific building name exists
+                
+                osmIn.value = text;
+                showErrorToast("Adresse gefunden: " + text, true);
+                
+                // Optional: Save coords immediately for this text so map works
+                locCoords[text] = { lat: parseFloat(latitude), lon: parseFloat(longitude) };
+            } else {
+                showErrorToast("Adresse nicht gefunden.");
+            }
+        })
+        .catch(e => showErrorToast("Fehler bei Adresssuche"));
+    }, err => {
+        showErrorToast("GPS Fehler: " + err.message);
+    });
+}
+
 if(osmIn){
     osmIn.addEventListener('input', e => {
         clearTimeout(debounce);
@@ -757,7 +839,7 @@ function addLocationWithCoords(name, lat, lon) {
 }
 function addManualLocation() {
     const val = osmIn.value.trim();
-    if(val && !locations.includes(val)) { locations.push(val); safeSave(); render(); showErrorToast("Ort ohne Koordinaten gespeichert", true); }
+    if(val && !locations.includes(val)) { locations.push(val); safeSave(); render(); showErrorToast("Ort gespeichert", true); }
 }
 function renderLocationList(){ getEl('locationListDisplay').textContent = locations.length ? locations.join(', ') : "Keine"; }
 
