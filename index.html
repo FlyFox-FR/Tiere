@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Top Tier 🐾</title>
+<title>Tiere zählen Ultimate v3.8 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -66,7 +66,7 @@ input,select,textarea{padding:10px;font-size:16px;border-radius:10px;border:1px 
 .animal-icon:hover { transform: scale(1.1); border-color: var(--accent); }
 .animal-icon img {width:100%; height:100%; object-fit:cover;}
 .name{flex:1; font-weight:bold; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 4px;}
-.count{width:24px; text-align:center; font-size:15px; font-weight:bold; margin: 0 2px; flex-shrink:0;}
+.count{width:30px; text-align:right; font-size:15px; font-weight:bold; margin-right: 6px; flex-shrink:0;}
 
 .row-controls { display:flex; gap:4px; align-items:center; flex-shrink: 0; }
 .row-controls button {
@@ -163,7 +163,7 @@ input:checked + .slider:before { transform: translateX(24px); }
   <button class="icon-btn-header info" onclick="safeRun(toggleInfo)" title="Hilfe anzeigen">ℹ️</button>
 </div>
 
-<h1>Top Tier 🐾</h1>
+<h1>Tiere zählen Ult. 🐾</h1>
 
 <!-- VEREINFACHTE INFO BOX FÜR ENDANWENDER -->
 <div id="infoBox" class="info-box">
@@ -171,9 +171,9 @@ input:checked + .slider:before { transform: translateX(24px); }
 <p>Hier kannst du ganz einfach deine Tierbeobachtungen festhalten.</p>
 <ul style="line-height:1.6; padding-left:20px;">
 <li><strong>➕ Tiere anlegen:</strong> Gehe unten auf "Verwalten", um neue Tiere zu deiner Liste hinzuzufügen.</li>
-<li><strong>🔢 Zählen:</strong> Nutze + und - in der Liste.</li>
+<li><strong>🔢 Zählen:</strong> Nutze nur das + in der Liste. Korrekturen über das Diagramm-Icon 📈.</li>
 <li><strong>📝 Notizen:</strong> Klicke auf das Stift-Symbol 📝, um Details zu notieren.</li>
-<li><strong>📈 Verlauf & Löschen:</strong> Klicke auf das Diagramm-Symbol 📈, um den Verlauf zu sehen oder <strong>Tiere zu löschen</strong>.</li>
+<li><strong>📈 Verlauf & Löschen:</strong> Klicke auf das Diagramm-Symbol 📈, um den Verlauf zu sehen, zu korrigieren oder Tiere zu löschen.</li>
 <li><strong>🏆 Erfolge:</strong> Schau in der "Statistik" vorbei!</li>
 </ul>
 </div>
@@ -507,6 +507,18 @@ function addAnimal(){
 
 function change(i, delta, event){
     try {
+        // === CHECK LOCATION IF ADDING ===
+        if (delta > 0) {
+            const locSel = getEl('locSelect'+i);
+            const locationValue = locSel ? locSel.value : '';
+            // If locations exist AND none is selected -> Confirm
+            if (locations.length > 0 && locationValue === '') {
+                if (!confirm("⚠️ Kein Ort ausgewählt.\n\nTrotzdem ohne Ort hinzufügen?")) {
+                    return; 
+                }
+            }
+        }
+        
         const t = new Date().toISOString().slice(0,10);
         history[t] = history[t] || { total:0, perAnimal:{} };
         history[t].perAnimal[i] = history[t].perAnimal[i] || [];
@@ -599,9 +611,10 @@ function render(){
             </div>
             <div class="row-controls">
                 ${locHTML}
-                <button onclick="safeRun(change,${i},1, event)" style="background:var(--accent);color:#fff">➕</button>
+                
                 <div class="count">${item.count}</div>
-                <button onclick="safeRun(change,${i},-1, event)">➖</button>
+                <button onclick="safeRun(change,${i},1, event)" style="background:var(--accent);color:#fff; width:36px; height:36px">➕</button>
+                
                 <button onclick="safeRun(openNoteModal,${i})" style="background:var(--bg)">📝</button>
                 <button onclick="safeRun(openDetail,${i})" style="background:var(--bg)">📈</button>
             </div>
@@ -854,10 +867,9 @@ function openDetail(i){
     });
     html += `</div></div>`;
 
-    // === ÄNDERUNG HIER START: KOMBINATION AUS "LETZTE 2" UND "ALLE ANZEIGEN" ===
+    // === KOMBINATION AUS "LETZTE 2" UND "ALLE ANZEIGEN" ===
     html += `<h3>📝 Verlauf</h3>`;
     
-    // Helper Funktion um Code-Duplizierung zu vermeiden (nur hier im String Template Kontext)
     const renderRow = (h) => {
         const displayDate = h.date.split('-').reverse().slice(0,2).join('.');
         return `<div class="hist-item">
@@ -873,23 +885,17 @@ function openDetail(i){
     if(historyList.length === 0) {
         html += '<p style="text-align:center; opacity:0.5">Keine Einträge</p>';
     } else {
-        // 1. Die gewohnte "Letzte 2" Ansicht (statisch)
         html += `<div class="history-list">`;
         historyList.slice(0, 2).forEach(h => html += renderRow(h));
         html += `</div>`;
 
-        // 2. Darunter ein aufklappbares Element für die gesamte Liste
         html += `<details style="margin-top:10px; border:none; background:transparent; padding:0;">
                     <summary style="font-size:14px; opacity:0.8; margin-bottom:5px">📜 Alle Einträge anzeigen (${historyList.length})</summary>
                     <div class="history-list" style="max-height:300px; overflow-y:auto; border-top:1px solid var(--btn); margin-top:0;">`;
-        
-        // Hier rendern wir ALLE
         historyList.forEach(h => html += renderRow(h));
-        
         html += `   </div>
                  </details>`;
     }
-    // === ÄNDERUNG ENDE ===
     
     html += `<div style="margin-top:30px; border-top:1px solid #eee; padding-top:20px; text-align:center"><button onclick="safeRun(removeAnimal, ${i})" style="background:var(--err-bg); color:var(--err-text); font-size:14px; padding:10px 20px;">⚠️ Dieses Tier löschen</button></div>`;
 
