@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Tiere zählen Ultimate v4.0 🐾</title>
+<title>Tiere zählen Ultimate v4.1 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -100,6 +100,13 @@ input,select,textarea{padding:10px;font-size:16px;border-radius:10px;border:1px 
 .xp-bar-bg { background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; overflow: hidden; margin-top: 10px; }
 .xp-bar-fill { background: #fff; height: 100%; width: 0%; transition: width 1s ease-out; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
 .xp-text { font-size: 11px; margin-top: 6px; opacity: 0.9; }
+
+/* Level List Table */
+.level-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+.level-table th { border-bottom: 1px solid var(--btn); padding: 5px; opacity: 0.7; }
+.level-table td { border-bottom: 1px solid var(--btn); padding: 6px 5px; }
+.level-table tr.current-level { background: rgba(33, 150, 243, 0.15); color: var(--accent); font-weight: bold; }
+.level-table tr:last-child td { border-bottom: none; }
 
 .chart-wrap { display: flex; align-items: flex-end; height: 140px; gap: 6px; padding-top: 25px; margin-top: 10px; }
 .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
@@ -1140,6 +1147,7 @@ function renderStats(){
       let timeOfDay={'Morgens (5-11)':0,'Mittags (11-14)':0,'Abends (14-22)':0,'Nachts (22-5)':0};
       let distinctAnimals=new Set(), distinctLocs=new Set(), firstSightings={};
       let animalsWithPhotos = 0;
+      let notesCount = 0; // NEW: Count Notes
 
       const sortedDates = Object.keys(history).sort((a,b)=>new Date(b)-new Date(a));
       if(sortedDates.length > 0) {
@@ -1160,6 +1168,9 @@ function renderStats(){
                 countsPerAnimal[idx] += list.length; distinctAnimals.add(idx);
                 if(!firstSightings[idx] && list.length>0) firstSightings[idx] = { date: dateStr, loc: list[0].location };
                 list.forEach(item => {
+                    // Count Notes
+                    if(item.note && item.note.trim().length > 0) notesCount++;
+                    
                     const loc = item.location; 
                     if(loc && loc.trim() !== '' && loc !== 'Unbekannt') distinctLocs.add(loc);
                     if(item.time) {
@@ -1177,8 +1188,8 @@ function renderStats(){
       animals.forEach(a => { if(a.image) { hasPhoto = true; animalsWithPhotos++; } });
 
       // === CALCULATE XP & LEVEL ===
-      // 10 XP per Sighting, 50 XP per Animal created, 100 XP per Photo, 25 XP per Location
-      const currentXP = (totalSights * 10) + (animals.length * 50) + (animalsWithPhotos * 100) + (distinctLocs.size * 25);
+      // 40 XP per Sighting, 75 XP per Note, 50 XP per Animal created, 100 XP per Photo, 25 XP per Location, 100 XP per streak day
+      const currentXP = (totalSights * 40) + (notesCount * 75) + (animals.length * 50) + (animalsWithPhotos * 100) + (distinctLocs.size * 25) + (streak * 100);
       
       let currentLevelObj = levels[0];
       let nextLevelObj = null;
@@ -1212,6 +1223,15 @@ function renderStats(){
         <div class="xp-text">${currentXP} XP ${nextLevelObj ? `(noch ${nextXPNeeded} XP bis ${nextLevelObj.name})` : '(Maximales Level erreicht!)'}</div>
       </div>
       `;
+
+      // === RENDER LEVEL TABLE (COLLAPSIBLE) ===
+      html += `<details style="margin-bottom:20px; border:1px solid var(--btn); border-radius:12px; padding:10px;"><summary>ℹ️ Level-Übersicht & XP</summary>`;
+      html += `<div style="max-height:250px; overflow-y:auto; margin-top:10px;"><table class="level-table"><tr><th>Lvl</th><th>Name</th><th>Benötigte XP</th></tr>`;
+      levels.forEach((lvl, i) => {
+          const isCurrent = (i+1) === levelIdx;
+          html += `<tr class="${isCurrent ? 'current-level' : ''}"><td>${i+1}</td><td>${lvl.name} ${isCurrent?'(Du)':''}</td><td>${lvl.xp}</td></tr>`;
+      });
+      html += `</table></div><div style="font-size:11px; margin-top:10px; opacity:0.7">XP Quellen: Sichtung (40), Notiz (75), Tier (50), Foto (100), Ort (25), Streak-Tag (100)</div></details>`;
 
       if(totalSights === 0) { html += '<div style="text-align:center; padding:20px">Noch keine Daten für weitere Statistiken.</div>'; container.innerHTML = html; return; }
 
