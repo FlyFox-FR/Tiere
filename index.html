@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Tiere zählen Ultimate v3.3 🐾</title>
+<title>Tiere zählen Ultimate v3.4 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -316,7 +316,7 @@ input:checked + .slider:before { transform: translateX(24px); }
     <p style="font-size:14px; opacity:0.8; margin-bottom:20px;">Wie möchtest du die Daten importieren?</p>
     
     <div class="import-actions">
-        <button class="btn-merge" onclick="safeRun(confirmImport, 'merge')">✨ Zusammenfügen (Merge)<br><small style="font-weight:normal; font-size:11px">Fügt neue Tiere hinzu & behält alte</small></button>
+        <button class="btn-merge" onclick="safeRun(confirmImport, 'merge')">✨ Zusammenfügen (Merge)<br><small style="font-weight:normal; font-size:11px">Fügt neue Daten hinzu (keine Doppelten)</small></button>
         <button class="btn-overwrite" onclick="safeRun(confirmImport, 'overwrite')">⚠️ Alles Überschreiben<br><small style="font-weight:normal; font-size:11px">Löscht aktuelle Daten komplett</small></button>
         <button class="btn-cancel" onclick="safeRun(confirmImport, 'cancel')">Abbrechen</button>
     </div>
@@ -985,7 +985,7 @@ function generateShareCard() {
     } catch(e) { showErrorToast("Bild-Export Fehler"); }
 }
 
-// === IMPORT FUNCTION FIXED ===
+// === FIXED IMPORT FUNCTION WITH NAME MAPPING ===
 function importBackup(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -994,10 +994,10 @@ function importBackup(event) {
         try {
             tempImportData = JSON.parse(e.target.result);
             if(!tempImportData.animals) throw new Error("Ungültige Datei");
-            getEl('importModal').style.display = 'block'; // Show options
+            getEl('importModal').style.display = 'block'; 
         } catch(err) { 
             console.error(err); showErrorToast("Dateifehler: " + err.message); 
-            getEl('importFile').value = ''; // Reset input
+            getEl('importFile').value = ''; 
         }
     };
     reader.readAsText(file);
@@ -1014,40 +1014,53 @@ function confirmImport(action) {
     try {
         const data = tempImportData;
         if(action === 'merge') {
-            // 1. Create MAP: Import_ID -> Current_ID
+            // MAP OLD ID -> NEW ID by ANIMAL NAME (STRICT)
             const idMap = {};
-            data.animals.forEach((impA, impIdx) => {
-                // Find existing animal by name (case insensitive trim)
-                const existIdx = animals.findIndex(a => a.name.trim().toLowerCase() === impA.name.trim().toLowerCase());
-                if(existIdx !== -1) {
-                    idMap[impIdx] = existIdx; // Map old to existing
-                } else {
-                    const newIdx = animals.push(impA) - 1; // Create new
-                    idMap[impIdx] = newIdx; // Map old to new
-                }
-            });
+            
+            // 1. Process Animals
+            if(data.animals) {
+                data.animals.forEach((impA, impIdx) => {
+                    const normName = impA.name.trim().toLowerCase();
+                    let existIdx = animals.findIndex(a => a.name.trim().toLowerCase() === normName);
+                    
+                    if(existIdx === -1) {
+                        existIdx = animals.push(impA) - 1; // Create new
+                    }
+                    idMap[impIdx] = existIdx; // Map old index to current
+                });
+            }
 
-            // 2. Merge History using Map
+            // 2. Process History (Strictly using idMap)
             if(data.history) {
-                Object.entries(data.history).forEach(([date, entry]) => {
+                Object.entries(data.history).forEach(([date, dayData]) => {
                     if(!history[date]) history[date] = { total: 0, perAnimal: {} };
-                    if(entry.perAnimal) {
-                        Object.entries(entry.perAnimal).forEach(([impIdxStr, list]) => {
-                            const targetIdx = idMap[parseInt(impIdxStr)];
-                            if(targetIdx !== undefined) {
+                    
+                    if(dayData.perAnimal) {
+                        Object.entries(dayData.perAnimal).forEach(([oldIdxStr, entries]) => {
+                            const oldIdx = parseInt(oldIdxStr);
+                            const targetIdx = idMap[oldIdx]; // GET CORRECT TARGET ANIMAL ID
+
+                            // Only proceed if we mapped this animal successfully
+                            if(targetIdx !== undefined && animals[targetIdx]) {
                                 if(!history[date].perAnimal[targetIdx]) history[date].perAnimal[targetIdx] = [];
-                                list.forEach(item => {
-                                    // Avoid strict duplicates
+                                
+                                entries.forEach(entry => {
+                                    // CHECK FOR DUPLICATES (Atomic package check)
                                     const exists = history[date].perAnimal[targetIdx].some(ex => 
-                                        ex.time === item.time && ex.location === item.location && ex.note === item.note
+                                        ex.time === entry.time && 
+                                        ex.location === entry.location && 
+                                        ex.note === entry.note
                                     );
-                                    if(!exists) history[date].perAnimal[targetIdx].push(item);
+                                    
+                                    if(!exists) {
+                                        history[date].perAnimal[targetIdx].push(entry);
+                                    }
                                 });
                             }
                         });
                     }
                 });
-                // Recalculate daily totals
+                // Recalculate totals
                 Object.keys(history).forEach(d => {
                     let t = 0;
                     if(history[d].perAnimal) Object.values(history[d].perAnimal).forEach(l => t += l.length);
@@ -1055,7 +1068,7 @@ function confirmImport(action) {
                 });
             }
             
-            // 3. Merge Locations
+            // 3. Locations
             if(data.locations) data.locations.forEach(l => { if(!locations.includes(l)) locations.push(l); });
             locations.sort();
             if(data.locCoords) locCoords = { ...locCoords, ...data.locCoords };
