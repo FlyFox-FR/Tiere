@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Top Tier🐾</title>
+<title>Top Tier 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -603,14 +603,51 @@ function render(){
     renderLocationList();
 }
 
+// === FIX: COMPLETELY REMOVE ANIMAL & HISTORY AND SHIFT INDICES ===
 function removeAnimal(i){ 
-    if(confirm("Dieses Tier und alle Statistiken unwiderruflich löschen?")) { 
-        animals.splice(i,1); 
-        safeSave(); 
-        closeModal('detailModal');
-        render(); 
-        showErrorToast("Tier gelöscht", true);
-    } 
+    if(!confirm("Dieses Tier und alle Statistiken unwiderruflich löschen?")) return;
+
+    // 1. Remove from animals array
+    animals.splice(i, 1);
+
+    // 2. Rebuild history for EVERY day
+    Object.keys(history).forEach(date => {
+        const dayData = history[date];
+        if (!dayData.perAnimal) return;
+
+        const newPerAnimal = {};
+        let newTotal = 0;
+
+        // Iterate old indices
+        Object.entries(dayData.perAnimal).forEach(([idxStr, sightings]) => {
+            const idx = parseInt(idxStr);
+            if (idx === i) {
+                // DELETE: Do not copy to new object
+            } else if (idx > i) {
+                // SHIFT DOWN: Index 5 becomes 4
+                newPerAnimal[idx - 1] = sightings;
+                newTotal += sightings.length;
+            } else {
+                // KEEP: Indices lower than i stay same
+                newPerAnimal[idx] = sightings;
+                newTotal += sightings.length;
+            }
+        });
+
+        // Save corrected data
+        dayData.perAnimal = newPerAnimal;
+        dayData.total = newTotal;
+
+        // Remove empty days
+        if (newTotal === 0 && Object.keys(newPerAnimal).length === 0) {
+            delete history[date];
+        }
+    });
+
+    safeSave(); 
+    closeModal('detailModal');
+    render(); 
+    showErrorToast("Tier komplett gelöscht", true);
 }
 
 // === MAP LOGIC ===
@@ -1014,61 +1051,42 @@ function confirmImport(action) {
     try {
         const data = tempImportData;
         if(action === 'merge') {
-            // MAP OLD ID -> NEW ID by ANIMAL NAME (STRICT)
             const idMap = {};
-            
-            // 1. Process Animals
             if(data.animals) {
                 data.animals.forEach((impA, impIdx) => {
                     const normName = impA.name.trim().toLowerCase();
                     let existIdx = animals.findIndex(a => a.name.trim().toLowerCase() === normName);
-                    
                     if(existIdx === -1) {
-                        existIdx = animals.push(impA) - 1; // Create new
+                        existIdx = animals.push(impA) - 1; 
                     }
-                    idMap[impIdx] = existIdx; // Map old index to current
+                    idMap[impIdx] = existIdx; 
                 });
             }
 
-            // 2. Process History (Strictly using idMap)
             if(data.history) {
                 Object.entries(data.history).forEach(([date, dayData]) => {
                     if(!history[date]) history[date] = { total: 0, perAnimal: {} };
-                    
                     if(dayData.perAnimal) {
-                        Object.entries(dayData.perAnimal).forEach(([oldIdxStr, entries]) => {
-                            const oldIdx = parseInt(oldIdxStr);
-                            const targetIdx = idMap[oldIdx]; // GET CORRECT TARGET ANIMAL ID
-
-                            // Only proceed if we mapped this animal successfully
+                        Object.entries(dayData.perAnimal).forEach(([oldIdxStr, list]) => {
+                            const targetIdx = idMap[parseInt(oldIdxStr)];
                             if(targetIdx !== undefined && animals[targetIdx]) {
                                 if(!history[date].perAnimal[targetIdx]) history[date].perAnimal[targetIdx] = [];
-                                
-                                entries.forEach(entry => {
-                                    // CHECK FOR DUPLICATES (Atomic package check)
+                                list.forEach(item => {
                                     const exists = history[date].perAnimal[targetIdx].some(ex => 
-                                        ex.time === entry.time && 
-                                        ex.location === entry.location && 
-                                        ex.note === entry.note
+                                        ex.time === item.time && ex.location === item.location && ex.note === item.note
                                     );
-                                    
-                                    if(!exists) {
-                                        history[date].perAnimal[targetIdx].push(entry);
-                                    }
+                                    if(!exists) history[date].perAnimal[targetIdx].push(item);
                                 });
                             }
                         });
                     }
                 });
-                // Recalculate totals
                 Object.keys(history).forEach(d => {
                     let t = 0;
                     if(history[d].perAnimal) Object.values(history[d].perAnimal).forEach(l => t += l.length);
                     history[d].total = t;
                 });
             }
-            
-            // 3. Locations
             if(data.locations) data.locations.forEach(l => { if(!locations.includes(l)) locations.push(l); });
             locations.sort();
             if(data.locCoords) locCoords = { ...locCoords, ...data.locCoords };
