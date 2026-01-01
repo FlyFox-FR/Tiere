@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Tiere zählen Ultimate v4.3 (Fix) 🐾</title>
+<title>Tiere zählen Ultimate v4.4 (Stable) 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -558,18 +558,42 @@ loadData();
 
 function fixCrossYearData() {
     let fixed = false;
+    // Iterate over the current loaded history (usually 2026)
     Object.keys(history).forEach(dateStr => {
         const y = new Date(dateStr).getFullYear();
-        if (y !== currentYear) {
+        if (y !== currentYear && !isNaN(y)) {
             // Found a misplaced entry! Move it.
-            const hOther = getHistoryForYear(y);
-            hOther[dateStr] = history[dateStr];
+            // 1. Load correct year's history
+            const hOther = getHistoryForYear(y); // This fetches existing data for Y
+            
+            // 2. Add current misplaced data to it
+            // Merge perAnimal arrays to avoid overwriting existing data in that year
+            if (history[dateStr].perAnimal) {
+                hOther[dateStr] = hOther[dateStr] || { total: 0, perAnimal: {} };
+                Object.entries(history[dateStr].perAnimal).forEach(([idx, list]) => {
+                    hOther[dateStr].perAnimal[idx] = hOther[dateStr].perAnimal[idx] || [];
+                    // Avoid duplicates
+                    list.forEach(item => {
+                        const exists = hOther[dateStr].perAnimal[idx].some(ex => ex.time === item.time && ex.location === item.location);
+                        if (!exists) {
+                            hOther[dateStr].perAnimal[idx].push(item);
+                            hOther[dateStr].total++;
+                        }
+                    });
+                });
+            }
+            
+            // 3. Save the OTHER year immediately
             saveHistoryForYear(y, hOther);
+            
+            // 4. Delete from CURRENT year
             delete history[dateStr];
             fixed = true;
         }
     });
+    
     if (fixed) {
+        // 5. Save CURRENT year immediately
         safeSave();
         renderStats(); // Refresh UI to show corrected years
         showErrorToast("Daten wurden automatisch repariert (Jahres-Zuordnung)", true);
@@ -636,9 +660,16 @@ function saveHistoryForYear(y, hData) {
 function getAnimalsForYear(y) {
     if (y === currentYear) return animals;
     try {
+        // FIX: If the animals file for a past year doesn't exist, use the CURRENT animals.
+        // This solves the "Deleted Data" bug where history exists but animals don't.
         const a = localStorage.getItem('animals-'+y);
-        return a ? JSON.parse(a) : [];
-    } catch(e) { return []; }
+        if (a) {
+            const parsed = JSON.parse(a);
+            if (parsed && parsed.length > 0) return parsed;
+        }
+        // Fallback to current animals if specific year is empty/missing
+        return animals;
+    } catch(e) { return animals; }
 }
 
 // === NAVIGATION ===
@@ -1002,7 +1033,10 @@ function updateDetailChart() {
     let targetIdx = i;
     if (y !== currentYear) {
         const pastAnimals = getAnimalsForYear(y);
-        targetIdx = pastAnimals.findIndex(pa => pa.name === a.name);
+        // Fallback: if pastAnimals is same as animals (by fallback), targetIdx stays i
+        if (pastAnimals !== animals) {
+             targetIdx = pastAnimals.findIndex(pa => pa.name === a.name);
+        }
     }
 
     let total = 0; let locs = {}; let times = { 'Morgens':0, 'Mittags':0, 'Abends':0, 'Nachts':0 };
