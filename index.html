@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Tiere zählen Ultimate v3.6 🐾</title>
+<title>Tiere zählen Ultimate v3.7 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -957,6 +957,7 @@ function renderStats(){
                 if(!firstSightings[idx] && list.length>0) firstSightings[idx] = { date: dateStr, loc: list[0].location };
                 list.forEach(item => {
                     const loc = item.location; 
+                    // FIX: Empty locations don't count for badges
                     if(loc && loc.trim() !== '' && loc !== 'Unbekannt') distinctLocs.add(loc);
                     if(item.time) {
                         const h = parseInt(item.time.split(':')[0]);
@@ -1135,11 +1136,37 @@ function confirmImport(action) {
     }
 }
 
+// === EXPORT CSV FIX (Semicolon) ===
+function exportCSV() {
+    let csv = "Datum;Uhrzeit;Tier;Ort;Notiz\n";
+    Object.entries(history).forEach(([d, v]) => {
+        if (v.perAnimal) {
+            Object.entries(v.perAnimal).forEach(([idx, list]) => {
+                const n = animals[idx] ? animals[idx].name : "Unbekannt";
+                list.forEach(s => {
+                    // Safe field handling for CSV (quotes if needed)
+                    const safe = (val) => {
+                        val = val || '';
+                        if (val.includes(';') || val.includes('"') || val.includes('\n')) {
+                            return `"${val.replace(/"/g, '""')}"`;
+                        }
+                        return val;
+                    };
+                    csv += `${d};${s.time || ''};${safe(n)};${safe(s.location)};${safe(s.note)}\n`;
+                });
+            });
+        }
+    });
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = `tiere-${year}.csv`;
+    a.click();
+}
+
 // === UTILS ===
 function toggleInfo(){ getEl('infoBox').style.display = getEl('infoBox').style.display==='none'?'block':'none'; }
 function toggleDarkMode(){ dark=!dark; document.body.classList.toggle('dark'); localStorage.setItem('darkmode',dark); }
 function downloadBackup(){ const b = new Blob([JSON.stringify({year,animals,history,locations,locCoords},null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`tiere-v3-${year}.json`; a.click(); }
-function exportCSV(){ let csv = "Datum,Uhrzeit,Tier,Ort,Notiz\n"; Object.entries(history).forEach(([d, v]) => { if(v.perAnimal){ Object.entries(v.perAnimal).forEach(([idx, list]) => { const n = animals[idx] ? animals[idx].name : "Unbekannt"; list.forEach(s => csv += `${d},${s.time||''},${n},${s.location||''},${s.note||''}\n`); }); } }); const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download=`tiere-${year}.csv`; a.click(); }
 function openNotifySettings(){ getEl('notifyModal').style.display='block'; }
 function closeModal(id){ getEl(id).style.display='none'; }
 window.onclick = e => { if(e.target.classList.contains('modal')) e.target.style.display='none'; }
