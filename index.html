@@ -134,7 +134,15 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
     background: var(--accent); color: white; width: 44px; height: 44px; border-radius: 14px;
     display: flex; align-items: center; justify-content: center; font-size: 20px; 
     box-shadow: 0 4px 10px var(--accent-glow);
+    /* NEU: Macht den Button etwas "erhabener" durch einen Rand */
+    border: 2px solid var(--card-solid); 
 }
+
+/* NEU: Verbindet Dropdown und Liste optisch etwas besser */
+.row .name-col select {
+    border-bottom-right-radius: 4px;
+}
+
 
 /* === GRID VIEW STYLES === */
 .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; padding-bottom: 20px; }
@@ -965,9 +973,14 @@ function render(){
         return b.count - a.count;
     });
 
+    // FIX: Ort-Auswahl Design & Stop-Propagation
     const createLocSelect = (i) => {
         if(!locations.length) return '';
-        return `<select id="${viewMode==='grid'?'locSelectGrid':'locSelect'}${i}" style="width:100%;font-size:11px;padding:4px;margin-top:4px;background:var(--bg);border:none"><option value="">📍 Ort?</option>${locations.map(l=>`<option>${l}</option>`).join('')}</select>`;
+        return `<select id="${viewMode==='grid'?'locSelectGrid':'locSelect'}${i}" 
+                onclick="event.stopPropagation()" 
+                style="width:auto; max-width:100%; display:block; margin-top:6px; margin-left:auto; font-size:11px; padding:4px; background:var(--btn); border:none; border-radius:6px; cursor:pointer;">
+                <option value="">📍 Ort wählen...</option>${locations.map(l=>`<option>${l}</option>`).join('')}
+                </select>`;
     };
 
     if (viewMode === 'grid') {
@@ -983,12 +996,43 @@ function render(){
     } else {
         displayList.forEach(item => {
             const div = document.createElement('div'); div.className = 'row fade-in';
-            div.innerHTML = `<div class="animal-icon" onclick="safeRun(openIconEdit, ${item.idx})">${item.emoji}</div><div class="name-col" onclick="safeRun(openDetail,${item.idx})"><div class="name">${item.name}</div><div class="tags-row">${item.tags.join(', ')}</div>${createLocSelect(item.idx)}</div><button class="fav-btn ${item.isFav?'active':''}" onclick="safeRun(toggleFav, ${item.idx}, event)">${item.isFav?'★':'☆'}</button><div class="count-badge">${item.count}</div><button class="action-btn-main" onclick="safeRun(change,${item.idx},1, event)">+</button><button onclick="safeRun(openNoteModal,${item.idx})" style="padding:0 10px; background:transparent; font-size:20px">📝</button>`;
+            
+            // HIER IST DIE ÄNDERUNG:
+            // 1. onclick vom äußeren div (.name-col) entfernt.
+            // 2. Ein inneres div um Name & Tags gelegt mit width: fit-content
+            div.innerHTML = `
+                <div class="animal-icon" onclick="safeRun(openIconEdit, ${item.idx})">${item.emoji}</div>
+                
+                <div class="name-col">
+                    <div onclick="safeRun(openDetail,${item.idx})" style="cursor:pointer; width:fit-content; padding-right:10px;">
+                        <div class="name">${item.name}</div>
+                        <div class="tags-row">${item.tags.join(', ')}</div>
+                    </div>
+                    ${createLocSelect(item.idx)}
+                </div>
+
+                <button class="fav-btn ${item.isFav?'active':''}" onclick="safeRun(toggleFav, ${item.idx}, event)">${item.isFav?'★':'☆'}</button>
+                <div class="count-badge">${item.count}</div>
+                <button class="action-btn-main" data-idx="${item.idx}">+</button>
+                <button onclick="safeRun(openNoteModal,${item.idx})" style="padding:0 10px; background:transparent; font-size:20px">📝</button>
+            `;
+            
+            // Bild laden
             if(item.imageId) { dbGetImg(item.imageId).then(src => { if(src) div.querySelector('.animal-icon').innerHTML = `<img src="${src}">`; }); }
+            
+            // Button Listener für Long-Press
+            const btn = div.querySelector('.action-btn-main');
+            if(typeof addPressEvents === "function") {
+                addPressEvents(btn, item.idx);
+            } else {
+                btn.onclick = (e) => safeRun(change, item.idx, 1, e);
+            }
+
             list.appendChild(div);
         });
     }
-    // START Orte-Liste rendern
+    
+    // Orte-Liste rendern
     const locContainer = getEl('locationListDisplay');
     locContainer.innerHTML = '';
     if(!locations.length) {
@@ -1002,9 +1046,7 @@ function render(){
             locContainer.appendChild(pill);
         });
     }
-    // END Orte-Liste
 }
-
 function filterTags(t) { currentFilter=t; render(); }
 function cycleSort() { sortMode = sortMode==='fav'?'name':(sortMode==='name'?'count':'fav'); render(); }
 function toggleViewMode() { viewMode = viewMode==='list'?'grid':'list'; localStorage.setItem('viewMode',viewMode); render(); }
@@ -1026,13 +1068,16 @@ async function openDetail(i){
 }
 
 function updateDetailChart() {
-    const i = detailAnimalIdx; const y = parseInt(getEl('detailYearSelect').value);
+    const i = detailAnimalIdx; 
+    const y = parseInt(getEl('detailYearSelect').value);
     const h = getHistory(y);
     const body = getEl('modalBody');
     const a = animals[i];
     if(!a) return;
 
     let total=0, locs={}, months=new Array(12).fill(0), historyList=[];
+    
+    // Daten sammeln
     Object.entries(h).forEach(([dateStr, entry]) => {
         if(entry.perAnimal?.[i]){
             const list = entry.perAnimal[i];
@@ -1044,8 +1089,11 @@ function updateDetailChart() {
             });
         }
     });
+    
+    // Sortieren: Neueste zuerst
     historyList.sort((a,b) => b.date.localeCompare(a.date) || (b.item.time||'').localeCompare(a.item.time||''));
 
+    // --- Statistik oben ---
     let html = `<div style="text-align:center; padding-bottom:15px; border-bottom:1px solid var(--btn)">Gesamt ${y}: <strong style="font-size:1.2em">${total}</strong></div>`;
     
     const sortedLocs = Object.entries(locs).sort((a,b)=>b[1]-a[1]).slice(0,3);
@@ -1062,16 +1110,44 @@ function updateDetailChart() {
     months.forEach((v, idx)=> html += `<div class="chart-col"><div class="chart-bar" style="height:${v===0?1:(v/maxM)*100}%; opacity:${v===0?0.1:1}"></div><div class="chart-label">${mN[idx]}</div></div>`);
     html += `</div>`;
 
+    // --- Verlauf Liste (Neu mit Trennern) ---
     if(historyList.length === 0) html += '<p style="text-align:center; opacity:0.6; margin-top:20px">Keine Sichtungen.</p>';
     else {
-        html += `<div style="margin-top:10px; max-height:300px; overflow-y:auto">`;
+        html += `<div style="margin-top:15px; max-height:350px; overflow-y:auto; padding-right:5px;">`;
+        
+        let lastDate = '';
+        const today = new Date().toISOString().slice(0,10);
+
         historyList.forEach(row => {
-            const d = row.date.split('-').reverse().slice(0,2).join('.');
-            html += `<div style="display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--btn)"><div><span style="font-size:13px; font-weight:bold">${d} - ${row.item.time||'--:--'}</span>${row.item.location ? `<br><span style="font-size:12px;opacity:0.8">📍 ${row.item.location}</span>` : ''}${row.item.note ? `<br><span style="background:var(--warn-bg);color:var(--warn-text);padding:2px 6px;border-radius:4px;font-size:11px">${row.item.note}</span>` : ''}</div><div><button style="padding:5px 10px; font-size:14px" onclick="safeRun(deleteHistoryItem, '${row.date}', ${i}, ${row.arrIdx})">🗑️</button><button style="padding:5px 10px; font-size:14px" onclick="safeRun(openNoteModal, ${i}, '${row.date}', ${row.arrIdx})">✏️</button></div></div>`;
+            // Datums-Überschrift einfügen, wenn neuer Tag
+            if(row.date !== lastDate) {
+                let displayDate = row.date.split('-').reverse().slice(0,2).join('.'); // DD.MM.
+                if(row.date === today) displayDate = "Heute";
+                
+                html += `<div style="position:sticky; top:0; background:var(--card-solid); border:1px solid var(--btn); padding:4px 12px; border-radius:15px; font-size:12px; font-weight:bold; margin:15px auto 5px auto; width:fit-content; z-index:5; box-shadow:0 2px 5px rgba(0,0,0,0.05);">📅 ${displayDate}</div>`;
+                lastDate = row.date;
+            }
+
+            // Der eigentliche Eintrag
+            html += `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:8px 10px; margin-bottom:6px; background:var(--bg); border-radius:12px; font-size:14px;">
+                <div>
+                    <span style="font-weight:bold; opacity:0.8">⌚ ${row.item.time||'--:--'}</span>
+                    ${row.item.location ? `<br><span style="font-size:12px; opacity:0.7">📍 ${row.item.location}</span>` : ''}
+                    ${row.item.note ? `<br><span style="background:var(--warn-bg); color:var(--warn-text); padding:2px 6px; border-radius:4px; font-size:11px; display:inline-block; margin-top:2px;">📝 ${row.item.note}</span>` : ''}
+                </div>
+                <div style="display:flex; gap:5px;">
+                    <button style="padding:6px; font-size:14px; background:var(--card-solid); border:1px solid var(--btn); border-radius:8px;" onclick="safeRun(deleteHistoryItem, '${row.date}', ${i}, ${row.arrIdx})">🗑️</button>
+                    <button style="padding:6px; font-size:14px; background:var(--card-solid); border:1px solid var(--btn); border-radius:8px;" onclick="safeRun(openNoteModal, ${i}, '${row.date}', ${row.arrIdx})">✏️</button>
+                </div>
+            </div>`;
         });
         html += `</div>`;
     }
-    html += `<div style="margin-top:20px; text-align:center"><button onclick="safeRun(removeAnimal, ${i})" style="background:var(--err-bg); color:var(--err-text)">Tier löschen</button></div>`;
+    
+    // Lösch-Button unten
+    html += `<div style="margin-top:20px; text-align:center"><button onclick="safeRun(moveToTrash, ${i})" style="background:var(--err-bg); color:var(--err-text); font-size:12px; padding:10px 20px;">Tier in Papierkorb verschieben</button></div>`;
+    
     body.innerHTML = html;
 }
 
