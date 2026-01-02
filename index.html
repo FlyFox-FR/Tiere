@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
 <style>
-/* === GLOBAL RESET FOR BOX SIZING (FIXES OVERFLOW) === */
+/* === GLOBAL RESET === */
 *, *::before, *::after { box-sizing: border-box; }
 
 :root{
@@ -101,48 +101,126 @@ button:hover{background:var(--hover)}
 input,select,textarea{padding:12px;font-size:16px;border-radius:12px;border:1px solid var(--btn);background:var(--card-solid);color:var(--text); width: 100%; box-sizing: border-box; font-family: inherit;}
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
 
-/* === LIST VIEW STYLES === */
-.row{
-    display:flex; align-items:center; gap:12px; 
-    background:var(--card); backdrop-filter: blur(5px);
-    padding:10px 12px; margin-bottom:10px; border-radius:18px; 
-    box-shadow: var(--shadow); border: var(--glass-border);
-    transition: transform 0.2s;
+/* === LIST VIEW STYLES (MODERN V7.6) === */
+.row {
+    display: flex; 
+    align-items: center; /* Zentriert alles vertikal */
+    gap: 12px; 
+    background: var(--card); 
+    backdrop-filter: blur(10px);
+    padding: 8px 12px; 
+    margin-bottom: 12px; 
+    border-radius: 20px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid rgba(255,255,255,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 .row:active { transform: scale(0.99); }
+
+/* Neuer Klick-Bereich links (Bild+Text) */
+.click-area-left {
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+    cursor: pointer;
+    border-radius: 16px;
+    padding: 4px;
+    transition: background 0.2s;
+}
+.click-area-left:active {
+    background: rgba(0,0,0,0.05);
+    transform: scale(0.98);
+}
+/* Hover Effekt */
+.click-area-left:hover .animal-icon {
+    transform: scale(1.1) rotate(-5deg);
+    border-color: var(--accent);
+    box-shadow: 0 4px 12px var(--accent-glow);
+}
+
 .animal-icon{
-    font-size:28px; width:48px; height:48px; flex-shrink:0; 
+    font-size:26px; width:46px; height:46px; flex-shrink:0; 
     display:flex; align-items:center; justify-content:center; 
-    overflow:hidden; border-radius:14px; cursor: pointer; 
-    background: var(--bg); border: 1px solid var(--btn);
+    overflow:hidden; border-radius:16px; cursor: pointer; 
+    background: linear-gradient(135deg, var(--bg), var(--card-solid));
+    border: 1px solid var(--btn);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .animal-icon img {width:100%; height:100%; object-fit:cover;}
+
 .name-col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
 .name{ font-weight:700; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tags-row { font-size:11px; opacity:0.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* LAYOUT: Count Badge drückt den Rest nach rechts */
 .count-badge { 
     background: var(--bg); color: var(--text); border: 1px solid var(--btn);
     min-width: 32px; height: 32px; border-radius: 10px; 
     display: flex; align-items: center; justify-content: center; 
-    font-weight: 800; font-size: 14px; margin-right: 4px;
+    font-weight: 800; font-size: 14px; 
+    
+    margin-left: auto; /* PUSH RECHTS */
+    margin-right: 4px;
 }
+
+/* Modern Select Dropdown (Pill Shape) */
+.modern-select {
+    appearance: none; -webkit-appearance: none;
+    background-color: var(--btn);
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23555%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px top 50%;
+    background-size: 10px auto;
+    padding: 6px 24px 6px 12px;
+    border-radius: 20px;
+    border: 1px solid transparent;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sub);
+    cursor: pointer;
+    
+    margin-left: 0; /* Kein Auto Margin mehr */
+    margin-right: 4px;
+    max-width: 110px;
+    white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
+    margin-top: 0; align-self: center;
+    transition: all 0.2s;
+}
+.modern-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    background-color: var(--card-solid);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* Fav Button Update */
 .fav-btn {
-    background: none; border: none; font-size: 18px; color: var(--btn); cursor: pointer; padding: 5px; margin-right: -4px;
+    background: none; border: none; 
+    font-size: 24px; /* Größer */
+    color: var(--btn); 
+    cursor: pointer; 
+    padding: 0 4px;
+    margin-right: -4px;
+    transition: transform 0.2s;
 }
-.fav-btn.active { color: #ffb300; text-shadow: 0 0 10px rgba(255, 179, 0, 0.4); }
+.fav-btn:active { transform: scale(1.3); }
+.fav-btn.active { color: #ffb300; filter: drop-shadow(0 0 2px rgba(255,179,0,0.5)); }
+
+/* Animations für Buttons */
+.action-btn-main, .icon-btn-anim {
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s;
+    cursor: pointer;
+}
 .action-btn-main {
     background: var(--accent); color: white; width: 44px; height: 44px; border-radius: 14px;
     display: flex; align-items: center; justify-content: center; font-size: 20px; 
     box-shadow: 0 4px 10px var(--accent-glow);
-    /* NEU: Macht den Button etwas "erhabener" durch einen Rand */
-    border: 2px solid var(--card-solid); 
+    border: 2px solid var(--card-solid);
 }
-
-/* NEU: Verbindet Dropdown und Liste optisch etwas besser */
-.row .name-col select {
-    border-bottom-right-radius: 4px;
-}
-
+.action-btn-main:active, .icon-btn-anim:active { transform: scale(0.90); }
+.action-btn-main:hover { transform: scale(1.05); box-shadow: 0 6px 15px var(--accent-glow); }
+.icon-btn-anim:hover { transform: scale(1.1); background: rgba(0,0,0,0.05); border-radius: 8px; }
 
 /* === GRID VIEW STYLES === */
 .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; padding-bottom: 20px; }
@@ -168,27 +246,15 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .undo-btn { background: transparent; color: #64b5f6; font-weight: bold; text-transform: uppercase; font-size: 14px; padding: 5px 10px; margin: -5px -10px -5px 0; cursor: pointer; }
 .error-toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--err-bg); color: var(--err-text); padding: 12px 24px; border-radius: 50px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 9999; font-size: 14px; display: none; animation: fadeIn 0.3s; font-weight: bold; width: max-content; }
 
-/* === BOTTOM SHEETS & MODALS (FIXED: Swipe & Width) === */
+/* === BOTTOM SHEETS & MODALS === */
 .modal { display: none; position: fixed; z-index: 9995; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); transition: opacity 0.3s; }
 .modal-content {
     background-color: var(--card-solid); margin: 5% auto; padding: 25px; border-radius: 24px; width: 90%; max-width: 500px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
     animation: zoomIn 0.2s ease-out; max-height: 85vh; overflow-y: auto;
 }
-/* MOBILE OVERRIDE FOR BOTTOM SHEET */
 @media (max-width: 600px) {
     .modal-content {
-        margin: 0; 
-        position: absolute; 
-        bottom: 0; 
-        left: 0; 
-        width: 100%; /* Fixes overflow */
-        max-width: 100%; /* Fixes overflow */
-        border-radius: 24px 24px 0 0;
-        animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        padding-bottom: 40px;
-        /* Enable hardware acceleration for smooth dragging */
-        transform: translateZ(0); 
-        transition: transform 0.1s;
+        margin: 0; position: absolute; bottom: 0; left: 0; width: 100%; max-width: 100%; border-radius: 24px 24px 0 0; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); padding-bottom: 40px; transform: translateZ(0); transition: transform 0.1s;
     }
 }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -230,7 +296,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .chart-val { font-size: 10px; margin-bottom: 2px; }
 .chart-label { font-size: 10px; margin-top: 4px; transform: rotate(-45deg); height: 20px; text-align: center; }
 
-/* === NEW STATS CSS FROM FILE 2 === */
+/* Level Table */
 .level-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
 .level-table th { border-bottom: 1px solid var(--btn); padding: 5px; opacity: 0.7; }
 .level-table td { border-bottom: 1px solid var(--btn); padding: 6px 5px; }
@@ -258,6 +324,9 @@ input:checked + .slider:before { transform: translateX(22px); }
 .autocomplete-results { position: absolute; top: 100%; left: 0; right: 0; background: var(--card-solid); border: 1px solid var(--btn); z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border-radius: 0 0 12px 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
 .suggestion-item { padding: 12px; cursor: pointer; border-bottom: 1px solid var(--btn); font-size: 14px; }
 
+/* Trash Bin */
+.trash-row { transition: background 0.2s; }
+.trash-row:hover { background: var(--btn); }
 </style>
 </head>
 <body>
@@ -937,7 +1006,8 @@ function spawnParticle(x, y, text) {
     setTimeout(() => p.remove(), 800);
 }
 
-// === RENDER ===
+
+// === RENDER (V7.6 Layout Update) ===
 function render(){
     const list = getEl('list'); list.innerHTML = '';
     getEl('viewToggleBtn').innerText = viewMode === 'list' ? '📜' : '▦';
@@ -973,13 +1043,14 @@ function render(){
         return b.count - a.count;
     });
 
-    // FIX: Ort-Auswahl Design & Stop-Propagation
+    // Helper: Dropdown erstellen
     const createLocSelect = (i) => {
         if(!locations.length) return '';
+        // margin-left entfernt, da jetzt die Zahl schiebt
         return `<select id="${viewMode==='grid'?'locSelectGrid':'locSelect'}${i}" 
-                onclick="event.stopPropagation()" 
-                style="width:auto; max-width:100%; display:block; margin-top:6px; margin-left:auto; font-size:11px; padding:4px; background:var(--btn); border:none; border-radius:6px; cursor:pointer;">
-                <option value="">📍 Ort wählen...</option>${locations.map(l=>`<option>${l}</option>`).join('')}
+                class="modern-select" 
+                onclick="event.stopPropagation()">
+                <option value="">📍 Ort...</option>${locations.map(l=>`<option>${l}</option>`).join('')}
                 </select>`;
     };
 
@@ -988,33 +1059,45 @@ function render(){
         displayList.forEach(item => {
             const card = document.createElement('div'); card.className = 'grid-item fade-in';
             const imgHTML = `<div class="grid-img-wrap" onclick="safeRun(openIconEdit, ${item.idx})"><div style="font-size:30px">${item.emoji}</div></div>`;
-            card.innerHTML = `<div class="grid-fav ${item.isFav?'active':''}" onclick="safeRun(toggleFav, ${item.idx}, event)">${item.isFav?'★':'☆'}</div>${imgHTML}<div class="grid-name">${item.name}</div><div class="grid-count" style="font-weight:bold;color:var(--accent)">${item.count}</div>${createLocSelect(item.idx)}<div class="grid-actions"><button class="grid-btn" onclick="safeRun(openDetail,${item.idx})">📈</button><button class="grid-btn" style="background:var(--accent);color:#fff;flex:1.5" onclick="safeRun(change,${item.idx},1, event)">+</button><button class="grid-btn" onclick="safeRun(openNoteModal,${item.idx})">📝</button></div>`;
+            // Grid Select braucht margin:auto zum zentrieren
+            const gridLoc = locations.length ? `<select class="modern-select" id="locSelectGrid${item.idx}" onclick="event.stopPropagation()" style="width:100%; margin:5px auto; text-align:center; padding-left:10px;"><option value="">📍 Ort...</option>${locations.map(l=>`<option>${l}</option>`).join('')}</select>` : '';
+            
+            card.innerHTML = `<div class="grid-fav ${item.isFav?'active':''}" onclick="safeRun(toggleFav, ${item.idx}, event)">${item.isFav?'★':'☆'}</div>${imgHTML}<div class="grid-name">${item.name}</div><div class="grid-count" style="font-weight:bold;color:var(--accent)">${item.count}</div>${gridLoc}<div class="grid-actions"><button class="grid-btn" onclick="safeRun(openDetail,${item.idx})">📈</button><button class="grid-btn" style="background:var(--accent);color:#fff;flex:1.5" onclick="safeRun(change,${item.idx},1, event)">+</button><button class="grid-btn" onclick="safeRun(openNoteModal,${item.idx})">📝</button></div>`;
             if(item.imageId) { dbGetImg(item.imageId).then(src => { if(src) card.querySelector('.grid-img-wrap').innerHTML = `<img src="${src}">`; }); }
             gridCont.appendChild(card);
         });
         list.appendChild(gridCont);
     } else {
+        // === LIST VIEW (Hier ist die Änderung) ===
         displayList.forEach(item => {
             const div = document.createElement('div'); div.className = 'row fade-in';
             
-            // HIER IST DIE ÄNDERUNG:
-            // 1. onclick vom äußeren div (.name-col) entfernt.
-            // 2. Ein inneres div um Name & Tags gelegt mit width: fit-content
+            // NEUE REIHENFOLGE:
+            // 1. Name/Bild (Links)
+            // 2. Count Badge (hat margin-left: auto -> drückt den Rest nach rechts)
+            // 3. Stern
+            // 4. Ort
+            // 5. Plus
+            // 6. Notiz
+            
             div.innerHTML = `
-                <div class="animal-icon" onclick="safeRun(openIconEdit, ${item.idx})">${item.emoji}</div>
-                
-                <div class="name-col">
-                    <div onclick="safeRun(openDetail,${item.idx})" style="cursor:pointer; width:fit-content; padding-right:10px;">
+                <div class="click-area-left" onclick="safeRun(openDetail,${item.idx})" title="Details anzeigen">
+                    <div class="animal-icon">${item.emoji}</div>
+                    <div class="name-col">
                         <div class="name">${item.name}</div>
                         <div class="tags-row">${item.tags.join(', ')}</div>
                     </div>
-                    ${createLocSelect(item.idx)}
                 </div>
 
-                <button class="fav-btn ${item.isFav?'active':''}" onclick="safeRun(toggleFav, ${item.idx}, event)">${item.isFav?'★':'☆'}</button>
                 <div class="count-badge">${item.count}</div>
+                
+                <button class="fav-btn ${item.isFav?'active':''}" onclick="safeRun(toggleFav, ${item.idx}, event)">${item.isFav?'★':'☆'}</button>
+                
+                ${createLocSelect(item.idx)}
+
                 <button class="action-btn-main" data-idx="${item.idx}">+</button>
-                <button onclick="safeRun(openNoteModal,${item.idx})" style="padding:0 10px; background:transparent; font-size:20px">📝</button>
+                
+                <button onclick="safeRun(openNoteModal,${item.idx})" class="icon-btn-anim" style="padding:0 8px; background:transparent; font-size:20px; border:none;">📝</button>
             `;
             
             // Bild laden
@@ -1032,7 +1115,7 @@ function render(){
         });
     }
     
-    // Orte-Liste rendern
+    // Orte-Liste rendern (Admin Bereich)
     const locContainer = getEl('locationListDisplay');
     locContainer.innerHTML = '';
     if(!locations.length) {
@@ -1047,6 +1130,7 @@ function render(){
         });
     }
 }
+
 function filterTags(t) { currentFilter=t; render(); }
 function cycleSort() { sortMode = sortMode==='fav'?'name':(sortMode==='name'?'count':'fav'); render(); }
 function toggleViewMode() { viewMode = viewMode==='list'?'grid':'list'; localStorage.setItem('viewMode',viewMode); render(); }
