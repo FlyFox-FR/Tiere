@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Tiere zählen Ultimate v4.7 (Safe Mode) 🐾</title>
+<title>Tiere zählen Ultimate v5.1 (Full Safe) 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -72,7 +72,7 @@ input,select,textarea{padding:10px;font-size:16px;border-radius:10px;border:1px 
 .grid-btn { padding: 8px; border-radius: 8px; background: var(--btn); font-size: 14px; flex: 1; display:flex; align-items:center; justify-content:center; }
 .grid-btn.add { background: var(--accent); color: white; flex: 1.5; font-size: 18px; }
 
-/* === LIST VIEW STYLES (Existing) === */
+/* === LIST VIEW STYLES === */
 .row{display:flex;align-items:center;gap:6px;background:var(--card);padding:6px 8px;margin-bottom:6px;border-radius:12px;box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-wrap:nowrap;}
 .animal-icon{font-size:24px;width:40px;height:40px;flex-shrink:0;text-align:center;display:flex;align-items:center;justify-content:center; overflow:hidden; border-radius:8px; cursor: pointer; transition: transform 0.2s; border: 1px solid transparent;}
 .animal-icon:hover { transform: scale(1.1); border-color: var(--accent); }
@@ -386,8 +386,8 @@ input:checked + .slider:before { transform: translateX(24px); }
     <p style="font-size:14px; opacity:0.8; margin-bottom:20px;">Wie möchtest du die Daten importieren?</p>
     
     <div class="import-actions">
-        <button class="btn-merge" onclick="safeRun(confirmImport, 'merge')">✨ Zusammenfügen (Merge)<br><small style="font-weight:normal; font-size:11px">Fügt neue Daten hinzu (keine Doppelten)</small></button>
-        <button class="btn-overwrite" onclick="safeRun(confirmImport, 'overwrite')">⚠️ Alles Überschreiben<br><small style="font-weight:normal; font-size:11px">Löscht ALLE Daten komplett</small></button>
+        <button class="btn-merge" onclick="safeRun(confirmImport, 'merge')">✨ Zusammenfügen (Smart Merge)<br><small style="font-weight:normal; font-size:11px">Sortiert alles automatisch in die richtigen Jahre</small></button>
+        <button class="btn-overwrite" onclick="safeRun(confirmImport, 'overwrite')">⚠️ Alles Überschreiben<br><small style="font-weight:normal; font-size:11px">Löscht ALLE Daten und stellt Backup wieder her</small></button>
         <button class="btn-cancel" onclick="safeRun(confirmImport, 'cancel')">Abbrechen</button>
     </div>
   </div>
@@ -430,14 +430,6 @@ input:checked + .slider:before { transform: translateX(24px); }
         <button onclick="safeRun(saveNotifySettings)" style="flex:1; background:var(--accent); color:#fff">Speichern</button>
         <button onclick="safeRun(testNotification)" style="flex:1;">Test</button>
     </div>
-    <hr>
-    <h4>📅 Kalender-Export</h4>
-    <div style="display:flex; gap:5px; margin-bottom:10px">
-        <select id="icsFreq"><option value="WEEKLY">Wöchentlich</option><option value="DAILY">Täglich</option></select>
-        <input type="time" id="icsTime" value="19:00">
-    </div>
-    <select id="icsDay" style="margin-bottom:10px"><option value="SA">Samstag</option><option value="SU">Sonntag</option></select>
-    <button onclick="safeRun(downloadICS)" style="width:100%">📅 ICS Datei laden</button>
   </div>
 </div>
 
@@ -459,11 +451,12 @@ function safeRun(func, ...args) {
     try { func(...args); } catch (e) { console.error(e); showErrorToast(e.message); }
 }
 const getEl = (id) => document.getElementById(id);
+const todayStr = () => new Date().toISOString().slice(0,10);
+const nowTimeStr = () => new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
 
-// === GLOBALS ===
-const currentYear = new Date().getFullYear();
+// === GLOBALS & CONFIG ===
+const currentSystemYear = new Date().getFullYear(); 
 let animals = []; 
-let history = {}; // Current year history for writing
 let colors = {};
 let locations = [];
 let locCoords = {};
@@ -477,12 +470,9 @@ let notifyConfig = JSON.parse(localStorage.getItem('notifyConfig')) || { enabled
 let mapInstance = null;
 let mapMarkers = [];
 let tempImportData = null;
-let detailAnimalIdx = null; // Store currently viewed animal for details
+let detailAnimalIdx = null;
 
-const today = () => new Date().toISOString().slice(0,10);
-const nowTime = () => new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
-
-// === LEVEL CONFIGURATION ===
+// === LEVELS CONFIG ===
 const levels = [
     { xp: 0, name: "Garten-Gucker" },
     { xp: 100, name: "Park-Besucher" },
@@ -506,7 +496,7 @@ const levels = [
     { xp: 25000, name: "Hüter der Wildnis" }
 ];
 
-// === SOUND ===
+// === SOUND ENGINE ===
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx; 
 try { audioCtx = new AudioContext(); } catch(e){}
@@ -531,97 +521,19 @@ function playSound(type){
     }
 }
 
-// === LOAD / SAVE ===
-function loadData() {
+// === STORAGE ENGINE V5.1 (SMART ROUTING) ===
+
+// 1. Get History Helper (Safe Load)
+function getHistoryForYear(year) {
     try {
-        const a = localStorage.getItem('animals-'+currentYear); animals = a ? JSON.parse(a) : [];
-        animals.forEach(an => { if(!an.tags) an.tags = []; });
-        
-        const h = localStorage.getItem('history-'+currentYear); history = h ? JSON.parse(h) : {};
-        const c = localStorage.getItem('colors-'+currentYear); colors = c ? JSON.parse(c) : {};
-        const l = localStorage.getItem('locations-'+currentYear); locations = l ? JSON.parse(l) : [];
-        const lc = localStorage.getItem('locCoords-'+currentYear); locCoords = lc ? JSON.parse(lc) : {};
-        
-        dark = localStorage.getItem('darkmode')==='true';
-        if(dark) document.body.classList.add('dark');
-        
-        const vm = localStorage.getItem('viewMode');
-        if(vm) viewMode = vm;
-
-        updateStorageUsage();
-        
-        // AUTO-FIX: Check if current year history contains wrong dates
-        setTimeout(fixCrossYearData, 500);
-    } catch(e) { animals=[]; }
-}
-loadData();
-
-function fixCrossYearData() {
-    let fixed = false;
-    // Iterate over the current loaded history (usually currentYear)
-    Object.keys(history).forEach(dateStr => {
-        const y = new Date(dateStr).getFullYear();
-        if (y !== currentYear && !isNaN(y)) {
-            // Found a misplaced entry! Move it.
-            const hOther = getHistoryForYear(y); // This fetches existing data for Y
-            
-            // Merge perAnimal arrays to avoid overwriting existing data in that year
-            if (history[dateStr].perAnimal) {
-                hOther[dateStr] = hOther[dateStr] || { total: 0, perAnimal: {} };
-                Object.entries(history[dateStr].perAnimal).forEach(([idx, list]) => {
-                    hOther[dateStr].perAnimal[idx] = hOther[dateStr].perAnimal[idx] || [];
-                    list.forEach(item => {
-                        const exists = hOther[dateStr].perAnimal[idx].some(ex => ex.time === item.time && ex.location === item.location);
-                        if (!exists) {
-                            hOther[dateStr].perAnimal[idx].push(item);
-                            hOther[dateStr].total++;
-                        }
-                    });
-                });
-            }
-            saveHistoryForYear(y, hOther);
-            delete history[dateStr];
-            fixed = true;
-        }
-    });
-    
-    if (fixed) {
-        safeSave();
-        renderStats(); 
-        showErrorToast("Daten wurden automatisch repariert (Jahres-Zuordnung)", true);
-    }
+        const h = localStorage.getItem('history-'+year);
+        return h ? JSON.parse(h) : {};
+    } catch(e) { return {}; }
 }
 
-const safeSave = () => {
-    localStorage.setItem('animals-'+currentYear, JSON.stringify(animals));
-    localStorage.setItem('history-'+currentYear, JSON.stringify(history));
-    localStorage.setItem('colors-'+currentYear, JSON.stringify(colors));
-    localStorage.setItem('locations-'+currentYear, JSON.stringify(locations));
-    localStorage.setItem('locCoords-'+currentYear, JSON.stringify(locCoords));
-    renderLocationList();
-    updateStorageUsage();
-};
-
-function updateStorageUsage() {
-    try {
-        let total = 0;
-        for (let x in localStorage) {
-            if (localStorage.hasOwnProperty(x)) total += ((localStorage[x].length * 2) / 1024 / 1024);
-        }
-        const pct = Math.min((total / 5) * 100, 100).toFixed(1);
-        const bar = getEl('storageBar');
-        const txt = getEl('storageText');
-        if(bar && txt) {
-            bar.style.width = pct + '%';
-            bar.style.background = pct > 90 ? 'var(--err-text)' : (pct > 70 ? 'var(--warn-text)' : 'var(--accent)');
-            txt.innerText = pct + '% (' + total.toFixed(2) + ' MB)';
-        }
-    } catch(e) {}
-}
-
-// === HELPER: MULTI-YEAR SUPPORT ===
+// 2. Get Available Years Helper
 function getAvailableYears() {
-    let years = new Set([currentYear]);
+    let years = new Set([currentSystemYear]);
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key.startsWith('history-')) {
@@ -632,129 +544,122 @@ function getAvailableYears() {
     return Array.from(years).sort((a,b) => b-a);
 }
 
-function getHistoryForYear(y) {
-    if (y === currentYear) return history;
-    try {
-        const h = localStorage.getItem('history-'+y);
-        return h ? JSON.parse(h) : {};
-    } catch(e) { return {}; }
+// 3. WRITE ROUTER (Crucial Logic)
+function writeHistoryEntry(dateStr, animalIdx, dataObj) {
+    const year = parseInt(dateStr.split('-')[0]);
+    if (isNaN(year)) throw new Error("Ungültiges Datum: " + dateStr);
+
+    let h = getHistoryForYear(year);
+
+    h[dateStr] = h[dateStr] || { total: 0, perAnimal: {} };
+    h[dateStr].perAnimal[animalIdx] = h[dateStr].perAnimal[animalIdx] || [];
+
+    h[dateStr].perAnimal[animalIdx].push(dataObj);
+    h[dateStr].total++;
+
+    localStorage.setItem('history-'+year, JSON.stringify(h));
+    
+    // Sync globals
+    saveGlobals();
+    updateStorageUsage();
 }
 
-function saveHistoryForYear(y, hData) {
-    if (y === currentYear) {
-        history = hData;
-        safeSave();
-    } else {
-        localStorage.setItem('history-'+y, JSON.stringify(hData));
+// 4. DELETE ROUTER
+function removeHistoryEntry(dateStr, animalIdx, arrIdx) {
+    const year = parseInt(dateStr.split('-')[0]);
+    let h = getHistoryForYear(year);
+    
+    if (h[dateStr] && h[dateStr].perAnimal && h[dateStr].perAnimal[animalIdx]) {
+        h[dateStr].perAnimal[animalIdx].splice(arrIdx, 1);
+        h[dateStr].total--;
+        
+        // Cleanup empty
+        if (h[dateStr].perAnimal[animalIdx].length === 0) delete h[dateStr].perAnimal[animalIdx];
+        if (h[dateStr].total <= 0) delete h[dateStr];
+        
+        localStorage.setItem('history-'+year, JSON.stringify(h));
+        updateStorageUsage();
     }
 }
 
-function getAnimalsForYear(y) {
-    if (y === currentYear) return animals;
+// 5. GLOBAL LOADER
+function loadGlobals() {
     try {
-        const a = localStorage.getItem('animals-'+y);
-        if (a) {
-            const parsed = JSON.parse(a);
-            if (parsed && parsed.length > 0) return parsed;
+        const a = localStorage.getItem('animals-'+currentSystemYear); 
+        // Fallback to prev year if current empty
+        if(!a) {
+             const prev = localStorage.getItem('animals-'+(currentSystemYear-1));
+             animals = prev ? JSON.parse(prev) : [];
+        } else {
+             animals = JSON.parse(a);
         }
-        return animals; // Fallback to current
-    } catch(e) { return animals; }
+        
+        // Migrate legacy color/locs to global if exists
+        const c = localStorage.getItem('colors'); colors = c ? JSON.parse(c) : (localStorage.getItem('colors-'+currentSystemYear) ? JSON.parse(localStorage.getItem('colors-'+currentSystemYear)) : {});
+        const l = localStorage.getItem('locations'); locations = l ? JSON.parse(l) : (localStorage.getItem('locations-'+currentSystemYear) ? JSON.parse(localStorage.getItem('locations-'+currentSystemYear)) : []);
+        const lc = localStorage.getItem('locCoords'); locCoords = lc ? JSON.parse(lc) : (localStorage.getItem('locCoords-'+currentSystemYear) ? JSON.parse(localStorage.getItem('locCoords-'+currentSystemYear)) : {});
+        
+        dark = localStorage.getItem('darkmode')==='true';
+        if(dark) document.body.classList.add('dark');
+        viewMode = localStorage.getItem('viewMode') || 'list';
+
+        updateStorageUsage();
+    } catch(e) { animals=[]; }
 }
 
-// === NAVIGATION ===
-function switchView(viewId, btn) {
-    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-    getEl(viewId).classList.add('active');
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    if(btn) btn.classList.add('active');
-    if(viewId === 'view-map') setTimeout(initMap, 200); 
-    if(viewId === 'view-stats') renderStats();
+function saveGlobals() {
+    localStorage.setItem('animals-'+currentSystemYear, JSON.stringify(animals));
+    localStorage.setItem('colors', JSON.stringify(colors));
+    localStorage.setItem('locations', JSON.stringify(locations));
+    localStorage.setItem('locCoords', JSON.stringify(locCoords));
 }
 
-// === PARTICLES ===
-function spawnParticle(x, y, text, color = 'var(--accent)') {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.innerText = text;
-    p.style.left = x + 'px';
-    p.style.top = y + 'px';
-    p.style.color = color;
-    document.body.appendChild(p);
-    setTimeout(() => p.remove(), 900);
+function updateStorageUsage() {
+    try {
+        let total = 0;
+        for (let x in localStorage) { if (localStorage.hasOwnProperty(x)) total += ((localStorage[x].length * 2) / 1024 / 1024); }
+        const pct = Math.min((total / 5) * 100, 100).toFixed(1);
+        const bar = getEl('storageBar'); const txt = getEl('storageText');
+        if(bar && txt) {
+            bar.style.width = pct + '%';
+            bar.style.background = pct > 90 ? 'var(--err-text)' : (pct > 70 ? 'var(--warn-text)' : 'var(--accent)');
+            txt.innerText = pct + '% (' + total.toFixed(2) + ' MB)';
+        }
+    } catch(e) {}
 }
 
-// === LOGIC ===
+// === APP LOGIC ===
+
 function addAnimal(){
     const nm = getEl('nameInput').value.trim();
-    const em = getEl('emojiInput').value || '📸';
-    const tag = getEl('tagInput').value.trim();
     if(!nm) return showErrorToast("Name fehlt");
-    const tags = tag ? [tag] : [];
-    animals.push({ name:nm, emoji:em, image:currentImage, tags: tags });
+    const tags = getEl('tagInput').value.trim() ? [getEl('tagInput').value.trim()] : [];
+    animals.push({ name:nm, emoji:getEl('emojiInput').value||'📸', image:currentImage, tags: tags });
     getEl('nameInput').value=''; getEl('emojiInput').value=''; getEl('tagInput').value='';
     clearImage();
-    safeSave(); render();
+    saveGlobals(); render();
     showErrorToast("Tier hinzugefügt", true);
 }
 
 function change(i, delta, event){
-    try {
-        if (delta > 0) {
-            const locSel = getEl(viewMode === 'grid' ? 'locSelectGrid'+i : 'locSelect'+i);
-            const locationValue = locSel ? locSel.value : '';
-            if (locations.length > 0 && locationValue === '') {
-                if (!confirm("⚠️ Kein Ort ausgewählt.\n\nTrotzdem ohne Ort hinzufügen?")) {
-                    return; 
-                }
-            }
+    if (delta > 0) {
+        // Location Check
+        const locSel = getEl(viewMode === 'grid' ? 'locSelectGrid'+i : 'locSelect'+i);
+        const locVal = locSel ? locSel.value : '';
+        if (locations.length > 0 && locVal === '') {
+            if (!confirm("⚠️ Kein Ort ausgewählt. Trotzdem speichern?")) return; 
         }
         
-        const t = new Date().toISOString().slice(0,10);
-        const dYear = new Date().getFullYear();
-        let targetH = (dYear === currentYear) ? history : getHistoryForYear(dYear);
+        const date = todayStr(); 
+        const entry = { location: locVal, time: nowTimeStr() };
         
-        targetH[t] = targetH[t] || { total:0, perAnimal:{} };
-        targetH[t].perAnimal[i] = targetH[t].perAnimal[i] || [];
+        // SMART ROUTER WRITE
+        writeHistoryEntry(date, i, entry);
         
-        if(delta > 0){
-            playSound('pop');
-            const locSel = getEl(viewMode === 'grid' ? 'locSelectGrid'+i : 'locSelect'+i);
-            targetH[t].perAnimal[i].push({ location: locSel?locSel.value:'', time: new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) });
-            targetH[t].total++;
-            if(event) {
-                const a = animals[i];
-                spawnParticle(event.clientX, event.clientY, "+1 " + (a.emoji||''));
-            }
-        }
-        
-        if (dYear === currentYear) {
-            history = targetH;
-            safeSave();
-        } else {
-            saveHistoryForYear(dYear, targetH);
-        }
+        playSound('pop');
+        if(event) spawnParticle(event.clientX, event.clientY, "+1 " + (animals[i].emoji||''));
         render();
-    } catch(e) { console.error(e); }
-}
-
-// === TAGS, SEARCH & FILTER ===
-function filterTags(tag) {
-    currentFilter = tag;
-    document.querySelectorAll('.tag-pill').forEach(p => p.classList.remove('active'));
-    const btn = getEl('tag-' + tag.replace(/\s/g,'_'));
-    if(btn) btn.classList.add('active');
-    render();
-}
-function cycleSort(){
-    if(sortMode==='name') { sortMode='count'; getEl('sortBtn').innerText='🔢'; }
-    else if(sortMode==='count') { sortMode='name'; getEl('sortBtn').innerText='🔤'; }
-    render();
-}
-function toggleViewMode() {
-    viewMode = viewMode === 'list' ? 'grid' : 'list';
-    localStorage.setItem('viewMode', viewMode);
-    getEl('viewToggleBtn').innerText = viewMode === 'list' ? '📜' : '▦';
-    render();
+    }
 }
 
 function render(){
@@ -773,10 +678,12 @@ function render(){
     });
     tagCont.innerHTML = tagHTML;
 
-    // Filter & Sort
+    // Load current year history for counts in list
+    const h = getHistoryForYear(currentSystemYear);
+
     let displayList = animals.map((a, i) => {
         let count = 0;
-        Object.values(history).forEach(h => { if(h.perAnimal && h.perAnimal[i]) count += h.perAnimal[i].length; });
+        Object.values(h).forEach(day => { if(day.perAnimal && day.perAnimal[i]) count += day.perAnimal[i].length; });
         return { ...a, idx: i, count };
     }).filter(a => {
         if(currentFilter !== 'ALL' && (!a.tags || !a.tags.includes(currentFilter))) return false;
@@ -813,222 +720,16 @@ function render(){
             list.appendChild(div);
         });
     }
-    renderLocationList();
+    getEl('locationListDisplay').textContent = locations.length ? locations.join(', ') : "Keine";
 }
 
-function removeAnimal(i){ 
-    if(!confirm("Dieses Tier und alle Statistiken unwiderruflich löschen?")) return;
-    animals.splice(i, 1);
-    Object.keys(history).forEach(date => {
-        const dayData = history[date];
-        if (!dayData.perAnimal) return;
-        const newPerAnimal = {};
-        let newTotal = 0;
-        Object.entries(dayData.perAnimal).forEach(([idxStr, sightings]) => {
-            const idx = parseInt(idxStr);
-            if (idx > i) { newPerAnimal[idx - 1] = sightings; newTotal += sightings.length; } 
-            else if (idx < i) { newPerAnimal[idx] = sightings; newTotal += sightings.length; }
-        });
-        dayData.perAnimal = newPerAnimal;
-        dayData.total = newTotal;
-        if (newTotal === 0 && Object.keys(newPerAnimal).length === 0) delete history[date];
-    });
-    safeSave(); closeModal('detailModal'); render(); 
-    showErrorToast("Tier gelöscht", true);
-}
-
-// === FIX: IMPLEMENTED MISSING DELETE FUNCTION ===
-function deleteHistoryItem(animalIdx, dateStr, itemIdx) {
-    const y = new Date(dateStr).getFullYear();
-    let h = (y === currentYear) ? history : getHistoryForYear(y);
-
-    // Security Check: Does entry exist?
-    if (!h[dateStr] || !h[dateStr].perAnimal || !h[dateStr].perAnimal[animalIdx]) {
-        return; 
-    }
-
-    const list = h[dateStr].perAnimal[animalIdx];
-    if (itemIdx >= 0 && itemIdx < list.length) {
-        // Remove exactly one item
-        list.splice(itemIdx, 1);
-        h[dateStr].total--;
-
-        // Clean up empty objects
-        if (list.length === 0) delete h[dateStr].perAnimal[animalIdx];
-        if (h[dateStr].total <= 0) delete h[dateStr];
-
-        // Save back
-        saveHistoryForYear(y, h);
-        
-        // Refresh UI
-        openDetail(animalIdx);
-        render();
-        showErrorToast("Eintrag gelöscht", true);
-    }
-}
-
-function hardReset() {
-    if(!confirm("⚠️ ACHTUNG: Möchtest du wirklich ALLE deine Daten (Tiere, Statistiken, Orte) unwiderruflich löschen?")) return;
-    if(!confirm("☠️ LETZTE WARNUNG: Dies kann nicht rückgängig gemacht werden! Wirklich alles löschen?")) return;
-    animals = []; history = {}; colors = {}; locations = []; locCoords = {};
-    safeSave(); render(); showErrorToast("Alles gelöscht. Tabula rasa!", true);
-}
-
-function initMap() {
-    if(mapInstance) { mapInstance.invalidateSize(); renderMapMarkers(); return; }
-    let center = [51.165, 10.451]; 
-    const keys = Object.keys(locCoords);
-    if(keys.length > 0) center = [locCoords[keys[0]].lat, locCoords[keys[0]].lon];
-    mapInstance = L.map('map').setView(center, 6);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 }).addTo(mapInstance);
-    renderMapMarkers();
-}
-
-function renderMapMarkers() {
-    mapMarkers.forEach(m => mapInstance.removeLayer(m));
-    mapMarkers = [];
-    let mapData = {};
-    Object.values(history).forEach(day => {
-        if(day.perAnimal) {
-            Object.entries(day.perAnimal).forEach(([idx, list]) => {
-                const animalName = animals[idx] ? animals[idx].name : '?';
-                list.forEach(item => {
-                    const loc = item.location;
-                    if(loc && locCoords[loc]) {
-                        if(!mapData[loc]) mapData[loc] = { ...locCoords[loc], counts: {} };
-                        mapData[loc].counts[animalName] = (mapData[loc].counts[animalName] || 0) + 1;
-                    }
-                });
-            });
-        }
-    });
-    Object.entries(mapData).forEach(([locName, data]) => {
-        let text = `<b>${locName}</b><br>`;
-        Object.entries(data.counts).forEach(([an, count]) => text += `${an}: ${count}<br>`);
-        mapMarkers.push(L.marker([data.lat, data.lon]).addTo(mapInstance).bindPopup(text));
-    });
-}
-
-// === LOCATION SEARCH & GPS ===
-const osmIn = getEl('osmInput'), osmRes = getEl('osmResults');
-let debounce;
-
-function locateMe() {
-    if(!navigator.geolocation) return showErrorToast("GPS nicht verfügbar");
-    showErrorToast("Standort wird ermittelt...", true);
-    navigator.geolocation.getCurrentPosition(pos => {
-        const { latitude, longitude } = pos.coords;
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`, {
-            headers: { 'User-Agent': 'TiereZaehlenApp/3.0' }
-        })
-        .then(r => r.json())
-        .then(data => {
-            if(data && data.address) {
-                const addr = data.address;
-                const city = addr.city || addr.town || addr.village || addr.municipality;
-                const road = addr.road || addr.pedestrian || addr.suburb;
-                let text = road ? (road + (city ? ", " + city : "")) : (city || "Unbekannter Ort");
-                if(data.name && data.name !== text) text = data.name + ", " + text;
-                osmIn.value = text;
-                showErrorToast("Adresse gefunden: " + text, true);
-                locCoords[text] = { lat: parseFloat(latitude), lon: parseFloat(longitude) };
-            } else { showErrorToast("Adresse nicht gefunden."); }
-        })
-        .catch(e => showErrorToast("Fehler bei Adresssuche"));
-    }, err => { showErrorToast("GPS Fehler: " + err.message); });
-}
-
-if(osmIn){
-    osmIn.addEventListener('input', e => {
-        clearTimeout(debounce);
-        if(e.target.value.length < 3) { osmRes.style.display='none'; return; }
-        debounce = setTimeout(() => {
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(e.target.value)}`)
-            .then(r=>r.json()).then(d => {
-                osmRes.innerHTML='';
-                if(!d.length) return;
-                osmRes.style.display='block';
-                d.slice(0,5).forEach(p => {
-                    const div = document.createElement('div');
-                    div.className='suggestion-item';
-                    div.innerText = p.display_name.split(',').slice(0,2).join(','); 
-                    div.onclick = () => { addLocationWithCoords(div.innerText, p.lat, p.lon); osmIn.value=''; osmRes.style.display='none'; };
-                    osmRes.appendChild(div);
-                });
-            });
-        }, 300);
-    });
-    document.addEventListener('click', e => { if(e.target!==osmIn) osmRes.style.display='none'; });
-}
-
-function addLocationWithCoords(name, lat, lon) {
-    if(!locations.includes(name)) locations.push(name);
-    locCoords[name] = { lat: parseFloat(lat), lon: parseFloat(lon) };
-    safeSave(); showErrorToast(`Ort "${name}" hinzugefügt`, true); render();
-}
-function addManualLocation() {
-    const val = osmIn.value.trim();
-    if(val && !locations.includes(val)) { locations.push(val); safeSave(); render(); showErrorToast("Ort gespeichert", true); }
-}
-function renderLocationList(){ getEl('locationListDisplay').textContent = locations.length ? locations.join(', ') : "Keine"; }
-
-let editIdx = null; let editImgTemp = null;
-function openIconEdit(i){
-    editIdx=i; editImgTemp = animals[i].image;
-    getEl('editEmoji').value = animals[i].emoji;
-    getEl('editTag').value = (animals[i].tags || []).join(', ');
-    updateEditPreview();
-    getEl('iconModal').style.display = 'block';
-}
-function handleEditFile(input){
-    if(input.files && input.files[0]){
-        const reader = new FileReader();
-        reader.onload = function(e){ resizeImage(e.target.result, 100, (res)=>{ editImgTemp = res; updateEditPreview(); }); }
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-function updateEditPreview(){
-    const img = getEl('editPreviewImg');
-    if(editImgTemp){ img.src = editImgTemp; getEl('editPreviewContainer').style.display='block'; }
-    else getEl('editPreviewContainer').style.display='none';
-}
-function removeEditImage(){ editImgTemp = null; updateEditPreview(); }
-function saveIconEdit(){
-    if(editIdx===null) return;
-    animals[editIdx].image = editImgTemp;
-    animals[editIdx].emoji = getEl('editEmoji').value || '📸';
-    const tagStr = getEl('editTag').value;
-    animals[editIdx].tags = tagStr ? tagStr.split(',').map(s=>s.trim()).filter(s=>s) : [];
-    safeSave(); render(); closeModal('iconModal');
-}
-
-function handleImageUpload(input){
-    if(input.files && input.files[0]){
-        const reader = new FileReader();
-        reader.onload = e => resizeImage(e.target.result, 300, res => { currentImage = res; getEl('previewEl').src = res; getEl('imgPreview').style.display='block'; });
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-function resizeImage(base64, maxW, cb){
-    const img = new Image(); img.src=base64;
-    img.onload = () => {
-        const c = document.createElement('canvas');
-        const s = maxW/img.width;
-        c.width=maxW; c.height=img.height*s;
-        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-        cb(c.toDataURL('image/jpeg',0.6)); 
-    }
-}
-function clearImage(){ currentImage=null; getEl('imgPreview').style.display='none'; }
-
-// === DETAIL MODAL WITH MULTI-YEAR ===
+// === DETAIL MODAL ===
 function openDetail(i){
-    detailAnimalIdx = i; // Global save
+    detailAnimalIdx = i;
     const modal = getEl('detailModal');
-    // Populate Year Dropdown for Detail
     const ys = getAvailableYears();
     const sel = getEl('detailYearSelect');
-    sel.innerHTML = ys.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`).join('');
+    sel.innerHTML = ys.map(y => `<option value="${y}" ${y === currentSystemYear ? 'selected' : ''}>${y}</option>`).join('');
     updateDetailChart();
     modal.style.display = 'block';
 }
@@ -1037,111 +738,94 @@ function updateDetailChart() {
     const i = detailAnimalIdx;
     if (i === null) return;
     const y = parseInt(getEl('detailYearSelect').value);
-    const targetHistory = getHistoryForYear(y);
+    const h = getHistoryForYear(y);
     const body = getEl('modalBody');
     const a = animals[i]; 
     if(!a) return;
     const col = colors[i] || '#2196f3';
 
-    let targetIdx = i;
-    if (y !== currentYear) {
-        const pastAnimals = getAnimalsForYear(y);
-        if (pastAnimals !== animals) {
-             targetIdx = pastAnimals.findIndex(pa => pa.name === a.name);
-        }
-    }
-
-    let total = 0; let locs = {}; let times = { 'Morgens':0, 'Mittags':0, 'Abends':0, 'Nachts':0 };
+    let total = 0; let locs = {}; 
     let months = new Array(12).fill(0); let historyList = [];
 
-    if (targetIdx !== -1 && targetHistory) {
-        Object.entries(targetHistory).forEach(([dateStr, entry]) => {
-            if(entry && entry.perAnimal && entry.perAnimal[targetIdx]){
-                const list = entry.perAnimal[targetIdx]; 
-                const d = new Date(dateStr);
-                total += list.length; months[d.getMonth()] += list.length;
-                list.forEach((item, arrIdx) => {
-                    historyList.push({ date:dateStr, item, arrIdx });
-                    const l = item.location || 'Unbekannt'; locs[l] = (locs[l]||0)+1;
-                    if(item.time){
-                        const h = parseInt(item.time.split(':')[0]);
-                        if(!isNaN(h)) { if(h>=5&&h<11) times['Morgens']++; else if(h>=11&&h<14) times['Mittags']++; else if(h>=14&&h<22) times['Abends']++; else times['Nachts']++; }
-                    }
-                });
-            }
-        });
-    }
+    Object.entries(h).forEach(([dateStr, entry]) => {
+        if(entry && entry.perAnimal && entry.perAnimal[i]){
+            const list = entry.perAnimal[i]; 
+            const d = new Date(dateStr);
+            total += list.length; months[d.getMonth()] += list.length;
+            list.forEach((item, arrIdx) => {
+                historyList.push({ date:dateStr, item, arrIdx });
+                const l = item.location || 'Unbekannt'; locs[l] = (locs[l]||0)+1;
+            });
+        }
+    });
 
     historyList.sort((a,b) => { if(b.date !== a.date) return b.date.localeCompare(a.date); return (b.item.time||'').localeCompare(a.item.time||''); });
 
     const icon = a.image ? `<img src="${a.image}">` : a.emoji;
-    let html = `<div class="modal-header"><div class="modal-icon" style="border-color:${col}">${icon}</div><h2 style="margin:0">${a.name}</h2><div style="opacity:0.6">Sichtungen ${y}: <strong>${total}</strong></div></div><div style="margin-bottom:20px;">`;
+    let html = `<div class="modal-header"><div class="modal-icon" style="border-color:${col}">${icon}</div><h2 style="margin:0">${a.name}</h2><div style="opacity:0.6">Sichtungen ${y}: <strong>${total}</strong></div></div>`;
 
     const sortedLocs = Object.entries(locs).sort((a,b)=>b[1]-a[1]);
     html += `<h4>📍 Orte (${y})</h4>`;
     if(sortedLocs.length===0) html+='<small>Keine</small>';
-    else {
-        const maxL = sortedLocs[0][1];
-        sortedLocs.slice(0,3).forEach(([name, val])=>{
-            const pct = (val/maxL)*100;
-            html += `<div class="hbar-row"><div class="hbar-label">${name}</div><div class="hbar-track"><div class="hbar-fill" style="width:${pct}%; background:${col}"></div></div><div class="hbar-val">${val}</div></div>`;
-        });
-    }
+    sortedLocs.slice(0,3).forEach(([name, val])=>{
+        const pct = (val/sortedLocs[0][1])*100;
+        html += `<div class="hbar-row"><div class="hbar-label">${name}</div><div class="hbar-track"><div class="hbar-fill" style="width:${pct}%; background:${col}"></div></div><div class="hbar-val">${val}</div></div>`;
+    });
 
     html += `<h4>🗓️ Jahrestrend ${y}</h4><div class="chart-wrap" style="height:100px; padding-top:15px">`;
     const maxM = Math.max(...months, 1); const mN = ['J','F','M','A','M','J','J','A','S','O','N','D'];
     months.forEach((v, idx)=>{
         html += `<div class="chart-col">${v>0?`<div class="chart-val">${v}</div>`:''}<div class="chart-bar" style="height:${v===0?1:(v/maxM)*100}%; background:${col}; opacity:${v===0?0.1:1}"></div><div class="chart-label">${mN[idx]}</div></div>`;
     });
-    html += `</div></div>`;
+    html += `</div>`;
 
     html += `<h3>📝 Verlauf ${y}</h3>`;
     const renderRow = (h) => {
         const displayDate = h.date.split('-').reverse().slice(0,2).join('.');
-        // Delete functionality now enabled safely for all years because deleteHistoryItem handles it by year
-        const delBtn = `<button class="icon-btn" onclick="safeRun(deleteHistoryItem, ${i}, '${h.date}', ${h.arrIdx})">🗑️</button>`;
-        const editBtn = `<button class="icon-btn" onclick="safeRun(openNoteModal, ${i}, '${h.date}', ${h.arrIdx})">✏️</button>`;
-        return `<div class="hist-item"><div class="hist-date">${displayDate}<br>${h.item.time||''}</div><div class="hist-info">${h.item.location ? `📍 ${h.item.location}` : ''}${h.item.note ? `<br><span class="hist-note">${h.item.note}</span>` : ''}</div><div class="hist-actions">${editBtn}${delBtn}</div></div>`;
+        return `<div class="hist-item"><div class="hist-date">${displayDate}<br>${h.item.time||''}</div><div class="hist-info">${h.item.location ? `📍 ${h.item.location}` : ''}${h.item.note ? `<br><span class="hist-note">${h.item.note}</span>` : ''}</div><div class="hist-actions"><button class="icon-btn" onclick="safeRun(openNoteModal, ${i}, '${h.date}', ${h.arrIdx})">✏️</button><button class="icon-btn" onclick="safeRun(deleteHistoryItem, ${i}, '${h.date}', ${h.arrIdx})">🗑️</button></div></div>`;
     };
 
-    if(historyList.length === 0) {
-        html += '<p style="text-align:center; opacity:0.5">Keine Einträge</p>';
-    } else {
+    if(historyList.length === 0) html += '<p style="text-align:center; opacity:0.5">Keine Einträge</p>';
+    else {
         html += `<div class="history-list">`;
-        historyList.slice(0, 2).forEach(h => html += renderRow(h));
-        html += `</div><details style="margin-top:10px; border:none; background:transparent; padding:0;"><summary style="font-size:14px; opacity:0.8; margin-bottom:5px">📜 Alle anzeigen (${historyList.length})</summary><div class="history-list" style="max-height:300px; overflow-y:auto; border-top:1px solid var(--btn); margin-top:0;">`;
+        historyList.slice(0, 3).forEach(h => html += renderRow(h));
+        html += `</div><details style="margin-top:10px; border:none; background:transparent; padding:0;"><summary style="font-size:14px; opacity:0.8;">📜 Alle anzeigen (${historyList.length})</summary><div class="history-list" style="max-height:300px; overflow-y:auto; border-top:1px solid var(--btn); margin-top:0;">`;
         historyList.forEach(h => html += renderRow(h));
         html += `</div></details>`;
     }
     
-    if (y === currentYear) {
-        html += `<div style="margin-top:30px; border-top:1px solid #eee; padding-top:20px; text-align:center"><button onclick="safeRun(removeAnimal, ${i})" style="background:var(--err-bg); color:var(--err-text); font-size:14px; padding:10px 20px;">⚠️ Dieses Tier löschen</button></div>`;
-    }
-
+    html += `<div style="margin-top:30px; border-top:1px solid #eee; padding-top:20px; text-align:center"><button onclick="safeRun(removeAnimal, ${i})" style="background:var(--err-bg); color:var(--err-text); font-size:14px; padding:10px 20px;">⚠️ Dieses Tier löschen</button></div>`;
     body.innerHTML = html;
 }
 
+function deleteHistoryItem(animalIdx, dateStr, itemIdx) {
+    if(confirm("Eintrag wirklich löschen?")) {
+        removeHistoryEntry(dateStr, animalIdx, itemIdx);
+        updateDetailChart();
+        render(); // Update List counts
+    }
+}
+
+// === NOTE EDIT LOGIC ===
 let editMode = null; 
 function openNoteModal(i, date = null, arrIndex = null) {
-  const modal = getEl('noteModal'); const sel = getEl('noteLoc'); if(!sel || !modal) return;
+  const modal = getEl('noteModal'); const sel = getEl('noteLoc');
   sel.innerHTML = `<option value="">📍 Ort?</option>${locations.map(l=>`<option>${l}</option>`).join('')}`;
-  let entry = null;
-  // If editing, we need to fetch from correct year history
+  
   if(date !== null && arrIndex !== null) {
-      const year = new Date(date).getFullYear();
-      const h = getHistoryForYear(year);
-      if (h[date] && h[date].perAnimal[i]) entry = h[date].perAnimal[i][arrIndex];
-  }
-
-  if (entry) {
+      // Editing existing
+      const y = parseInt(date.split('-')[0]);
+      const h = getHistoryForYear(y);
+      const entry = h[date].perAnimal[i][arrIndex];
       editMode = { date, arrIndex, animalIdx: i };
       getEl('noteTitle').innerText = "Sichtung bearbeiten";
       getEl('noteDate').value = date; getEl('noteTime').value = entry.time || '';
       getEl('noteLoc').value = entry.location || ''; getEl('noteText').value = entry.note || '';
   } else {
+      // New Note
       editMode = null;
       getEl('noteTitle').innerText = "Sichtung mit Notiz";
-      getEl('noteDate').value = today(); getEl('noteTime').value = nowTime();
+      getEl('noteDate').value = todayStr(); getEl('noteTime').value = nowTimeStr();
       getEl('noteLoc').value = getEl('locSelect'+i)?.value || ''; getEl('noteText').value = '';
   }
   const btn = getEl('noteSaveBtn'); const newBtn = btn.cloneNode(true); btn.parentNode.replaceChild(newBtn, btn);
@@ -1150,56 +834,40 @@ function openNoteModal(i, date = null, arrIndex = null) {
 }
 
 function saveNote(i) {
-  const d = getEl('noteDate').value || today(); const t = getEl('noteTime').value || nowTime();
+  const d = getEl('noteDate').value || todayStr(); const t = getEl('noteTime').value || nowTimeStr();
   const l = getEl('noteLoc').value; const n = getEl('noteText').value;
-  
-  const targetYear = new Date(d).getFullYear();
-  let targetHistory = (targetYear === currentYear) ? history : getHistoryForYear(targetYear);
 
-  if (editMode) {
-      const oldYear = new Date(editMode.date).getFullYear();
-      let oldHistory = (oldYear === currentYear) ? history : getHistoryForYear(oldYear);
-      
-      if(oldHistory[editMode.date] && oldHistory[editMode.date].perAnimal[editMode.animalIdx]) {
-          const oldList = oldHistory[editMode.date].perAnimal[editMode.animalIdx];
-          oldList.splice(editMode.arrIndex, 1);
-          oldHistory[editMode.date].total--;
-          if(oldList.length===0) delete oldHistory[editMode.date].perAnimal[editMode.animalIdx];
-          if(oldHistory[editMode.date].total<=0) delete oldHistory[editMode.date];
-          saveHistoryForYear(oldYear, oldHistory);
-      }
-      targetHistory = (targetYear === currentYear) ? history : getHistoryForYear(targetYear);
+  if(editMode) {
+      // Delete old entry first
+      removeHistoryEntry(editMode.date, editMode.animalIdx, editMode.arrIndex);
   } else {
       playSound('pop');
   }
 
-  targetHistory[d] = targetHistory[d] || { total:0, perAnimal:{} }; 
-  targetHistory[d].perAnimal[i] = targetHistory[d].perAnimal[i] || [];
-  targetHistory[d].perAnimal[i].push({ location:l, time:t, note:n }); 
-  targetHistory[d].total++;
-
-  saveHistoryForYear(targetYear, targetHistory);
-
-  if (editMode) openDetail(i);
-  else render();
+  // Create new entry
+  const entry = { location: l, time: t, note: n };
+  writeHistoryEntry(d, i, entry);
   
   closeModal('noteModal');
+  if(editMode) openDetail(i);
+  render();
 }
 
-// === STATS & EXPORT ===
+// === STATS ENGINE (FULL) ===
 function renderStats(){
   const container = getEl('statsContent'); if(!container) return;
   const ys = getAvailableYears();
   const yearSelect = getEl('statsYearSelect');
   if (yearSelect.options.length !== ys.length) {
       const oldVal = yearSelect.value;
-      yearSelect.innerHTML = ys.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`).join('');
+      yearSelect.innerHTML = ys.map(y => `<option value="${y}" ${y === currentSystemYear ? 'selected' : ''}>${y}</option>`).join('');
       if (ys.includes(parseInt(oldVal))) yearSelect.value = oldVal;
   }
   
-  const selectedYear = parseInt(yearSelect.value) || currentYear;
+  const selectedYear = parseInt(yearSelect.value) || currentSystemYear;
   
   try {
+      // XP AGGREGATION (Across ALL years)
       let grandTotalSights = 0;
       let grandTotalNotes = 0;
       let grandDistinctLocs = new Set();
@@ -1219,10 +887,9 @@ function renderStats(){
           });
       });
 
+      // CURRENT YEAR STATS
       const targetHistory = getHistoryForYear(selectedYear);
-      const targetAnimals = getAnimalsForYear(selectedYear);
-      
-      let yearSights=0, maxDayCount=0, streak=0, weekendCounts=0, lunchCounts=0, nightCounts=0, earlyCounts=0, hasPhoto=false;
+      let yearSights=0, streak=0, weekendCounts=0, lunchCounts=0, nightCounts=0, earlyCounts=0, hasPhoto=false;
       let countsPerMonth=new Array(12).fill(0);
       let countsPerAnimalMap = {}; 
       let timeOfDay={'Morgens (5-11)':0,'Mittags (11-14)':0,'Abends (14-22)':0,'Nachts (22-5)':0};
@@ -1230,21 +897,21 @@ function renderStats(){
 
       const sortedDates = Object.keys(targetHistory).sort((a,b)=>new Date(b)-new Date(a));
       if(sortedDates.length > 0) {
-          const diffHours = (new Date(today()) - new Date(sortedDates[0])) / 36e5;
+          const diffHours = (new Date(todayStr()) - new Date(sortedDates[0])) / 36e5;
           if(diffHours <= 48){ streak = 1; for(let i=0; i<sortedDates.length-1; i++){ if(Math.round((new Date(sortedDates[i])-new Date(sortedDates[i+1]))/864e5) === 1) streak++; else break; } }
       }
 
       Object.entries(targetHistory).forEach(([dateStr, entry]) => {
-        yearSights += (entry.total||0); if(entry.total > maxDayCount) maxDayCount = entry.total;
+        yearSights += (entry.total||0);
         const d = new Date(dateStr); countsPerMonth[d.getMonth()] += (entry.total||0);
         if(d.getDay() === 0 || d.getDay() === 6) weekendCounts += entry.total;
 
         if(entry.perAnimal){
           Object.entries(entry.perAnimal).forEach(([idxStr, list]) => {
             const idx = parseInt(idxStr);
-            const aName = targetAnimals[idx] ? targetAnimals[idx].name : '???';
+            const aName = animals[idx] ? animals[idx].name : '???';
             
-            if(targetAnimals[idx]) {
+            if(animals[idx]) {
                 countsPerAnimalMap[aName] = (countsPerAnimalMap[aName] || 0) + list.length;
                 distinctAnimalsYear.add(aName);
                 list.forEach(item => {
@@ -1312,7 +979,7 @@ function renderStats(){
           { id:'night', icon:'🦉', name:'Nachteule', desc:'Sichtung nachts', condition: nightCounts > 0 },
           { id:'early', icon:'🐓', name:'Früh', desc:'Sichtung morgens', condition: earlyCounts > 0 }
       ];
-      if([1, 50, 100, 250, 1000].includes(yearSights) && selectedYear === currentYear) playSound('fanfare');
+      if([1, 50, 100, 250, 1000].includes(yearSights) && selectedYear === currentSystemYear) playSound('fanfare');
 
       html += `<div class="stat-kpi-row">
         <div class="stat-kpi"><div style="font-size:20px;font-weight:bold">${yearSights}</div><div style="font-size:10px;opacity:0.7">Sichtungen ${selectedYear}</div></div>
@@ -1339,7 +1006,7 @@ function renderStats(){
       html += `</div></details>`;
 
       html += `<details><summary>🔥 30-Tage Heatmap</summary><div class="heatmap-grid">`;
-      let refDate = (selectedYear === currentYear) ? new Date() : new Date(selectedYear, 11, 31);
+      let refDate = (selectedYear === currentSystemYear) ? new Date() : new Date(selectedYear, 11, 31);
       
       for(let i=27; i>=0; i--){
         const d = new Date(refDate); d.setDate(d.getDate() - i); const iso = d.toISOString().slice(0,10);
@@ -1354,19 +1021,93 @@ function renderStats(){
   } catch(e) { console.error(e); container.innerHTML = `<div style="color:red; text-align:center; padding:20px;">Fehler beim Laden der Statistik.<br><small>${e.message}</small></div>`; }
 }
 
-function generateShareCard() {
-    try {
-        const canvas = document.createElement('canvas'); canvas.width = 600; canvas.height = 400; const ctx = canvas.getContext('2d');
-        ctx.fillStyle = dark ? '#1e1e1e' : '#f4f4f4'; ctx.fillRect(0,0,600,400);
-        ctx.fillStyle = dark ? '#fff' : '#000'; ctx.font = 'bold 30px system-ui'; ctx.textAlign = 'center'; ctx.fillText(`Meine Tiersammlung ${currentYear}`, 300, 50);
-        let total = Object.values(history).reduce((a,b)=>a+(b.total||0),0);
-        let topAnimal = null; if(animals.length) topAnimal = animals.map((a,i)=>{ let c=0; Object.values(history).forEach(h=>{if(h&&h.perAnimal&&h.perAnimal[i])c+=h.perAnimal[i].length}); return {n:a.name, c:c, e:a.emoji}; }).sort((a,b)=>b.c-a.c)[0];
-        ctx.font = 'bold 60px system-ui'; ctx.fillStyle = '#2196f3'; ctx.fillText(total, 300, 150);
-        ctx.font = '20px system-ui'; ctx.fillStyle = dark ? '#bbb' : '#555'; ctx.fillText("Sichtungen Gesamt", 300, 180);
-        if(topAnimal && topAnimal.c > 0) { ctx.fillStyle = dark ? '#fff' : '#000'; ctx.font = '30px system-ui'; ctx.fillText(`🏆 Top Tier: ${topAnimal.e} ${topAnimal.n} (${topAnimal.c})`, 300, 250); }
-        ctx.font = 'italic 16px system-ui'; ctx.fillStyle = '#888'; ctx.fillText("Erstellt mit Tier-Tracker Ultimate v3", 300, 370);
-        const link = document.createElement('a'); link.download = `tier-stats-${currentYear}.png`; link.href = canvas.toDataURL(); link.click();
-    } catch(e) { showErrorToast("Bild-Export Fehler"); }
+// === MAP ENGINE (FULL) ===
+function initMap() {
+    if(mapInstance) { mapInstance.invalidateSize(); renderMapMarkers(); return; }
+    let center = [51.165, 10.451]; 
+    const keys = Object.keys(locCoords);
+    if(keys.length > 0) center = [locCoords[keys[0]].lat, locCoords[keys[0]].lon];
+    mapInstance = L.map('map').setView(center, 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 }).addTo(mapInstance);
+    renderMapMarkers();
+}
+
+function renderMapMarkers() {
+    mapMarkers.forEach(m => mapInstance.removeLayer(m));
+    mapMarkers = [];
+    let mapData = {};
+    const ys = getAvailableYears();
+    
+    ys.forEach(y => {
+        const h = getHistoryForYear(y);
+        Object.values(h).forEach(day => {
+            if(day.perAnimal) {
+                Object.entries(day.perAnimal).forEach(([idx, list]) => {
+                    const animalName = animals[idx] ? animals[idx].name : '?';
+                    list.forEach(item => {
+                        const loc = item.location;
+                        if(loc && locCoords[loc]) {
+                            if(!mapData[loc]) mapData[loc] = { ...locCoords[loc], counts: {} };
+                            mapData[loc].counts[animalName] = (mapData[loc].counts[animalName] || 0) + 1;
+                        }
+                    });
+                });
+            }
+        });
+    });
+
+    Object.entries(mapData).forEach(([locName, data]) => {
+        let text = `<b>${locName}</b><br>`;
+        Object.entries(data.counts).forEach(([an, count]) => text += `${an}: ${count}<br>`);
+        mapMarkers.push(L.marker([data.lat, data.lon]).addTo(mapInstance).bindPopup(text));
+    });
+}
+
+// === EXPORT / IMPORT (FULL) ===
+function downloadBackup(){ 
+    const fullHistory = {};
+    for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if(k.startsWith('history-')) {
+            const y = k.replace('history-', '');
+            fullHistory[y] = JSON.parse(localStorage.getItem(k));
+        }
+    }
+    const exportObj = {
+        meta: { generated: new Date().toISOString(), version: "5.1" },
+        animals,
+        locations,
+        locCoords,
+        colors,
+        fullHistory 
+    };
+    const b = new Blob([JSON.stringify(exportObj,null,2)],{type:'application/json'}); 
+    const a = document.createElement('a'); 
+    a.href=URL.createObjectURL(b); 
+    a.download=`tier-backup-full.json`; 
+    a.click(); 
+}
+
+function exportCSV() {
+    let csv = "Datum;Uhrzeit;Tier;Ort;Notiz\n";
+    const years = getAvailableYears().sort((a,b) => b-a);
+    
+    years.forEach(y => {
+        const h = getHistoryForYear(y);
+        Object.entries(h).forEach(([d, v]) => {
+            if (v.perAnimal) {
+                Object.entries(v.perAnimal).forEach(([idx, list]) => {
+                    const n = animals[idx] ? animals[idx].name : "Unbekannt";
+                    list.forEach(s => {
+                        const safe = (val) => { val = val || ''; if (val.includes(';') || val.includes('"') || val.includes('\n')) { return `"${val.replace(/"/g, '""')}"`; } return val; };
+                        csv += `${d};${s.time || ''};${safe(n)};${safe(s.location)};${safe(s.note)}\n`;
+                    });
+                });
+            }
+        });
+    });
+    const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv); 
+    a.download = `tier-export-full.csv`; a.click();
 }
 
 function importBackup(event) {
@@ -1376,9 +1117,9 @@ function importBackup(event) {
     reader.onload = function(e) {
         try {
             tempImportData = JSON.parse(e.target.result);
-            if(!tempImportData.animals) throw new Error("Ungültige Datei");
+            if(!tempImportData.animals && !tempImportData.fullHistory) throw new Error("Unbekanntes Format");
             getEl('importModal').style.display = 'block'; 
-        } catch(err) { console.error(err); showErrorToast("Dateifehler: " + err.message); getEl('importFile').value = ''; }
+        } catch(err) { showErrorToast("Dateifehler: " + err.message); }
     };
     reader.readAsText(file);
 }
@@ -1386,152 +1127,252 @@ function importBackup(event) {
 function confirmImport(action) {
     getEl('importModal').style.display = 'none';
     if(action === 'cancel') { tempImportData = null; getEl('importFile').value = ''; return; }
+    
     try {
         const data = tempImportData;
-        
-        // Helper to merge or overwrite specific history years
-        const processHistoryImport = (histSource) => {
-             // Handle "fullHistory" (new format) vs "history" (old format - current year only)
-             if (data.fullHistory) {
-                 Object.entries(data.fullHistory).forEach(([y, hData]) => {
-                     // If overwriting, just set it. If merging, logic is complex, but for simplicity we treat overwriting history per year
-                     if (action === 'overwrite') {
-                         localStorage.setItem('history-'+y, JSON.stringify(hData));
-                     } else {
-                        // Merge logic for specific years would go here
-                        // For safety in this version, merge appends to CURRENT year history mostly, 
-                        // but if we have full history, let's merge per year
-                        let existing = getHistoryForYear(y);
-                        // Deep merge perAnimal... omitted for brevity, fullHistory usually implies restoration
-                        localStorage.setItem('history-'+y, JSON.stringify(hData));
-                     }
-                 });
-                 // Reload current year history into memory
-                 history = getHistoryForYear(currentYear);
-             } else if (data.history) {
-                 // Old format fallback
-                 const y = data.year || currentYear;
-                 if(action === 'overwrite') {
-                     saveHistoryForYear(y, data.history);
-                 }
-             }
-        };
-
-        if(action === 'merge') {
-            const idMap = {};
+        if (action === 'overwrite') {
+            localStorage.clear();
+            if(data.animals) localStorage.setItem('animals-'+currentSystemYear, JSON.stringify(data.animals));
+            if(data.colors) localStorage.setItem('colors', JSON.stringify(data.colors));
+            if(data.locations) localStorage.setItem('locations', JSON.stringify(data.locations));
+            if(data.locCoords) localStorage.setItem('locCoords', JSON.stringify(data.locCoords));
+        } else if (action === 'merge') {
             if(data.animals) {
-                data.animals.forEach((impA, impIdx) => {
-                    const normName = impA.name.trim().toLowerCase();
-                    let existIdx = animals.findIndex(a => a.name.trim().toLowerCase() === normName);
-                    if(existIdx === -1) existIdx = animals.push(impA) - 1; 
-                    idMap[impIdx] = existIdx; 
+                data.animals.forEach(impA => {
+                    if(!animals.some(a => a.name === impA.name)) animals.push(impA);
                 });
+                saveGlobals();
             }
-            // Simple Merge Logic only looks at 'history' (current) for now to avoid massive complexity
-            // Ideally 'fullHistory' merge needs sophisticated ID tracking across years.
-            // fallback to standard behavior for current year data
-            if(data.history) {
-               const y = data.year || currentYear;
-               let hTarget = getHistoryForYear(y);
-               Object.entries(data.history).forEach(([date, dayData]) => {
-                    if(!hTarget[date]) hTarget[date] = { total: 0, perAnimal: {} };
-                    if(dayData.perAnimal) {
-                        Object.entries(dayData.perAnimal).forEach(([oldIdxStr, list]) => {
-                            const targetIdx = idMap[parseInt(oldIdxStr)];
-                            if(targetIdx !== undefined) {
-                                if(!hTarget[date].perAnimal[targetIdx]) hTarget[date].perAnimal[targetIdx] = [];
-                                list.forEach(item => {
-                                    const exists = hTarget[date].perAnimal[targetIdx].some(ex => ex.time === item.time);
-                                    if(!exists) hTarget[date].perAnimal[targetIdx].push(item);
-                                });
+            if(data.locations) {
+                data.locations.forEach(l => { if(!locations.includes(l)) locations.push(l); });
+                locations.sort();
+            }
+        }
+
+        let entriesToProcess = [];
+        if (data.fullHistory) {
+            Object.values(data.fullHistory).forEach(yearData => {
+                Object.entries(yearData).forEach(([dateStr, dayContent]) => {
+                    if(dayContent.perAnimal) {
+                        Object.entries(dayContent.perAnimal).forEach(([idxStr, list]) => {
+                            let targetIdx = parseInt(idxStr);
+                            if (data.animals && data.animals[idxStr]) {
+                                const impName = data.animals[idxStr].name;
+                                const localIdx = animals.findIndex(a => a.name === impName);
+                                if (localIdx !== -1) targetIdx = localIdx;
                             }
+                            list.forEach(item => entriesToProcess.push({ date: dateStr, idx: targetIdx, data: item }));
                         });
                     }
-               });
-               saveHistoryForYear(y, hTarget);
-            }
-            if(data.locations) data.locations.forEach(l => { if(!locations.includes(l)) locations.push(l); });
-            locations.sort();
-            if(data.locCoords) locCoords = { ...locCoords, ...data.locCoords };
-        } else if (action === 'overwrite') {
-            // clear old history keys
-            for(let k in localStorage){ if(k.startsWith('history-')) localStorage.removeItem(k); }
-            
-            animals = data.animals || []; 
-            colors = data.colors || {}; 
-            locations = data.locations || []; 
-            locCoords = data.locCoords || {};
-            
-            processHistoryImport(); // Restore history files
-            
-            // Reload globals
-            history = getHistoryForYear(currentYear);
+                });
+            });
         }
-        safeSave(); render(); showErrorToast(action === 'merge' ? "Import erfolgreich!" : "Überschrieben!", true);
-    } catch(e) { console.error(e); showErrorToast("Import fehlgeschlagen."); } 
+        
+        // Legacy Support
+        if (data.history) {
+            Object.entries(data.history).forEach(([dateStr, dayContent]) => {
+                if(dayContent.perAnimal) {
+                    Object.entries(dayContent.perAnimal).forEach(([idxStr, list]) => {
+                        let targetIdx = parseInt(idxStr);
+                        if (data.animals && data.animals[idxStr]) {
+                             const impName = data.animals[idxStr].name;
+                             const localIdx = animals.findIndex(a => a.name === impName);
+                             if (localIdx !== -1) targetIdx = localIdx;
+                        }
+                        list.forEach(item => entriesToProcess.push({ date: dateStr, idx: targetIdx, data: item }));
+                    });
+                }
+            });
+        }
+
+        entriesToProcess.forEach(e => {
+            if (action === 'overwrite') {
+                writeHistoryEntry(e.date, e.idx, e.data);
+            } else {
+                const y = e.date.split('-')[0];
+                const h = getHistoryForYear(y);
+                let exists = false;
+                if(h[e.date] && h[e.date].perAnimal && h[e.date].perAnimal[e.idx]) {
+                     exists = h[e.date].perAnimal[e.idx].some(ex => ex.time === e.data.time && ex.location === e.data.location);
+                }
+                if (!exists) writeHistoryEntry(e.date, e.idx, e.data);
+            }
+        });
+
+        loadGlobals(); render();
+        showErrorToast("Daten erfolgreich importiert & sortiert!", true);
+
+    } catch(e) { console.error(e); showErrorToast("Import Fehler: " + e.message); }
     finally { tempImportData = null; getEl('importFile').value = ''; }
 }
 
-// === FIX: EXPORT ALL DATA (ALL YEARS) ===
-function downloadBackup(){ 
-    // Gather all history
-    const allHistory = {};
-    const years = getAvailableYears();
-    years.forEach(y => {
-        allHistory[y] = getHistoryForYear(y);
-    });
-
-    const exportObj = {
-        year: currentYear,
-        animals,
-        locations,
-        locCoords,
-        colors,
-        fullHistory: allHistory // New structure
-    };
-    
-    const b = new Blob([JSON.stringify(exportObj,null,2)],{type:'application/json'}); 
-    const a = document.createElement('a'); 
-    a.href=URL.createObjectURL(b); 
-    a.download=`tier-backup-full.json`; // Renamed
-    a.click(); 
+// === UI UTILS ===
+function switchView(viewId, btn) {
+    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+    getEl(viewId).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    if(viewId === 'view-map') setTimeout(initMap, 200); 
+    if(viewId === 'view-stats') renderStats();
 }
-
-// === FIX: CSV EXPORT ALL YEARS ===
-function exportCSV() {
-    let csv = "Datum;Uhrzeit;Tier;Ort;Notiz\n";
-    
-    // Iterate ALL years available
-    const years = getAvailableYears().sort((a,b) => b-a); // Newest first
-    
-    years.forEach(y => {
-        const h = getHistoryForYear(y);
-        const yearAnimals = getAnimalsForYear(y);
-        
-        Object.entries(h).forEach(([d, v]) => {
-            if (v.perAnimal) {
-                Object.entries(v.perAnimal).forEach(([idx, list]) => {
-                    const n = yearAnimals[idx] ? yearAnimals[idx].name : "Unbekannt";
-                    list.forEach(s => {
-                        const safe = (val) => { val = val || ''; if (val.includes(';') || val.includes('"') || val.includes('\n')) { return `"${val.replace(/"/g, '""')}"`; } return val; };
-                        csv += `${d};${s.time || ''};${safe(n)};${safe(s.location)};${safe(s.note)}\n`;
-                    });
-                });
-            }
-        });
-    });
-
-    const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv); 
-    a.download = `tier-export-full.csv`; // Renamed
-    a.click();
+function filterTags(tag) {
+    currentFilter = tag;
+    document.querySelectorAll('.tag-pill').forEach(p => p.classList.remove('active'));
+    const btn = getEl('tag-' + tag.replace(/\s/g,'_'));
+    if(btn) btn.classList.add('active');
+    render();
 }
-
+function cycleSort(){
+    if(sortMode==='name') { sortMode='count'; getEl('sortBtn').innerText='🔢'; }
+    else if(sortMode==='count') { sortMode='name'; getEl('sortBtn').innerText='🔤'; }
+    render();
+}
+function toggleViewMode() {
+    viewMode = viewMode === 'list' ? 'grid' : 'list';
+    localStorage.setItem('viewMode', viewMode);
+    getEl('viewToggleBtn').innerText = viewMode === 'list' ? '📜' : '▦';
+    render();
+}
 function toggleInfo(){ getEl('infoBox').style.display = getEl('infoBox').style.display==='none'?'block':'none'; }
 function toggleDarkMode(){ dark=!dark; document.body.classList.toggle('dark'); localStorage.setItem('darkmode',dark); }
 function openNotifySettings(){ getEl('notifyModal').style.display='block'; }
 function closeModal(id){ getEl(id).style.display='none'; }
 window.onclick = e => { if(e.target.classList.contains('modal')) e.target.style.display='none'; }
+function generateShareCard() { showErrorToast("Screenshot Funktion (simuliert)", true); }
 
+// === GPS & ICON EDIT ===
+const osmIn = getEl('osmInput'), osmRes = getEl('osmResults');
+let debounce;
+function locateMe() {
+    if(!navigator.geolocation) return showErrorToast("GPS nicht verfügbar");
+    showErrorToast("Standort wird ermittelt...", true);
+    navigator.geolocation.getCurrentPosition(pos => {
+        const { latitude, longitude } = pos.coords;
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`, {
+            headers: { 'User-Agent': 'TiereZaehlenApp/5.0' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if(data && data.address) {
+                const addr = data.address;
+                const city = addr.city || addr.town || addr.village || addr.municipality;
+                const road = addr.road || addr.pedestrian || addr.suburb;
+                let text = road ? (road + (city ? ", " + city : "")) : (city || "Unbekannter Ort");
+                if(data.name && data.name !== text) text = data.name + ", " + text;
+                osmIn.value = text;
+                showErrorToast("Adresse gefunden: " + text, true);
+                locCoords[text] = { lat: parseFloat(latitude), lon: parseFloat(longitude) };
+            } else { showErrorToast("Adresse nicht gefunden."); }
+        })
+        .catch(e => showErrorToast("Fehler bei Adresssuche"));
+    }, err => { showErrorToast("GPS Fehler: " + err.message); });
+}
+if(osmIn){
+    osmIn.addEventListener('input', e => {
+        clearTimeout(debounce);
+        if(e.target.value.length < 3) { osmRes.style.display='none'; return; }
+        debounce = setTimeout(() => {
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(e.target.value)}`)
+            .then(r=>r.json()).then(d => {
+                osmRes.innerHTML='';
+                if(!d.length) return;
+                osmRes.style.display='block';
+                d.slice(0,5).forEach(p => {
+                    const div = document.createElement('div');
+                    div.className='suggestion-item';
+                    div.innerText = p.display_name.split(',').slice(0,2).join(','); 
+                    div.onclick = () => { addLocationWithCoords(div.innerText, p.lat, p.lon); osmIn.value=''; osmRes.style.display='none'; };
+                    osmRes.appendChild(div);
+                });
+            });
+        }, 300);
+    });
+    document.addEventListener('click', e => { if(e.target!==osmIn) osmRes.style.display='none'; });
+}
+function addLocationWithCoords(name, lat, lon) {
+    if(!locations.includes(name)) locations.push(name);
+    locCoords[name] = { lat: parseFloat(lat), lon: parseFloat(lon) };
+    saveGlobals(); showErrorToast(`Ort "${name}" hinzugefügt`, true); render();
+}
+function addManualLocation() {
+    const val = osmIn.value.trim();
+    if(val && !locations.includes(val)) { locations.push(val); saveGlobals(); render(); showErrorToast("Ort gespeichert", true); }
+}
+let editIdx = null; let editImgTemp = null;
+function openIconEdit(i){
+    editIdx=i; editImgTemp = animals[i].image;
+    getEl('editEmoji').value = animals[i].emoji;
+    getEl('editTag').value = (animals[i].tags || []).join(', ');
+    updateEditPreview();
+    getEl('iconModal').style.display = 'block';
+}
+function handleEditFile(input){
+    if(input.files && input.files[0]){
+        const reader = new FileReader();
+        reader.onload = function(e){ resizeImage(e.target.result, 100, (res)=>{ editImgTemp = res; updateEditPreview(); }); }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+function updateEditPreview(){
+    const img = getEl('editPreviewImg');
+    if(editImgTemp){ img.src = editImgTemp; getEl('editPreviewContainer').style.display='block'; }
+    else getEl('editPreviewContainer').style.display='none';
+}
+function removeEditImage(){ editImgTemp = null; updateEditPreview(); }
+function saveIconEdit(){
+    if(editIdx===null) return;
+    animals[editIdx].image = editImgTemp;
+    animals[editIdx].emoji = getEl('editEmoji').value || '📸';
+    const tagStr = getEl('editTag').value;
+    animals[editIdx].tags = tagStr ? tagStr.split(',').map(s=>s.trim()).filter(s=>s) : [];
+    saveGlobals(); render(); closeModal('iconModal');
+}
+function handleImageUpload(input){
+    if(input.files && input.files[0]){
+        const reader = new FileReader();
+        reader.onload = e => resizeImage(e.target.result, 300, res => { currentImage = res; getEl('previewEl').src = res; getEl('imgPreview').style.display='block'; });
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+function resizeImage(base64, maxW, cb){
+    const img = new Image(); img.src=base64;
+    img.onload = () => {
+        const c = document.createElement('canvas');
+        const s = maxW/img.width;
+        c.width=maxW; c.height=img.height*s;
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        cb(c.toDataURL('image/jpeg',0.6)); 
+    }
+}
+function clearImage(){ currentImage=null; getEl('imgPreview').style.display='none'; }
+function removeAnimal(i){
+    if(!confirm("Tier und ALLE Daten aller Jahre löschen?")) return;
+    animals.splice(i, 1);
+    for (let k in localStorage) {
+        if(k.startsWith('history-')) {
+            const h = JSON.parse(localStorage.getItem(k));
+            Object.values(h).forEach(d => {
+                if(d.perAnimal) {
+                    const newPerAnimal = {};
+                    Object.entries(d.perAnimal).forEach(([idx, val]) => {
+                        const ii = parseInt(idx);
+                        if(ii < i) newPerAnimal[ii] = val;
+                        else if(ii > i) newPerAnimal[ii-1] = val;
+                    });
+                    d.perAnimal = newPerAnimal;
+                }
+            });
+            localStorage.setItem(k, JSON.stringify(h));
+        }
+    }
+    saveGlobals(); closeModal('detailModal'); render();
+}
+function hardReset(){
+    if(confirm("ALLES LÖSCHEN?")) { localStorage.clear(); location.reload(); }
+}
+
+// STARTUP
+loadGlobals();
 safeRun(render);
 setTimeout(() => getEl('muteBtn').innerText = isMuted ? '🔇' : '🔊', 100);
 </script>
