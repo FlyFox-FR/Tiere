@@ -1,16 +1,9 @@
-﻿Das ist natürlich ärgerlich, sorry! Da habe ich zwei Dinge vermasselt:
-1.  **Buttons fehlen:** Ich hatte im Code stehen `const canEdit = (y === currentYear);`. Das hat die Buttons für vergangene Jahre (wie 2025) absichtlich ausgeblendet. Das habe ich entfernt -> **Buttons sind jetzt immer da.**
-2.  **Löschen geht nicht:** Ich hatte vergessen, die Funktion `deleteHistoryItem` tatsächlich in den Code zu schreiben. Der Button war da (in 2026), aber er drückte quasi ins Leere.
-
-Hier ist **Version 4.5**. Damit funktionieren **Bearbeiten (Stift)** und **Löschen (Mülleimer)** jetzt in **allen Jahren** (2025, 2026, etc.) und aktualisieren auch sofort die Statistik des jeweiligen Jahres.
-
-```html
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Tiere zählen Ultimate v4.5 (Full Edit) 🐾</title>
+<title>Top Tier 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -201,7 +194,7 @@ input:checked + .slider:before { transform: translateX(24px); }
   <button class="icon-btn-header info" onclick="safeRun(toggleInfo)" title="Hilfe anzeigen">ℹ️</button>
 </div>
 
-<h1>Tiere zählen Ult. 🐾</h1>
+<h1>Top Tier 🐾</h1>
 
 <!-- VEREINFACHTE INFO BOX FÜR ENDANWENDER -->
 <div id="infoBox" class="info-box">
