@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1">
+<title>Tiere zählen Ultimate v6.4 🐾 (Merged)</title>
+<meta name="theme-color" content="#121212">
+
+<!-- PWA MANIFEST -->
+<link rel="manifest" href='data:application/manifest+json,{"name":"Tiere Zählen Ult.","short_name":"TierTracker","start_url":".","display":"standalone","background_color":"#121212","theme_color":"#2196f3","icons":[{"src":"https://emojicdn.elk.sh/🐾","sizes":"192x192","type":"image/png"}]}'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<!-- LEAFLET MAP CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+<style>
+/* === GLOBAL RESET FOR BOX SIZING (FIXES OVERFLOW) === */
+*, *::before, *::after { box-sizing: border-box; }
+
+:root{
+    --bg:#f0f2f5;
+    --card:rgba(255, 255, 255, 0.85);
+    --card-solid:#fff;
+    --text:#1c1e21;
+    --btn:#e4e6eb;
+    --hover:#d8dadf;
+    --accent:#2196f3;
+    --accent-glow: rgba(33, 150, 243, 0.4);
+    --warn-bg:#fff3cd; --warn-text:#856404;
+    --err-bg:#f8d7da; --err-text:#721c24;
+    --sub:#65676b; 
+    --nav-height: 70px;
+    --glass-border: 1px solid rgba(255, 255, 255, 0.6);
+    --shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+body.dark{
+    --bg:#121212;
+    --card:rgba(30, 30, 30, 0.85);
+    --card-solid:#1e1e1e;
+    --text:#e4e6eb;
+    --btn:#3a3b3c;
+    --hover:#4e4f50;
+    --accent:#64b5f6;
+    --accent-glow: rgba(100, 181, 246, 0.3);
+    --warn-bg:#3d3618; --warn-text:#e8c658;
+    --err-bg:#4c1f24; --err-text:#ff8a96;
+    --sub:#b0b3b8;
+    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body{font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background:var(--bg); color:var(--text); max-width:980px; margin:auto; padding:16px; padding-bottom:calc(var(--nav-height) + 40px); position:relative; overflow-x:hidden; transition: background 0.3s;}
+
+/* Utilities */
+.hidden { display: none !important; }
+.fade-in { animation: fadeIn 0.3s forwards; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.glass-panel { background: var(--card); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: var(--glass-border); box-shadow: var(--shadow); }
+
+/* Header & Toggles */
+.header-controls { position:absolute; top:16px; right:16px; display:flex; gap:8px; z-index: 100; }
+.icon-btn-header { font-size:18px; background:var(--btn); color:var(--text); border-radius:50%; width:40px; height:40px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.icon-btn-header:active { transform: scale(0.9); }
+.icon-btn-header.info { background:var(--accent); color:#fff; box-shadow: 0 2px 8px var(--accent-glow); }
+
+h1 { margin-top: 5px; margin-bottom: 20px; font-size: 1.8em; font-weight: 800; letter-spacing: -0.5px; background: -webkit-linear-gradient(45deg, var(--text), var(--sub)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; width: fit-content;}
+
+/* Views Container */
+.view-section { display: none; }
+.view-section.active { display: block; animation: fadeIn 0.3s ease-out; }
+
+/* Sticky Bottom Nav (Glass) */
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-height); background: var(--card); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: var(--glass-border); display: flex; justify-content: space-around; align-items: center; z-index: 9000; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -5px 20px rgba(0,0,0,0.1); }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--sub); cursor: pointer; transition: all 0.2s; font-size: 11px; background: none; border: none; padding: 0; }
+.nav-item .nav-icon { font-size: 22px; margin-bottom: 4px; transition: transform 0.2s; }
+.nav-item.active { color: var(--accent); font-weight: 600; }
+.nav-item.active .nav-icon { transform: translateY(-2px); }
+
+/* Floating Particles */
+.particle { position: fixed; pointer-events: none; font-weight: bold; z-index: 9999; animation: floatUp 0.8s ease-out forwards; font-size: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+@keyframes floatUp { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -150px) scale(1.5); opacity: 0; } }
+
+/* Tag Filters & Search */
+.list-header { display:flex; gap:8px; margin-bottom:15px; position: relative; z-index: 5; }
+.search-bar { flex:1; padding:12px 16px; border-radius:25px; border:none; background:var(--card-solid); color:var(--text); font-size:15px; box-shadow: var(--shadow); transition: box-shadow 0.2s; }
+.search-bar:focus { outline: 2px solid var(--accent); box-shadow: 0 4px 12px var(--accent-glow); }
+.sort-btn { padding:0; width: 44px; height: 44px; border-radius:14px; border:none; background:var(--card-solid); color: var(--text); cursor:pointer; box-shadow: var(--shadow); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+
+.tag-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 4px 4px 15px 4px; margin-bottom: 0px; scrollbar-width: none; mask-image: linear-gradient(to right, black 90%, transparent 100%); }
+.tag-scroll::-webkit-scrollbar { display: none; }
+.tag-pill { background: var(--btn); padding: 8px 16px; border-radius: 20px; font-size: 13px; white-space: nowrap; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; font-weight: 500; }
+.tag-pill.active { background: var(--accent); color: #fff; box-shadow: 0 4px 10px var(--accent-glow); transform: scale(1.05); }
+
+/* Map Container */
+#map { height: 60vh; width: 100%; border-radius: 24px; z-index: 1; margin-bottom: 20px; border: 4px solid var(--card); box-shadow: var(--shadow); }
+
+/* Inputs & Buttons */
+button{font-size:16px;padding:10px 16px;border-radius:14px;border:none;background:var(--btn);color:var(--text);cursor:pointer; transition: all 0.2s; font-weight: 600;}
+button:active{transform: scale(0.96);}
+button:hover{background:var(--hover)}
+input,select,textarea{padding:12px;font-size:16px;border-radius:12px;border:1px solid var(--btn);background:var(--card-solid);color:var(--text); width: 100%; box-sizing: border-box; font-family: inherit;}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+
+/* === LIST VIEW STYLES === */
+.row{
+    display:flex; align-items:center; gap:12px; 
+    background:var(--card); backdrop-filter: blur(5px);
+    padding:10px 12px; margin-bottom:10px; border-radius:18px; 
+    box-shadow: var(--shadow); border: var(--glass-border);
+    transition: transform 0.2s;
+}
+.row:active { transform: scale(0.99); }
+.animal-icon{
+    font-size:28px; width:48px; height:48px; flex-shrink:0; 
+    display:flex; align-items:center; justify-content:center; 
+    overflow:hidden; border-radius:14px; cursor: pointer; 
+    background: var(--bg); border: 1px solid var(--btn);
+}
+.animal-icon img {width:100%; height:100%; object-fit:cover;}
+.name-col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.name{ font-weight:700; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tags-row { font-size:11px; opacity:0.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.count-badge { 
+    background: var(--bg); color: var(--text); border: 1px solid var(--btn);
+    min-width: 32px; height: 32px; border-radius: 10px; 
+    display: flex; align-items: center; justify-content: center; 
+    font-weight: 800; font-size: 14px; margin-right: 4px;
+}
+.fav-btn {
+    background: none; border: none; font-size: 18px; color: var(--btn); cursor: pointer; padding: 5px; margin-right: -4px;
+}
+.fav-btn.active { color: #ffb300; text-shadow: 0 0 10px rgba(255, 179, 0, 0.4); }
+.action-btn-main {
+    background: var(--accent); color: white; width: 44px; height: 44px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center; font-size: 20px; 
+    box-shadow: 0 4px 10px var(--accent-glow);
+}
+
+/* === GRID VIEW STYLES === */
+.grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; padding-bottom: 20px; }
+.grid-item { background: var(--card); border-radius: 20px; padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: var(--shadow); position: relative; border: var(--glass-border); }
+.grid-fav { position: absolute; top: 8px; right: 8px; font-size: 16px; color: var(--btn); cursor: pointer; }
+.grid-fav.active { color: #ffb300; }
+.grid-img-wrap { width: 80px; height: 80px; border-radius: 40px; overflow: hidden; margin-bottom: 10px; border: 4px solid var(--bg); box-shadow: 0 4px 8px rgba(0,0,0,0.1); cursor: pointer; display:flex; align-items:center; justify-content:center; font-size:40px; background:var(--btn); }
+.grid-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.grid-name { font-weight: bold; font-size: 14px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+.grid-count { background: transparent; color: var(--accent); padding: 2px 8px; font-size: 16px; font-weight: bold; margin-bottom: 8px; }
+.grid-actions { display: flex; gap: 8px; width: 100%; margin-top: 10px; }
+.grid-btn { flex: 1; padding: 8px; border-radius: 10px; font-size: 16px; display:flex; align-items:center; justify-content:center; }
+
+/* === UNDO TOAST === */
+.undo-toast {
+    position: fixed; bottom: calc(var(--nav-height) + 20px); left: 50%; transform: translateX(-50%) translateY(100px);
+    background: #323232; color: white; padding: 12px 20px; border-radius: 30px;
+    display: flex; align-items: center; gap: 15px; z-index: 9998;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    width: 90%; max-width: 400px; justify-content: space-between;
+}
+.undo-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.undo-btn { background: transparent; color: #64b5f6; font-weight: bold; text-transform: uppercase; font-size: 14px; padding: 5px 10px; margin: -5px -10px -5px 0; cursor: pointer; }
+.error-toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--err-bg); color: var(--err-text); padding: 12px 24px; border-radius: 50px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 9999; font-size: 14px; display: none; animation: fadeIn 0.3s; font-weight: bold; width: max-content; }
+
+/* === BOTTOM SHEETS & MODALS (FIXED: Swipe & Width) === */
+.modal { display: none; position: fixed; z-index: 9995; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); transition: opacity 0.3s; }
+.modal-content {
+    background-color: var(--card-solid); margin: 5% auto; padding: 25px; border-radius: 24px; width: 90%; max-width: 500px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    animation: zoomIn 0.2s ease-out; max-height: 85vh; overflow-y: auto;
+}
+/* MOBILE OVERRIDE FOR BOTTOM SHEET */
+@media (max-width: 600px) {
+    .modal-content {
+        margin: 0; 
+        position: absolute; 
+        bottom: 0; 
+        left: 0; 
+        width: 100%; /* Fixes overflow */
+        max-width: 100%; /* Fixes overflow */
+        border-radius: 24px 24px 0 0;
+        animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        padding-bottom: 40px;
+        /* Enable hardware acceleration for smooth dragging */
+        transform: translateZ(0); 
+        transition: transform 0.1s;
+    }
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes zoomIn { from { transform: scale(0.9); opacity:0; } to { transform: scale(1); opacity:1; } }
+
+.close-btn { position: absolute; top: 15px; right: 20px; color: var(--sub); font-size: 24px; width:30px; height:30px; display:flex;align-items:center;justify-content:center; background:var(--btn); border-radius:50%; cursor: pointer; z-index:10; }
+.sheet-handle { width: 50px; height: 6px; background: var(--btn); border-radius: 10px; margin: 0 auto 20px auto; cursor: grab; }
+
+/* === STATS Styles === */
+.card-section { background:var(--card); padding:20px; border-radius:20px; box-shadow: var(--shadow); margin-bottom: 20px; border: var(--glass-border); }
+.card-section h3 { margin-top: 0; margin-bottom: 15px; font-size: 1.1em; border-bottom: 1px solid var(--btn); padding-bottom: 15px; display:flex; align-items:center; gap:10px; }
+.level-card { background: linear-gradient(135deg, #2196f3, #673ab7); color: white; padding: 25px; border-radius: 24px; margin-bottom: 20px; text-align: center; box-shadow: 0 10px 25px rgba(33, 150, 243, 0.3); position: relative; overflow: hidden; }
+.level-card::before { content:''; position: absolute; top:-50%; left:-50%; width:200%; height:200%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); pointer-events: none; }
+.level-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; margin-bottom: 5px; }
+.level-num { font-size: 42px; font-weight: 900; margin: 10px 0; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+.xp-bar-bg { background: rgba(0,0,0,0.25); height: 8px; border-radius: 4px; overflow: hidden; margin-top: 15px; }
+.xp-bar-fill { background: #fff; height: 100%; width: 0%; transition: width 1s ease-out; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+.xp-text { font-size: 11px; margin-top: 6px; opacity: 0.9; }
+
+.badge-grid { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.badge { background: var(--btn); padding: 6px 10px; border-radius: 20px; font-size: 12px; display: flex; align-items: center; gap: 5px; opacity: 0.4; filter: grayscale(1); transition: all 0.3s; cursor: pointer; user-select: none; border: 1px solid transparent; }
+.badge:active { transform: scale(0.95); }
+.badge.earned { opacity: 1; filter: grayscale(0); background: rgba(33, 150, 243, 0.15); border-color: var(--accent); color: var(--accent); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.badge-icon { font-size: 16px; }
+
+.heatmap-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; max-width: 320px; margin: 10px auto; }
+.heat-cell { aspect-ratio: 1; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: transparent; background: var(--btn); }
+
+.stat-kpi-row { display:flex; gap:10px; justify-content:space-around; margin-bottom:15px; text-align:center; }
+.stat-kpi { background:var(--card-solid); padding:10px; border-radius:12px; flex:1; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.hbar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; }
+.hbar-label { flex: 1; text-align: left; opacity: 0.9; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.hbar-track { width: 40%; flex: none; background: var(--btn); height: 12px; border-radius: 6px; overflow: hidden; }
+.hbar-fill { height: 100%; background: var(--accent); }
+.hbar-val { font-size: 12px; width: 25px; text-align:right; font-weight:bold; flex:none; }
+.chart-wrap { display: flex; align-items: flex-end; height: 140px; gap: 6px; padding-top: 25px; margin-top: 10px; }
+.chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+.chart-bar { width: 100%; background: var(--accent); border-radius: 4px 4px 0 0; opacity: 0.9; min-height: 1px; }
+.chart-val { font-size: 10px; margin-bottom: 2px; }
+.chart-label { font-size: 10px; margin-top: 4px; transform: rotate(-45deg); height: 20px; text-align: center; }
+
+/* === NEW STATS CSS FROM FILE 2 === */
+.level-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+.level-table th { border-bottom: 1px solid var(--btn); padding: 5px; opacity: 0.7; }
+.level-table td { border-bottom: 1px solid var(--btn); padding: 6px 5px; }
+.level-table tr.current-level { background: rgba(33, 150, 243, 0.15); color: var(--accent); font-weight: bold; }
+
+/* Switch Toggle */
+.switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--btn); transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+input:checked + .slider { background-color: var(--accent); }
+input:checked + .slider:before { transform: translateX(22px); }
+
+/* Import/Actions */
+.import-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+.import-actions button { height: 100%; padding: 15px; border-radius: 16px; }
+.btn-merge { grid-column: span 2; background: var(--accent); color: white; }
+
+/* Image Edit */
+.edit-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+.file-label { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; background: var(--btn); padding: 15px; border-radius: 16px; cursor: pointer; font-size: 13px; font-weight: bold; }
+
+/* Autocomplete */
+.autocomplete-container { flex: 1; position: relative; }
+.autocomplete-results { position: absolute; top: 100%; left: 0; right: 0; background: var(--card-solid); border: 1px solid var(--btn); z-index: 1000; display: none; max-height: 200px; overflow-y: auto; border-radius: 0 0 12px 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+.suggestion-item { padding: 12px; cursor: pointer; border-bottom: 1px solid var(--btn); font-size: 14px; }
+
+</style>
+</head>
+<body>
+
+<!-- Global Toast & Undo -->
+<div id="errorToast" class="error-toast"></div>
+<div id="undoToast" class="undo-toast">
+    <span id="undoText">Gezählt: Löwe (+1)</span>
+    <button class="undo-btn" onclick="safeRun(performUndo)">Rückgängig</button>
+</div>
+
+<!-- HEADER -->
+<div class="header-controls">
+  <button class="icon-btn-header" onclick="safeRun(openNotifySettings)" title="Einstellungen & Erinnerungen">🔔</button>
+  <button class="icon-btn-header" onclick="safeRun(toggleMute)" id="muteBtn" title="Ton an/aus">🔇</button>
+  <button class="icon-btn-header info" onclick="safeRun(toggleInfo)" title="Hilfe anzeigen">ℹ️</button>
+</div>
+
+<h1>Tiere Zählen <span style="font-size:0.5em; opacity:0.6; vertical-align:middle; font-weight:normal">v6.4</span></h1>
+
+<!-- INFO BOX (Anleitung für Endanwender) -->
+<div id="infoBox" class="glass-panel" style="display:none; padding:20px; margin-bottom:20px; border-radius:20px;">
+<h3>📖 Anleitung</h3>
+<p>Willkommen! So benutzt du die App:</p>
+<ul style="line-height:1.6; padding-left:20px;">
+<li><strong>🔢 Zählen:</strong> Tippe auf das (+), um ein Tier zu zählen.</li>
+<li><strong>🔍 Details & Historie:</strong> Tippe auf den Namen oder das Bild eines Tiers, um alle Sichtungen zu sehen. <em>(Schließen nur über das X oben rechts möglich)</em>.</li>
+<li><strong>📝 Notizen:</strong> Klicke auf das 📝 Symbol, um eine Notiz oder eine genaue Uhrzeit einzutragen.</li>
+<li><strong>⭐ Favoriten:</strong> Markiere deine Lieblingstiere mit dem Stern, damit sie oben stehen.</li>
+<li><strong>⚙️ Verwalten:</strong> Unten auf "Admin" kannst du neue Tiere anlegen oder Backups machen.</li>
+</ul>
+</div>
+
+<!-- === VIEW: LIST (Startseite) === -->
+<div id="view-list" class="view-section active">
+  <div class="list-header">
+      <input id="listSearch" class="search-bar" placeholder="🔍 Tier suchen..." oninput="safeRun(render)">
+      <button class="sort-btn" onclick="safeRun(toggleViewMode)" id="viewToggleBtn" title="Ansicht wechseln">📜</button>
+      <button class="sort-btn" onclick="safeRun(cycleSort)" id="sortBtn" title="Sortieren" style="margin-left:8px">🔤</button>
+  </div>
+
+  <div id="tagFilterContainer" class="tag-scroll">
+      <div class="tag-pill active" onclick="safeRun(filterTags, 'ALL')" id="tag-ALL">Alle</div>
+      <!-- Dynamisch gefüllt -->
+  </div>
+
+  <div id="list" style="padding-bottom: 20px;"></div>
+  
+  <div id="emptyState" style="text-align:center; padding:60px 20px; color:var(--sub); display:none;">
+      <div style="font-size:60px; margin-bottom:15px; opacity:0.5">🐾</div>
+      <h3>Keine Tiere gefunden</h3>
+      <p>Gehe auf "Admin" um neue Tiere anzulegen.</p>
+  </div>
+</div>
+
+<!-- === VIEW: ADMIN (Verwalten) === -->
+<div id="view-admin" class="view-section">
+  
+  <!-- BUBBLE 1: NEUES TIER -->
+  <div class="card-section">
+    <h3>🐾 Neues Tier anlegen</h3>
+    <div class="edit-tools" style="margin-bottom:0">
+      <label class="file-label">
+          <span style="font-size:24px">🖼️</span> Galerie
+          <input type="file" id="fileUpload" hidden accept="image/*" onchange="safeRun(handleImageUpload, this)">
+      </label>
+      <label class="file-label">
+          <span style="font-size:24px">📷</span> Kamera
+          <input type="file" id="cameraUpload" hidden accept="image/*" capture="environment" onchange="safeRun(handleImageUpload, this)">
+      </label>
+    </div>
+    
+    <div style="display:flex; gap:10px; margin:15px 0;">
+        <input id="emojiInput" placeholder="🦁" size="3" style="width:60px; text-align:center; font-size:24px">
+        <input id="nameInput" placeholder="Name des Tiers (z.B. Rotfuchs)" style="flex:1">
+    </div>
+    
+    <div style="margin-bottom:15px">
+        <input id="tagInput" placeholder="Kategorie (z.B. Vögel, Säuger)..." list="tagSuggestions">
+        <datalist id="tagSuggestions">
+            <option value="Vögel">
+            <option value="Säugetiere">
+            <option value="Insekten">
+            <option value="Fische">
+        </datalist>
+    </div>
+    
+    <div id="imgPreview" style="display:none; margin-bottom:15px; position:relative; width:fit-content; margin: 0 auto 15px auto;">
+        <img id="previewEl" src="" style="width:80px; height:80px; border-radius:20px; object-fit:cover; border:2px solid var(--accent)">
+        <div onclick="safeRun(clearImage)" style="position:absolute; top:-5px; right:-5px; background:red; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer">✖</div>
+    </div>
+
+    <button onclick="safeRun(addAnimal)" style="width:100%; background:var(--accent); color:#fff; padding:14px;">Tier Speichern ✨</button>
+  </div>
+
+  <!-- BUBBLE 2: ORTE -->
+  <div class="card-section">
+    <h3>📍 Orte & Suche</h3>
+    <p style="font-size:12px; opacity:0.7; margin-bottom:10px">Suche Orte oder nutze GPS, um die Adresse automatisch zu finden.</p>
+    <div style="display:flex; gap:8px; align-items:flex-start;">
+        <div class="autocomplete-container" style="flex:1">
+          <input id="osmInput" placeholder="Ort suchen (Enter)...">
+          <div id="osmResults" class="autocomplete-results"></div>
+        </div>
+        <button onclick="safeRun(locateMe)" title="Mein Standort" style="background:var(--card-solid); border:1px solid var(--btn); min-width:44px">📍</button>
+        <button onclick="safeRun(addManualLocation)" style="min-width:44px;">💾</button>
+    </div>
+ <div style="margin-top:15px; border-top:1px solid var(--btn); padding-top:10px;">
+        <span style="font-size:12px; opacity:0.7">Gespeicherte Orte (zum Löschen antippen):</span>
+        <div id="locationListDisplay" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; max-height:120px; overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <!-- BUBBLE 3: DATEN -->
+  <div class="card-section">
+    <h3>💾 Daten & Sicherung</h3>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+        <button onclick="safeRun(toggleDarkMode)">🌙 Design</button>
+        <button onclick="safeRun(downloadBackup)">📦 Backup</button>
+        <button onclick="safeRun(exportCSV)">📄 CSV Export</button>
+        <button onclick="document.getElementById('importFile').click()">📥 Import</button>
+        <input type="file" id="importFile" accept="application/json" hidden onchange="safeRun(importBackup, event)">
+    </div>
+    
+    <div style="margin-top:20px; font-size:12px; opacity:0.8;">
+        <div style="display:flex; justify-content:space-between"><span>Bild-Datenbank (IndexedDB):</span><span id="storageText">Lade...</span></div>
+        <div class="xp-bar-bg" style="height:6px; margin-top:5px; background:var(--btn)"><div id="storageBar" class="xp-bar-fill" style="width:0%; background:var(--accent)"></div></div>
+    </div>
+  </div>
+
+  <div style="text-align:center; margin-top:40px; padding-top:20px; border-top:1px dashed var(--btn);">
+      <p style="color:var(--err-text); font-weight:bold; font-size:12px; margin-bottom:10px">⚠️ GEFAHRENZONE</p>
+      <button onclick="safeRun(hardReset)" style="background:transparent; color:var(--err-text); border:1px solid var(--err-text); font-size:12px">⚠️ App vollständig zurücksetzen</button>
+  </div>
+</div>
+
+<!-- === VIEW: MAP (Karte) === -->
+<div id="view-map" class="view-section">
+    <div id="map"></div>
+    <div style="text-align:center; opacity:0.7; font-size:13px">Zeigt Orte deiner Sichtungen aller Jahre.</div>
+</div>
+
+<!-- === VIEW: STATS (Statistik) === -->
+<div id="view-stats" class="view-section">
+  <div style="display:flex; justify-content:flex-end; margin-bottom:15px">
+      <select id="statsYearSelect" onchange="safeRun(renderStats)" style="width:auto; font-weight:bold; background:var(--card);"></select>
+  </div>
+  <div id="statsContainer">
+    <div id="statsContent"></div>
+  </div>
+  <button onclick="safeRun(generateShareCard)" style="width:100%; margin-top:20px; background:var(--text); color:var(--bg)">🎨 Share Card erstellen</button>
+</div>
+
+<!-- === BOTTOM NAV === -->
+<div class="bottom-nav">
+    <button class="nav-item active" onclick="safeRun(switchView, 'view-list', this)">
+        <span class="nav-icon">📋</span>
+        <span>Liste</span>
+    </button>
+    <button class="nav-item" onclick="safeRun(switchView, 'view-admin', this)">
+        <span class="nav-icon">⚙️</span>
+        <span>Admin</span>
+    </button>
+    <button class="nav-item" onclick="safeRun(switchView, 'view-map', this)">
+        <span class="nav-icon">🌍</span>
+        <span>Karte</span>
+    </button>
+    <button class="nav-item" onclick="safeRun(switchView, 'view-stats', this)">
+        <span class="nav-icon">📊</span>
+        <span>Stats</span>
+    </button>
+</div>
+
+<!-- MODALS WITH SWIPE HANDLE -->
+<div id="detailModal" class="modal">
+    <div class="modal-content">
+        <!-- SHEET HANDLE ENTFERNT, damit man nicht denkt, man kann swipen -->
+        <div class="close-btn" onclick="closeModal('detailModal')">✕</div>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid var(--btn)">
+             <div class="modal-icon" id="detailIcon" style="font-size:50px; line-height:1"></div>
+             <div>
+                 <h2 id="detailTitle" style="margin:0">Tier</h2>
+                 <select id="detailYearSelect" onchange="safeRun(updateDetailChart)" style="padding:4px; font-size:13px; margin-top:4px"></select>
+             </div>
+        </div>
+        <div id="modalBody"></div>
+    </div>
+</div>
+
+<div id="noteModal" class="modal">
+  <div class="modal-content">
+    <div class="sheet-handle"></div>
+    <div class="close-btn" onclick="closeModal('noteModal')">✕</div>
+    <h3>📝 Notiz & Details</h3>
+    <input type="date" id="noteDate" style="margin-bottom:10px">
+    <div style="display:flex; gap:10px; margin-bottom:10px">
+        <input type="time" id="noteTime">
+        <select id="noteLoc"></select>
+    </div>
+    <textarea id="noteText" placeholder="Was hast du beobachtet?" rows="4" style="margin-bottom:15px"></textarea>
+    <button id="noteSaveBtn" style="width:100%; background:var(--accent); color:#fff; padding:15px">Speichern</button>
+  </div>
+</div>
+
+<div id="importModal" class="modal">
+  <div class="modal-content" style="text-align:center">
+    <div class="sheet-handle"></div>
+    <h3>Backup Importieren</h3>
+    <p style="opacity:0.7">Wie möchtest du die Daten importieren?</p>
+    <div class="import-actions">
+        <button class="btn-merge" onclick="safeRun(confirmImport, 'merge')">✨ Zusammenfügen (Smart Merge)<br><small>Fügt neue Daten hinzu, behält alte</small></button>
+        <button class="btn-overwrite" onclick="safeRun(confirmImport, 'overwrite')" style="background:var(--err-bg); color:var(--err-text); border:1px solid var(--err-text)">⚠️ Alles Überschreiben<br><small>Löscht ALLE aktuellen Daten</small></button>
+        <button onclick="safeRun(confirmImport, 'cancel')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<div id="iconModal" class="modal">
+  <div class="modal-content">
+    <div class="sheet-handle"></div>
+    <div class="close-btn" onclick="closeModal('iconModal')">✕</div>
+    <h3>Bearbeiten</h3>
+    <div class="edit-tools">
+       <label class="file-label">🖼️ Galerie<input type="file" id="editFileInput" hidden accept="image/*" onchange="safeRun(handleEditFile, this)"></label>
+       <label class="file-label">📷 Foto<input type="file" id="editCameraInput" hidden accept="image/*" capture="environment" onchange="safeRun(handleEditFile, this)"></label>
+    </div>
+    <div id="editPreviewContainer" style="text-align:center; display:none; margin-bottom:15px">
+        <img id="editPreviewImg" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid var(--accent)">
+        <br><button onclick="safeRun(removeEditImage)" style="margin-top:5px; font-size:12px; padding:5px 10px; background:var(--err-bg); color:var(--err-text); border:none; border-radius:8px">Bild löschen</button>
+    </div>
+    <div style="display:flex; gap:10px; margin-bottom:15px">
+       <input id="editEmoji" style="width:70px; font-size:30px; text-align:center" placeholder="🦁">
+       <input id="editTag" placeholder="Kategorien (Komma getrennt)">
+    </div>
+    <button onclick="safeRun(saveIconEdit)" style="width:100%; background:var(--accent); color:#fff">Speichern</button>
+  </div>
+</div>
+
+<div id="notifyModal" class="modal">
+  <div class="modal-content">
+    <div class="sheet-handle"></div>
+    <div class="close-btn" onclick="closeModal('notifyModal')">✕</div>
+    <h3>🔔 Einstellungen</h3>
+    <div style="background:var(--bg); padding:15px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+        <span>Inaktivitäts-Alarm</span>
+        <label class="switch"><input type="checkbox" id="notifyToggle"><span class="slider"></span></label>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center; margin-bottom:20px">
+        <span>Nach Tagen:</span> <input type="number" id="notifyDays" value="7" style="width:80px">
+    </div>
+    <div style="display:flex; gap:10px; margin-bottom:20px">
+        <button onclick="safeRun(saveNotifySettings)" style="flex:1; background:var(--accent); color:#fff">Speichern</button>
+        <button onclick="safeRun(testNotification)" style="flex:1;">Testen</button>
+    </div>
+    <hr style="opacity:0.2">
+    <h4>📅 Kalender-Export</h4>
+    <div style="display:flex; gap:5px; margin-bottom:10px">
+        <select id="icsFreq"><option value="WEEKLY">Wöchentlich</option><option value="DAILY">Täglich</option></select>
+        <input type="time" id="icsTime" value="19:00">
+    </div>
+    <select id="icsDay" style="margin-bottom:10px"><option value="SA">Samstag</option><option value="SU">Sonntag</option></select>
+    <button onclick="safeRun(downloadICS)" style="width:100%">📅 ICS Datei laden</button>
+  </div>
+</div>
+
+<!-- LEAFLET JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+/** 
+ * === TIER APP V6.4 ULTIMATE CORE ===
+ * Fixes: Disabled Swipe for Details View
+ */
+
+// === 1. SWIPE GESTURE HANDLER ===
+function initSwipeGestures() {
+    let startY = 0;
+    let currentModalContent = null;
+
+    document.addEventListener('touchstart', (e) => {
+        const handle = e.target.closest('.sheet-handle');
+        const content = e.target.closest('.modal-content');
+        
+        // HIER WIRD DIE ÄNDERUNG GEMACHT:
+        // Wenn das Modal die ID 'detailModal' hat, brechen wir ab (kein Swipe)
+        if (content && content.parentElement.id === 'detailModal') return;
+
+        // Only allow swipe if touching handle OR touching content at the very top (scrolled up)
+        if (content && (handle || content.scrollTop === 0)) {
+            currentModalContent = content;
+            startY = e.touches[0].clientY;
+            // Remove transition for instant drag response
+            currentModalContent.style.transition = 'none';
+        }
+    }, {passive: true});
+
+    document.addEventListener('touchmove', (e) => {
+        if (!currentModalContent) return;
+        const currentY = e.touches[0].clientY;
+        const delta = currentY - startY;
+
+        // Only move if dragging DOWN
+        if (delta > 0) {
+            e.preventDefault(); // Prevent scrolling body
+            currentModalContent.style.transform = `translateY(${delta}px)`;
+        }
+    }, {passive: false});
+
+    document.addEventListener('touchend', (e) => {
+        if (!currentModalContent) return;
+        const delta = e.changedTouches[0].clientY - startY;
+
+        // Restore transition for smooth bounce back or exit
+        currentModalContent.style.transition = 'transform 0.3s ease-out';
+
+        if (delta > 120) { // Threshold to close
+            const modalId = currentModalContent.parentElement.id;
+            closeModal(modalId);
+            // Reset transform AFTER animation closes it (timeout matches css transition)
+            setTimeout(() => { 
+                currentModalContent.style.transform = ''; 
+                currentModalContent.style.transition = '';
+            }, 300);
+        } else {
+            // Bounce back
+            currentModalContent.style.transform = '';
+        }
+        currentModalContent = null;
+    });
+}
+
+// === 2. INDEXED DB WRAPPER (Async Image Storage) ===
+const DB_NAME = 'TierAppDB';
+const STORE_IMGS = 'images';
+const dbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = e => { e.target.result.createObjectStore(STORE_IMGS); };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e);
+});
+
+async function dbSaveImg(id, dataUrl) {
+    const db = await dbPromise;
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_IMGS, 'readwrite');
+        tx.objectStore(STORE_IMGS).put(dataUrl, id);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject();
+    });
+}
+async function dbGetImg(id) {
+    const db = await dbPromise;
+    return new Promise(resolve => {
+        const tx = db.transaction(STORE_IMGS, 'readonly');
+        const req = tx.objectStore(STORE_IMGS).get(id);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+    });
+}
+async function dbDelImg(id) {
+    const db = await dbPromise;
+    const tx = db.transaction(STORE_IMGS, 'readwrite');
+    tx.objectStore(STORE_IMGS).delete(id);
+}
+async function dbCount() {
+    const db = await dbPromise;
+    return new Promise(resolve => {
+        const req = db.transaction(STORE_IMGS, 'readonly').objectStore(STORE_IMGS).count();
+        req.onsuccess = () => resolve(req.result);
+    });
+}
+
+// === 3. GLOBALS & CONFIG ===
+const currentSystemYear = new Date().getFullYear();
+let animals = []; 
+let locations = [];
+let locCoords = {};
+let dark = false;
+let currentTempImg = null;
+let currentFilter = 'ALL';
+let sortMode = 'fav'; 
+let viewMode = 'list';
+let isMuted = localStorage.getItem('muted') !== 'false';
+let notifyConfig = JSON.parse(localStorage.getItem('notifyConfig')) || { enabled: false, days: 7 };
+let undoStack = [];
+let undoTimeout = null;
+let mapInstance = null;
+let tempImportData = null;
+let detailAnimalIdx = null;
+
+// LEVEL CONFIG
+const levels = [
+    { xp: 0, name: "Garten-Gucker" }, { xp: 100, name: "Park-Besucher" }, { xp: 250, name: "Spuren-Sucher" },
+    { xp: 500, name: "Wald-Wanderer" }, { xp: 800, name: "Hobby-Beobachter" }, { xp: 1200, name: "Fernglas-Profi" },
+    { xp: 1700, name: "Vogel-Versteher" }, { xp: 2300, name: "Pfadfinder" }, { xp: 3000, name: "Natur-Freund" },
+    { xp: 3800, name: "Feld-Forscher" }, { xp: 4700, name: "Tier-Flüsterer" }, { xp: 5700, name: "Wildnis-Entdecker" },
+    { xp: 6800, name: "Fährtenleser" }, { xp: 8000, name: "Dschungel-Guide" }, { xp: 9500, name: "Ökosystem-Experte" },
+    { xp: 11500, name: "Wald-Ranger" }, { xp: 14000, name: "Meister-Biologe" }, { xp: 17000, name: "Nationalpark-Direktor" },
+    { xp: 20000, name: "Tier-Orakel" }, { xp: 25000, name: "Hüter der Wildnis" }
+];
+
+// Helper
+const getEl = id => document.getElementById(id);
+const todayStr = () => new Date().toISOString().slice(0,10);
+const nowTimeStr = () => new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+function safeRun(fn, ...args){ try{fn(...args)}catch(e){console.error(e); showErrorToast(e.message)}}
+function showErrorToast(msg, isInfo=false){
+    const t=getEl('errorToast'); t.innerText=(isInfo?"ℹ️ ":"⚠️ ")+msg; 
+    t.style.background=isInfo?"var(--accent)":"var(--err-bg)"; t.style.color=isInfo?"#fff":"var(--err-text)";
+    t.style.display='block'; setTimeout(()=>t.style.display='none',4000);
+}
+function toggleMute(){ isMuted=!isMuted; localStorage.setItem('muted',isMuted); getEl('muteBtn').innerText=isMuted?'🔇':'🔊'; }
+
+// === 4. AUDIO ENGINE ===
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function playSound(type){
+    if(isMuted) return;
+    if(!audioCtx) audioCtx = new AudioContext();
+    if(audioCtx.state==='suspended') audioCtx.resume();
+    const now=audioCtx.currentTime; const osc=audioCtx.createOscillator(); const g=audioCtx.createGain();
+    osc.connect(g); g.connect(audioCtx.destination);
+    if(type==='pop'){
+        osc.frequency.setValueAtTime(800,now); osc.frequency.exponentialRampToValueAtTime(1200,now+0.1);
+        g.gain.setValueAtTime(0.05,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.1);
+        osc.start(now); osc.stop(now+0.1);
+    } else if(type==='fanfare'){
+        [440,554,659].forEach((f,i)=>{
+             const o=audioCtx.createOscillator(); const gn=audioCtx.createGain(); o.connect(gn); gn.connect(audioCtx.destination);
+             o.frequency.value=f; gn.gain.setValueAtTime(0.05,now+i*0.1); gn.gain.linearRampToValueAtTime(0,now+i*0.1+0.5);
+             o.start(now+i*0.1); o.stop(now+i*0.1+0.5);
+        });
+    }
+}
+
+// === 5. DATA ENGINE ===
+function getHistory(y) { try{return JSON.parse(localStorage.getItem('history-'+y))||{}}catch(e){return{}} }
+function saveHistory(y, h) { localStorage.setItem('history-'+y, JSON.stringify(h)); }
+function getAvailableYears() {
+    let ys = new Set([currentSystemYear]);
+    for(let i=0; i<localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if(k.startsWith('history-')) ys.add(parseInt(k.split('-')[1]));
+    }
+    return Array.from(ys).sort((a,b)=>b-a);
+}
+
+function writeEntry(date, idx, data){
+    const y = parseInt(date.split('-')[0]);
+    let h = getHistory(y);
+    h[date] = h[date] || { total:0, perAnimal:{} };
+    h[date].perAnimal[idx] = h[date].perAnimal[idx] || [];
+    h[date].perAnimal[idx].push(data);
+    h[date].total++;
+    saveHistory(y, h);
+    return { year:y, date, idx, arrIdx: h[date].perAnimal[idx].length-1 };
+}
+
+function removeEntry(date, idx, arrIdx){
+    const y = parseInt(date.split('-')[0]);
+    let h = getHistory(y);
+    if(h[date]?.perAnimal?.[idx]){
+        h[date].perAnimal[idx].splice(arrIdx, 1);
+        h[date].total--;
+        if(h[date].perAnimal[idx].length===0) delete h[date].perAnimal[idx];
+        if(h[date].total<=0) delete h[date];
+        saveHistory(y, h);
+    }
+}
+
+function loadGlobals(){
+    try {
+        const a = localStorage.getItem('animals-'+currentSystemYear) || localStorage.getItem('animals-'+(currentSystemYear-1));
+        animals = a ? JSON.parse(a) : [];
+        
+        // MIGRATION: Move LocalStorage Base64 Images to IndexedDB (One-Time)
+        animals.forEach(async (an, i) => {
+            if(an.image && !an.imageId && an.image.startsWith('data:')) {
+                const newId = 'img_'+Date.now()+'_'+i;
+                await dbSaveImg(newId, an.image);
+                an.imageId = newId; delete an.image;
+                saveGlobals();
+            }
+        });
+        
+        locations = JSON.parse(localStorage.getItem('locations')||'[]');
+        let lc = localStorage.getItem('locCoords');
+        if(!lc) lc = localStorage.getItem('locCoords-'+currentSystemYear);
+        locCoords = lc ? JSON.parse(lc) : {};
+
+        dark = localStorage.getItem('darkmode')==='true';
+        if(dark) document.body.classList.add('dark');
+        viewMode = localStorage.getItem('viewMode') || 'list';
+        updateStorageUI();
+    } catch(e){ console.error(e); animals=[]; }
+}
+
+function saveGlobals(){
+    localStorage.setItem('animals-'+currentSystemYear, JSON.stringify(animals));
+    localStorage.setItem('locations', JSON.stringify(locations));
+    localStorage.setItem('locCoords', JSON.stringify(locCoords));
+}
+
+async function updateStorageUI(){
+    const count = await dbCount();
+    getEl('storageText').innerText = count + " Bilder gespeichert";
+    const pct = Math.min((count * 0.5) / 500 * 100, 100);
+    getEl('storageBar').style.width = pct + '%';
+    getEl('storageBar').style.background = pct > 90 ? 'var(--err-text)' : 'var(--accent)';
+}
+
+// === 6. IMAGE COMPRESSION ===
+function resizeImage(base64, maxW, cb){
+    const img = new Image();
+    img.src = base64;
+    img.onload = () => {
+        const c = document.createElement('canvas');
+        const scale = maxW / img.width;
+        c.width = maxW;
+        c.height = img.height * scale;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        cb(c.toDataURL('image/jpeg', 0.6));
+    };
+}
+
+// === 7. CORE LOGIC ===
+async function addAnimal(){
+    const nm = getEl('nameInput').value.trim();
+    if(!nm) return showErrorToast("Name fehlt");
+    let imgId = null;
+    if(currentTempImg) {
+        imgId = 'img_' + Date.now();
+        await dbSaveImg(imgId, currentTempImg);
+    }
+    const tags = getEl('tagInput').value.trim() ? getEl('tagInput').value.split(',').map(s=>s.trim()) : [];
+    animals.push({ name:nm, emoji:getEl('emojiInput').value||'🐾', imageId: imgId, tags, isFav: false });
+    getEl('nameInput').value=''; getEl('emojiInput').value=''; getEl('tagInput').value='';
+    clearImage();
+    saveGlobals(); render(); updateStorageUI();
+    showErrorToast("Tier angelegt!", true);
+}
+
+function handleImageUpload(input){
+    if(input.files && input.files[0]){
+        const reader = new FileReader();
+        reader.onload = e => resizeImage(e.target.result, 800, res => { // Max 800px width
+            currentTempImg = res;
+            getEl('previewEl').src = res;
+            getEl('imgPreview').style.display='block';
+        });
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+function clearImage(){ currentTempImg=null; getEl('imgPreview').style.display='none'; }
+
+// === UNDO SYSTEM ===
+function showUndoToast(actionDesc, undoFn) {
+    const t = getEl('undoToast');
+    getEl('undoText').innerText = actionDesc;
+    t.classList.add('show');
+    clearTimeout(undoTimeout);
+    undoStack.push(undoFn);
+    undoTimeout = setTimeout(() => {
+        t.classList.remove('show');
+        undoStack = []; 
+    }, 4000);
+}
+
+function performUndo() {
+    if(undoStack.length > 0) {
+        const fn = undoStack.pop(); fn();
+        getEl('undoToast').classList.remove('show');
+        render(); showErrorToast("Rückgängig gemacht", true);
+    }
+}
+
+function change(i, delta, e){
+    if(delta > 0) {
+        const locSel = getEl(viewMode === 'grid' ? 'locSelectGrid'+i : 'locSelect'+i);
+        const locVal = locSel ? locSel.value : '';
+        const entry = { location: locVal, time: nowTimeStr() };
+        const date = todayStr();
+        const info = writeEntry(date, i, entry);
+        playSound('pop');
+        if(e && navigator.vibrate) navigator.vibrate(15);
+        if(e) spawnParticle(e.clientX, e.clientY, "+1");
+        showUndoToast(`Gezählt: ${animals[i].name} (+1)`, () => removeEntry(date, i, info.arrIdx));
+        render();
+    }
+}
+
+function toggleFav(i, e) {
+    if(e) e.stopPropagation();
+    animals[i].isFav = !animals[i].isFav;
+    saveGlobals();
+    if(navigator.vibrate) navigator.vibrate(5);
+    render();
+}
+
+function spawnParticle(x, y, text) {
+    const p = document.createElement('div');
+    p.className = 'particle'; p.innerText = text; p.style.color = 'var(--accent)';
+    p.style.left = x + 'px'; p.style.top = y + 'px';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 800);
+}
+
+// === RENDER ===
+function render(){
+    const list = getEl('list'); list.innerHTML = '';
+    getEl('viewToggleBtn').innerText = viewMode === 'list' ? '📜' : '▦';
+    getEl('sortBtn').innerText = sortMode === 'fav' ? '⭐' : (sortMode === 'name' ? '🔤' : '🔢');
+    const searchVal = getEl('listSearch').value.toLowerCase();
+    
+    // Filter Tags
+    const allTags = new Set(); animals.forEach(a => a.tags?.forEach(t => allTags.add(t)));
+    const tagCont = getEl('tagFilterContainer');
+    let tagHTML = `<div class="tag-pill ${currentFilter==='ALL'?'active':''}" onclick="safeRun(filterTags, 'ALL')" id="tag-ALL">Alle</div>`;
+    allTags.forEach(t => tagHTML += `<div class="tag-pill ${currentFilter===t?'active':''}" onclick="safeRun(filterTags, '${t}')" id="tag-${t}">${t}</div>`);
+    tagCont.innerHTML = tagHTML;
+
+    // Calc Counts
+    const h = getHistory(currentSystemYear);
+    let displayList = animals.map((a, i) => {
+        let count = 0;
+        Object.values(h).forEach(day => { if(day.perAnimal?.[i]) count += day.perAnimal[i].length; });
+        return { ...a, idx: i, count };
+    }).filter(a => {
+        if(currentFilter !== 'ALL' && !a.tags?.includes(currentFilter)) return false;
+        if(searchVal && !a.name.toLowerCase().includes(searchVal)) return false;
+        return true;
+    });
+
+    if(displayList.length === 0) { getEl('emptyState').style.display='block'; return; }
+    getEl('emptyState').style.display='none';
+
+    // Sort
+    displayList.sort((a,b) => {
+        if(sortMode === 'fav') { if(a.isFav !== b.isFav) return b.isFav - a.isFav; return a.name.localeCompare(b.name); }
+        if(sortMode === 'name') return a.name.localeCompare(b.name);
+        return b.count - a.count;
+    });
+
+    const createLocSelect = (i) => {
+        if(!locations.length) return '';
+        return `<select id="${viewMode==='grid'?'locSelectGrid':'locSelect'}${i}" style="width:100%;font-size:11px;padding:4px;margin-top:4px;background:var(--bg);border:none"><option value="">📍 Ort?</option>${locations.map(l=>`<option>${l}</option>`).join('')}</select>`;
+    };
+
+    if (viewMode === 'grid') {
+        const gridCont = document.createElement('div'); gridCont.className = 'grid-container';
+        displayList.forEach(item => {
+            const card = document.createElement('div'); card.className = 'grid-item fade-in';
+            const imgHTML = `<div class="grid-img-wrap" onclick="safeRun(openIconEdit, ${item.idx})"><div style="font-size:30px">${item.emoji}</div></div>`;
+            card.innerHTML = `<div class="grid-fav ${item.isFav?'active':''}" onclick="safeRun(toggleFav, ${item.idx}, event)">${item.isFav?'★':'☆'}</div>${imgHTML}<div class="grid-name">${item.name}</div><div class="grid-count" style="font-weight:bold;color:var(--accent)">${item.count}</div>${createLocSelect(item.idx)}<div class="grid-actions"><button class="grid-btn" onclick="safeRun(openDetail,${item.idx})">📈</button><button class="grid-btn" style="background:var(--accent);color:#fff;flex:1.5" onclick="safeRun(change,${item.idx},1, event)">+</button><button class="grid-btn" onclick="safeRun(openNoteModal,${item.idx})">📝</button></div>`;
+            if(item.imageId) { dbGetImg(item.imageId).then(src => { if(src) card.querySelector('.grid-img-wrap').innerHTML = `<img src="${src}">`; }); }
+            gridCont.appendChild(card);
+        });
+        list.appendChild(gridCont);
+    } else {
+        displayList.forEach(item => {
+            const div = document.createElement('div'); div.className = 'row fade-in';
+            div.innerHTML = `<div class="animal-icon" onclick="safeRun(openIconEdit, ${item.idx})">${item.emoji}</div><div class="name-col" onclick="safeRun(openDetail,${item.idx})"><div class="name">${item.name}</div><div class="tags-row">${item.tags.join(', ')}</div>${createLocSelect(item.idx)}</div><button class="fav-btn ${item.isFav?'active':''}" onclick="safeRun(toggleFav, ${item.idx}, event)">${item.isFav?'★':'☆'}</button><div class="count-badge">${item.count}</div><button class="action-btn-main" onclick="safeRun(change,${item.idx},1, event)">+</button><button onclick="safeRun(openNoteModal,${item.idx})" style="padding:0 10px; background:transparent; font-size:20px">📝</button>`;
+            if(item.imageId) { dbGetImg(item.imageId).then(src => { if(src) div.querySelector('.animal-icon').innerHTML = `<img src="${src}">`; }); }
+            list.appendChild(div);
+        });
+    }
+    // START Orte-Liste rendern
+    const locContainer = getEl('locationListDisplay');
+    locContainer.innerHTML = '';
+    if(!locations.length) {
+        locContainer.innerHTML = '<span style="font-size:13px; opacity:0.5; padding:5px;">Keine Orte gespeichert.</span>';
+    } else {
+        locations.forEach((l, i) => {
+            const pill = document.createElement('div');
+            pill.style.cssText = "background:var(--btn); padding:6px 10px; border-radius:15px; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:5px; border:1px solid transparent;";
+            pill.innerHTML = `<span>📍 ${l}</span> <span style="color:var(--err-text); font-weight:bold; margin-left:2px;">&times;</span>`;
+            pill.onclick = () => safeRun(deleteLocation, i);
+            locContainer.appendChild(pill);
+        });
+    }
+    // END Orte-Liste
+}
+
+function filterTags(t) { currentFilter=t; render(); }
+function cycleSort() { sortMode = sortMode==='fav'?'name':(sortMode==='name'?'count':'fav'); render(); }
+function toggleViewMode() { viewMode = viewMode==='list'?'grid':'list'; localStorage.setItem('viewMode',viewMode); render(); }
+
+// === DETAILS & EDIT ===
+async function openDetail(i){
+    detailAnimalIdx = i;
+    const modal = getEl('detailModal');
+    const a = animals[i];
+    getEl('detailTitle').innerText = a.name;
+    const iconDiv = getEl('detailIcon');
+    iconDiv.innerHTML = a.emoji;
+    if(a.imageId) { const src = await dbGetImg(a.imageId); if(src) iconDiv.innerHTML = `<img src="${src}" style="width:60px;height:60px;border-radius:15px;object-fit:cover">`; }
+    const ys = getAvailableYears();
+    const sel = getEl('detailYearSelect');
+    sel.innerHTML = ys.map(y => `<option value="${y}" ${y===currentSystemYear?'selected':''}>${y}</option>`).join('');
+    updateDetailChart();
+    modal.style.display = 'block';
+}
+
+function updateDetailChart() {
+    const i = detailAnimalIdx; const y = parseInt(getEl('detailYearSelect').value);
+    const h = getHistory(y);
+    const body = getEl('modalBody');
+    const a = animals[i];
+    if(!a) return;
+
+    let total=0, locs={}, months=new Array(12).fill(0), historyList=[];
+    Object.entries(h).forEach(([dateStr, entry]) => {
+        if(entry.perAnimal?.[i]){
+            const list = entry.perAnimal[i];
+            const d = new Date(dateStr);
+            total += list.length; months[d.getMonth()] += list.length;
+            list.forEach((item, arrIdx) => {
+                historyList.push({ date:dateStr, item, arrIdx });
+                if(item.location) locs[item.location] = (locs[item.location]||0)+1;
+            });
+        }
+    });
+    historyList.sort((a,b) => b.date.localeCompare(a.date) || (b.item.time||'').localeCompare(a.item.time||''));
+
+    let html = `<div style="text-align:center; padding-bottom:15px; border-bottom:1px solid var(--btn)">Gesamt ${y}: <strong style="font-size:1.2em">${total}</strong></div>`;
+    
+    const sortedLocs = Object.entries(locs).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    if(sortedLocs.length) {
+        html += `<h4>📍 Top Orte</h4>`;
+        sortedLocs.forEach(([name, val])=>{
+            const pct = (val/sortedLocs[0][1])*100;
+            html += `<div class="hbar-row"><div class="hbar-label">${name}</div><div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;"></div></div><div class="hbar-val">${val}</div></div>`;
+        });
+    }
+
+    html += `<h4>🗓️ Jahrestrend</h4><div class="chart-wrap" style="height:80px; padding-top:10px">`;
+    const maxM = Math.max(...months, 1); const mN = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+    months.forEach((v, idx)=> html += `<div class="chart-col"><div class="chart-bar" style="height:${v===0?1:(v/maxM)*100}%; opacity:${v===0?0.1:1}"></div><div class="chart-label">${mN[idx]}</div></div>`);
+    html += `</div>`;
+
+    if(historyList.length === 0) html += '<p style="text-align:center; opacity:0.6; margin-top:20px">Keine Sichtungen.</p>';
+    else {
+        html += `<div style="margin-top:10px; max-height:300px; overflow-y:auto">`;
+        historyList.forEach(row => {
+            const d = row.date.split('-').reverse().slice(0,2).join('.');
+            html += `<div style="display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--btn)"><div><span style="font-size:13px; font-weight:bold">${d} - ${row.item.time||'--:--'}</span>${row.item.location ? `<br><span style="font-size:12px;opacity:0.8">📍 ${row.item.location}</span>` : ''}${row.item.note ? `<br><span style="background:var(--warn-bg);color:var(--warn-text);padding:2px 6px;border-radius:4px;font-size:11px">${row.item.note}</span>` : ''}</div><div><button style="padding:5px 10px; font-size:14px" onclick="safeRun(deleteHistoryItem, '${row.date}', ${i}, ${row.arrIdx})">🗑️</button><button style="padding:5px 10px; font-size:14px" onclick="safeRun(openNoteModal, ${i}, '${row.date}', ${row.arrIdx})">✏️</button></div></div>`;
+        });
+        html += `</div>`;
+    }
+    html += `<div style="margin-top:20px; text-align:center"><button onclick="safeRun(removeAnimal, ${i})" style="background:var(--err-bg); color:var(--err-text)">Tier löschen</button></div>`;
+    body.innerHTML = html;
+}
+
+function deleteHistoryItem(date, i, arrIdx) { if(confirm("Eintrag löschen?")) { removeEntry(date, i, arrIdx); updateDetailChart(); render(); } }
+function removeAnimal(i) {
+    if(confirm("Wirklich löschen? Alle Daten gehen verloren.")) {
+        if(animals[i].imageId) dbDelImg(animals[i].imageId);
+        animals.splice(i, 1);
+        getAvailableYears().forEach(y => {
+            const h = getHistory(y); let changed = false;
+            Object.values(h).forEach(d => {
+                if(d.perAnimal){
+                    const newPer = {};
+                    Object.keys(d.perAnimal).forEach(k => { const ki = parseInt(k); if(ki < i) newPer[ki] = d.perAnimal[ki]; if(ki > i) newPer[ki-1] = d.perAnimal[ki]; });
+                    d.perAnimal = newPer; changed=true;
+                }
+            });
+            if(changed) saveHistory(y, h);
+        });
+        saveGlobals(); render(); closeModal('detailModal');
+    }
+}
+
+// === NOTES ===
+let editNoteRef = null;
+function openNoteModal(i, date=null, arrIdx=null){
+    const modal = getEl('noteModal');
+    const locs = getEl('noteLoc');
+    locs.innerHTML = `<option value="">📍 Ort?</option>${locations.map(l=>`<option>${l}</option>`).join('')}`;
+    
+    if(date && arrIdx !== null) {
+        editNoteRef = { date, i, arrIdx };
+        const h = getHistory(parseInt(date.split('-')[0]));
+        const entry = h[date].perAnimal[i][arrIdx];
+        getEl('noteDate').value = date; getEl('noteTime').value = entry.time||''; 
+        getEl('noteLoc').value = entry.location||''; getEl('noteText').value = entry.note||'';
+    } else {
+        editNoteRef = null;
+        getEl('noteDate').value = todayStr(); getEl('noteTime').value = nowTimeStr();
+        getEl('noteLoc').value = getEl('locSelect'+i)?.value || ''; getEl('noteText').value = '';
+    }
+    
+    getEl('noteSaveBtn').onclick = () => {
+        const d = getEl('noteDate').value || todayStr();
+        const data = { time: getEl('noteTime').value, location: getEl('noteLoc').value, note: getEl('noteText').value };
+        if(editNoteRef) removeEntry(editNoteRef.date, editNoteRef.i, editNoteRef.arrIdx);
+        else playSound('pop');
+        writeEntry(d, i, data);
+        closeModal('noteModal');
+        if(editNoteRef && getEl('detailModal').style.display === 'block') updateDetailChart();
+        render();
+    };
+    modal.style.display='block';
+}
+
+// === EDIT ANIMAL ICON ===
+let editIconIdx = null; let editIconTemp = null;
+async function openIconEdit(i){
+    editIconIdx=i; editIconTemp=null;
+    getEl('editEmoji').value = animals[i].emoji;
+    getEl('editTag').value = (animals[i].tags||[]).join(', ');
+    const prev = getEl('editPreviewImg');
+    if(animals[i].imageId) {
+        const src = await dbGetImg(animals[i].imageId);
+        prev.src = src || '';
+        getEl('editPreviewContainer').style.display = src ? 'block' : 'none';
+    } else { getEl('editPreviewContainer').style.display='none'; }
+    getEl('iconModal').style.display='block';
+}
+function handleEditFile(input){
+    if(input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => resizeImage(e.target.result, 800, res => { editIconTemp = res; getEl('editPreviewImg').src = res; getEl('editPreviewContainer').style.display='block'; });
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+async function removeEditImage(){ editIconTemp = 'DELETE'; getEl('editPreviewContainer').style.display='none'; }
+async function saveIconEdit(){
+    if(editIconIdx===null) return;
+    const a = animals[editIconIdx];
+    a.emoji = getEl('editEmoji').value || '🐾';
+    a.tags = getEl('editTag').value.split(',').map(s=>s.trim()).filter(s=>s);
+    if(editIconTemp === 'DELETE') { if(a.imageId) await dbDelImg(a.imageId); a.imageId = null; }
+    else if(editIconTemp) { if(a.imageId) await dbDelImg(a.imageId); const newId = 'img_' + Date.now(); await dbSaveImg(newId, editIconTemp); a.imageId = newId; }
+    saveGlobals(); render(); updateStorageUI(); closeModal('iconModal');
+}
+
+// === EXPORT / IMPORT ===
+async function downloadBackup(){
+    const fullHistory = {}; getAvailableYears().forEach(y => fullHistory[y] = getHistory(y));
+    const images = {};
+    if(animals.length) {
+        showErrorToast("Backup wird erstellt... das kann kurz dauern.", true);
+        for(let a of animals) { if(a.imageId) { const data = await dbGetImg(a.imageId); if(data) images[a.imageId] = data; } }
+    }
+    const exportObj = { meta:{v:"6.3", date:new Date()}, animals, locations, locCoords, fullHistory, images, notifyConfig };
+    const blob = new Blob([JSON.stringify(exportObj)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `tiere-backup-${todayStr()}.json`; a.click();
+}
+function importBackup(e){
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = evt => { try { tempImportData = JSON.parse(evt.target.result); getEl('importModal').style.display='block'; } catch(err) { showErrorToast("Datei beschädigt"); } };
+    reader.readAsText(file);
+}
+async function confirmImport(mode){
+    getEl('importModal').style.display='none'; if(mode==='cancel') return;
+    try {
+        const d = tempImportData;
+        if(mode==='overwrite') {
+            const allKeys = await new Promise(async r => { const db = await dbPromise; const req = db.transaction(STORE_IMGS).objectStore(STORE_IMGS).getAllKeys(); req.onsuccess = () => r(req.result); });
+            for(let k of allKeys) await dbDelImg(k); localStorage.clear();
+        }
+        if(d.images) for(let [id, data] of Object.entries(d.images)) await dbSaveImg(id, data);
+        if(mode==='overwrite') {
+            animals = d.animals || []; locations = d.locations || []; locCoords = d.locCoords || {}; notifyConfig = d.notifyConfig || notifyConfig;
+            if(d.fullHistory) Object.entries(d.fullHistory).forEach(([y, h]) => saveHistory(y, h));
+            else if(d.history) saveHistory(currentSystemYear, d.history);
+        } else {
+            d.animals?.forEach(impA => { if(!animals.some(a => a.name === impA.name)) animals.push(impA); });
+            let entriesToProcess = [];
+            if(d.fullHistory) {
+                Object.values(d.fullHistory).forEach(yearData => {
+                    Object.entries(yearData).forEach(([dateStr, dayContent]) => {
+                        if(dayContent.perAnimal) Object.entries(dayContent.perAnimal).forEach(([idxStr, list]) => {
+                            let targetIdx = parseInt(idxStr);
+                            if(d.animals && d.animals[idxStr]) { const impName = d.animals[idxStr].name; const localIdx = animals.findIndex(a => a.name === impName); if(localIdx !== -1) targetIdx = localIdx; }
+                            list.forEach(item => entriesToProcess.push({ date: dateStr, idx: targetIdx, data: item }));
+                        });
+                    });
+                });
+            }
+            entriesToProcess.forEach(e => { const y = e.date.split('-')[0]; const h = getHistory(y); let exists = false; if(h[e.date]?.perAnimal?.[e.idx]) exists = h[e.date].perAnimal[e.idx].some(ex => ex.time === e.data.time && ex.location === e.data.location); if(!exists) writeEntry(e.date, e.idx, e.data); });
+        }
+        saveGlobals(); render(); updateStorageUI(); showErrorToast("Import fertig!", true); setTimeout(()=>location.reload(), 1500);
+    } catch(e) { console.error(e); showErrorToast("Import Fehler: " + e.message); }
+}
+
+function exportCSV() {
+    let csv = "Datum;Uhrzeit;Tier;Ort;Notiz\n";
+    getAvailableYears().forEach(y => {
+        const h = getHistory(y);
+        Object.entries(h).forEach(([d, val]) => {
+             if(val.perAnimal) Object.entries(val.perAnimal).forEach(([idx, list]) => {
+                 const name = animals[idx]?.name || 'Unknown';
+                 list.forEach(item => csv += `${d};${item.time};"${name}";"${item.location||''}";"${item.note||''}"\n`);
+             });
+        });
+    });
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tiere-export.csv'; a.click();
+}
+
+// === MAP & STATS ===
+function initMap() {
+    if(mapInstance) { mapInstance.invalidateSize(); return; }
+    let center = [51.165, 10.451];
+    if(Object.keys(locCoords).length) { const k=Object.keys(locCoords)[0]; center=[locCoords[k].lat, locCoords[k].lon]; }
+    mapInstance = L.map('map').setView(center, 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'&copy; OSM'}).addTo(mapInstance);
+    
+    const locCounts = {};
+    getAvailableYears().forEach(y => {
+        const h = getHistory(y);
+        Object.values(h).forEach(d => { if(d.perAnimal) Object.values(d.perAnimal).forEach(list => list.forEach(item => { if(item.location && locCoords[item.location]) locCounts[item.location] = (locCounts[item.location]||0)+1; })); });
+    });
+    Object.entries(locCounts).forEach(([name, count]) => {
+        const c = locCoords[name];
+        L.marker([c.lat, c.lon]).addTo(mapInstance).bindPopup(`<b>${name}</b><br>${count} Sichtungen`);
+    });
+}
+
+// === NEW STATS RENDERER FROM FILE 2 ===
+function renderStats(){
+    const ct=getEl('statsContent'); const ys=getAvailableYears(); const sel=getEl('statsYearSelect');
+    if(sel.options.length!==ys.length)sel.innerHTML=ys.map(y=>`<option value="${y}" ${y===currentSystemYear?'selected':''}>${y}</option>`).join('');
+    
+    const sYr=parseInt(sel.value)||currentSystemYear;
+    let gTot=0, gNote=0, gLoc=new Set(), streak=0;
+    
+    ys.forEach(y=>{const h=getHistory(y); Object.values(h).forEach(e=>{gTot+=(e.total||0); if(e.perAnimal)Object.values(e.perAnimal).forEach(l=>l.forEach(x=>{if(x.note)gNote++;if(x.location)gLoc.add(x.location)}));});});
+    
+    const th=getHistory(sYr);
+    let yTot=0, yWk=0, yDistinct=new Set(), time={Morgens:0,Mittags:0,Abends:0,Nachts:0}, photo=animals.some(a=>a.imageId);
+    const dates=Object.keys(th).sort((a,b)=>new Date(b)-new Date(a));
+    if(dates.length){ const dh=(new Date(todayStr())-new Date(dates[0]))/36e5; if(dh<=48){streak=1;for(let i=0;i<dates.length-1;i++)if(Math.round((new Date(dates[i])-new Date(dates[i+1]))/864e5)===1)streak++;else break;}}
+    
+    let mCounts=new Array(12).fill(0);
+    Object.entries(th).forEach(([dStr,e])=>{
+        yTot+=e.total; mCounts[new Date(dStr).getMonth()]+=e.total; if([0,6].includes(new Date(dStr).getDay()))yWk+=e.total;
+        if(e.perAnimal)Object.entries(e.perAnimal).forEach(([k,l])=>{ yDistinct.add(animals[k]?.name); l.forEach(x=>{if(x.time){const h=parseInt(x.time); if(h>=5&&h<11)time.Morgens++;else if(h>=11&&h<14)time.Mittags++;else if(h>=14&&h<22)time.Abends++;else time.Nachts++;}}); });
+    });
+
+    const xp = (gTot*40) + (gNote*75) + (animals.length*50) + (photo?100:0) + (gLoc.size*25) + (streak*100);
+    let lvl=levels[0], nxt=null; for(let l of levels){if(xp>=l.xp){lvl=l;}else{nxt=l;break;}}
+    const pct = nxt ? Math.min(((xp-lvl.xp)/(nxt.xp-lvl.xp))*100,100) : 100;
+
+    let html=`<div class="level-card"><div class="level-title">Level ${levels.indexOf(lvl)+1}</div><div class="level-num">${lvl.name}</div><div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${pct}%"></div></div><div class="xp-text">${xp} XP ${nxt?`(noch ${nxt.xp-xp})`:'MAX'}</div></div>`;
+    
+    html+=`<details style="margin-bottom:20px;border:1px solid var(--btn);border-radius:12px;padding:10px;"><summary>ℹ️ Level-Übersicht</summary><div style="max-height:200px;overflow-y:auto;margin-top:10px;"><table class="level-table"><tr><th>Lvl</th><th>Name</th><th>XP</th></tr>${levels.map((l,i)=>`<tr class="${l===lvl?'current-level':''}"><td>${i+1}</td><td>${l.name}</td><td>${l.xp}</td></tr>`).join('')}</table></div></details>`;
+
+    if(gTot===0) { ct.innerHTML=html+'<div style="text-align:center">Noch keine Daten.</div>'; return; }
+
+    const badges=[
+          {i:'🐣',n:'Starter',c:gTot>=1},{i:'🥉',n:'Sammler',c:gTot>=50},{i:'🥈',n:'Profi',c:gTot>=100},{i:'👑',n:'Legende',c:gTot>=250},{i:'🪐',n:'Titan',c:gTot>=1000},
+          {i:'🔥',n:'On Fire',c:streak>=3},{i:'⚡',n:'Marathon',c:streak>=7},{i:'📅',n:'Weekend',c:yWk>0},{i:'🍱',n:'Mittag',c:time.Mittags>0},
+          {i:'🌈',n:'Arche',c:yDistinct.size>=10},{i:'🧬',n:'Darwin',c:yDistinct.size>=25},{i:'🌍',n:'Entdecker',c:gLoc.size>=3},
+          {i:'🗺️',n:'Globe',c:gLoc.size>=10},{i:'📸',n:'Paparazzi',c:photo},{i:'🦉',n:'Nachteule',c:time.Nachts>0},{i:'🐓',n:'Früh',c:time.Morgens>0}
+    ];
+
+    html+=`<div class="stat-kpi-row"><div class="stat-kpi"><h2>${yTot}</h2><small>Sichtungen</small></div><div class="stat-kpi"><h2>${yDistinct.size}</h2><small>Arten</small></div><div class="stat-kpi"><h2>${streak}</h2><small>Streak</small></div></div>`;
+    html+=`<div class="card-section"><h3>🏆 Trophäen</h3><div class="badge-grid">`+badges.map(b=>`<div class="badge ${b.c?'earned':''}"><span class="badge-icon">${b.i}</span> ${b.n}</div>`).join('')+`</div></div>`;
+    const maxT = Math.max(...Object.values(time), 1);
+    html += `<div class="card-section"><h3>⏱️ Tageszeiten</h3>`+Object.entries(time).map(([l,v])=>`<div class="hbar-row"><div class="hbar-label" style="width:80px">${l}</div><div class="hbar-track"><div class="hbar-fill" style="width:${(v/maxT)*100}%;opacity:0.8"></div></div><div class="hbar-val">${v}</div></div>`).join('')+`</div>`;
+    html+=`<div class="card-section"><h3>🗓️ Jahr ${sYr}</h3><div class="chart-wrap">`+mCounts.map((v,i)=>`<div class="chart-col"><div class="chart-bar" style="height:${v?(v/Math.max(...mCounts))*100:1}%;opacity:${v?1:0.1}"></div><div class="chart-label">${['J','F','M','A','M','J','J','A','S','O','N','D'][i]}</div></div>`).join('')+`</div></div>`;
+    let rd=(sYr===currentSystemYear)?new Date():new Date(sYr,11,31);
+    html += `<div class="card-section"><h3>🔥 30 Tage Heatmap</h3><div class="heatmap-grid">`;
+    let refDate = (sYr === currentSystemYear) ? new Date() : new Date(sYr, 11, 31);
+    for(let i=27; i>=0; i--){
+        const d = new Date(refDate); d.setDate(d.getDate() - i); const iso = d.toISOString().slice(0,10);
+        const count = getHistory(d.getFullYear())[iso]?.total || 0;
+        // Änderung hier: color: #fff hinzugefügt, damit die Zahl sichtbar wird
+        html += `<div class="heat-cell" style="background:${count>0?`rgba(33, 150, 243, ${Math.min(count*0.2+0.2,1)})`:'var(--btn)'}; color:${count>0?'#fff':'transparent'}; font-weight:bold;">${count||''}</div>`;
+    }
+    html += `</div></div>`;
+    ct.innerHTML=html;
+}
+
+function generateShareCard() {
+    const canvas = document.createElement('canvas'); canvas.width = 600; canvas.height = 400; const ctx = canvas.getContext('2d');
+    ctx.fillStyle = dark ? '#1e1e1e' : '#f4f4f4'; ctx.fillRect(0,0,600,400);
+    ctx.fillStyle = dark ? '#fff' : '#000'; ctx.font = 'bold 30px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`Meine Tiersammlung ${currentSystemYear}`, 300, 50);
+    const h = getHistory(currentSystemYear); let total = 0; Object.values(h).forEach(d=>total+=d.total||0);
+    ctx.font = 'bold 80px sans-serif'; ctx.fillStyle = '#2196f3'; ctx.fillText(total, 300, 180);
+    ctx.font = '20px sans-serif'; ctx.fillStyle = '#888'; ctx.fillText("Sichtungen Gesamt", 300, 220);
+    const link = document.createElement('a'); link.download = `tier-stats-${currentSystemYear}.png`; link.href = canvas.toDataURL(); link.click();
+}
+
+// === NOTIFICATIONS & UTILS ===
+function saveNotifySettings(){
+    notifyConfig.enabled = getEl('notifyToggle').checked;
+    notifyConfig.days = parseInt(getEl('notifyDays').value) || 7;
+    localStorage.setItem('notifyConfig', JSON.stringify(notifyConfig));
+    showErrorToast("Einstellungen gespeichert", true); closeModal('notifyModal');
+}
+function testNotification(){
+    if (Notification.permission === "granted") new Notification("Tier-Tracker", { body: "Test-Erinnerung: Zeit zu zählen! 🐾" });
+    else if (Notification.permission !== "denied") Notification.requestPermission().then(p => { if (p === "granted") new Notification("Test", { body: "Erinnerungen aktiviert." }); });
+}
+function downloadICS() {
+    let ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//TierTracker//DE\nBEGIN:VEVENT\nSUMMARY:Tiere zählen 🐾\nRRULE:FREQ=" + getEl('icsFreq').value + (getEl('icsFreq').value==='WEEKLY' ? ";BYDAY="+getEl('icsDay').value : "") + "\nDTSTART:" + todayStr().replace(/-/g,'') + "T" + getEl('icsTime').value.replace(':','') + "00\nDURATION:PT15M\nDESCRIPTION:Zeit deine Beobachtungen einzutragen!\nEND:VEVENT\nEND:VCALENDAR";
+    const a = document.createElement('a'); a.href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics); a.download = 'tiere-erinnerung.ics'; a.click();
+}
+
+function toggleDarkMode(){ dark=!dark; localStorage.setItem('darkmode',dark); document.body.classList.toggle('dark', dark); }
+function switchView(id, btn){
+    document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active')); getEl(id).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); if(btn) btn.classList.add('active');
+    if(id==='view-map') setTimeout(initMap, 200); if(id==='view-stats') renderStats();
+}
+function toggleInfo(){ const b = getEl('infoBox'); b.style.display = b.style.display==='none'?'block':'none'; }
+function openNotifySettings(){ getEl('notifyModal').style.display='block'; }
+function closeModal(id){ getEl(id).style.display='none'; }
+function hardReset(){ if(confirm("ALLES LÖSCHEN?")) { localStorage.clear(); location.reload(); } }
+
+// === GPS ===
+function locateMe(){
+    if(!navigator.geolocation) return showErrorToast("Kein GPS");
+    showErrorToast("Suche Position...", true);
+    navigator.geolocation.getCurrentPosition(p => {
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${p.coords.latitude}&lon=${p.coords.longitude}&zoom=18`)
+        .then(r=>r.json()).then(d => {
+            const name = (d.address.road || d.address.village || d.address.city || "Ort");
+            getEl('osmInput').value = name; locCoords[name] = {lat:p.coords.latitude, lon:p.coords.longitude};
+        }).catch(()=>showErrorToast("Ort nicht gefunden"));
+    });
+}
+function addManualLocation(){ const v = getEl('osmInput').value; if(v && !locations.includes(v)) { locations.push(v); saveGlobals(); render(); showErrorToast("Ort gespeichert", true); } }
+function deleteLocation(i) {
+    if(confirm(`Ort "${locations[i]}" wirklich löschen?`)) {
+        locations.splice(i, 1);
+        saveGlobals();
+        render(); // Aktualisiert die Liste sofort
+        showErrorToast("Ort gelöscht", true);
+    }
+}
+// === AUTOCOMPLETE LOGIC FROM FILE 2 ===
+getEl('osmInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') addManualLocation(); });
+getEl('osmInput').addEventListener('input', e => { 
+    if(e.target.value.length<3) { getEl('osmResults').style.display='none'; return; }
+    clearTimeout(window.osmDebounce); 
+    window.osmDebounce = setTimeout(() => { 
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${e.target.value}`)
+        .then(r=>r.json()).then(d => { 
+            const res = getEl('osmResults'); res.innerHTML='';
+            if(d.length) {
+                res.style.display='block';
+                d.slice(0,3).forEach(x => { 
+                    const div = document.createElement('div'); div.className='suggestion-item'; div.innerText=x.display_name.split(',')[0]; 
+                    div.onclick=()=>{ getEl('osmInput').value=div.innerText; locCoords[div.innerText]={lat:parseFloat(x.lat),lon:parseFloat(x.lon)}; res.style.display='none'; addManualLocation(); }; 
+                    res.appendChild(div); 
+                });
+            } else { res.style.display='none'; }
+        }); 
+    }, 500); 
+});
+document.addEventListener('click', (e) => { if(e.target !== getEl('osmInput')) getEl('osmResults').style.display='none'; });
+
+// STARTUP
+loadGlobals(); render(); initSwipeGestures();
+</script>
+</body>
+</html>
