@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Top Tier 🐾</title>
+<title>Tiere zählen Ultimate v5.2 (Fixed) 🐾</title>
 <meta name="theme-color" content="#121212">
 
 <!-- LEAFLET MAP CSS -->
@@ -194,7 +194,7 @@ input:checked + .slider:before { transform: translateX(24px); }
   <button class="icon-btn-header info" onclick="safeRun(toggleInfo)" title="Hilfe anzeigen">ℹ️</button>
 </div>
 
-<h1>Top Tier 🐾</h1>
+<h1>Tiere zählen Ult. 🐾</h1>
 
 <!-- VEREINFACHTE INFO BOX FÜR ENDANWENDER -->
 <div id="infoBox" class="info-box">
@@ -430,6 +430,14 @@ input:checked + .slider:before { transform: translateX(24px); }
         <button onclick="safeRun(saveNotifySettings)" style="flex:1; background:var(--accent); color:#fff">Speichern</button>
         <button onclick="safeRun(testNotification)" style="flex:1;">Test</button>
     </div>
+    <hr>
+    <h4>📅 Kalender-Export</h4>
+    <div style="display:flex; gap:5px; margin-bottom:10px">
+        <select id="icsFreq"><option value="WEEKLY">Wöchentlich</option><option value="DAILY">Täglich</option></select>
+        <input type="time" id="icsTime" value="19:00">
+    </div>
+    <select id="icsDay" style="margin-bottom:10px"><option value="SA">Samstag</option><option value="SU">Sonntag</option></select>
+    <button onclick="safeRun(downloadICS)" style="width:100%">📅 ICS Datei laden</button>
   </div>
 </div>
 
@@ -597,7 +605,19 @@ function loadGlobals() {
         // Migrate legacy color/locs to global if exists
         const c = localStorage.getItem('colors'); colors = c ? JSON.parse(c) : (localStorage.getItem('colors-'+currentSystemYear) ? JSON.parse(localStorage.getItem('colors-'+currentSystemYear)) : {});
         const l = localStorage.getItem('locations'); locations = l ? JSON.parse(l) : (localStorage.getItem('locations-'+currentSystemYear) ? JSON.parse(localStorage.getItem('locations-'+currentSystemYear)) : []);
-        const lc = localStorage.getItem('locCoords'); locCoords = lc ? JSON.parse(lc) : (localStorage.getItem('locCoords-'+currentSystemYear) ? JSON.parse(localStorage.getItem('locCoords-'+currentSystemYear)) : {});
+        
+        // ROBUST COORDINATE MIGRATION
+        let lc = localStorage.getItem('locCoords');
+        if (!lc) {
+             lc = localStorage.getItem('locCoords-'+currentSystemYear);
+             if(!lc) {
+                 // Scan for any locCoords in previous years if current is empty
+                 for(let k in localStorage) {
+                     if(k.startsWith('locCoords-')) { lc = localStorage.getItem(k); break; }
+                 }
+             }
+        }
+        locCoords = lc ? JSON.parse(lc) : {};
         
         dark = localStorage.getItem('darkmode')==='true';
         if(dark) document.body.classList.add('dark');
@@ -629,6 +649,18 @@ function updateStorageUsage() {
 }
 
 // === APP LOGIC ===
+
+// RESTORED PARTICLE FUNCTION
+function spawnParticle(x, y, text, color = 'var(--accent)') {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.innerText = text;
+    p.style.left = x + 'px';
+    p.style.top = y + 'px';
+    p.style.color = color;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+}
 
 function addAnimal(){
     const nm = getEl('nameInput').value.trim();
@@ -1033,6 +1065,7 @@ function initMap() {
 }
 
 function renderMapMarkers() {
+    if(!mapInstance) return;
     mapMarkers.forEach(m => mapInstance.removeLayer(m));
     mapMarkers = [];
     let mapData = {};
@@ -1206,6 +1239,69 @@ function confirmImport(action) {
     finally { tempImportData = null; getEl('importFile').value = ''; }
 }
 
+// === RESTORED SETTINGS & SHARE FUNCTIONS ===
+
+function generateShareCard() {
+    try {
+        const canvas = document.createElement('canvas'); canvas.width = 600; canvas.height = 400; const ctx = canvas.getContext('2d');
+        ctx.fillStyle = dark ? '#1e1e1e' : '#f4f4f4'; ctx.fillRect(0,0,600,400);
+        ctx.fillStyle = dark ? '#fff' : '#000'; ctx.font = 'bold 30px system-ui'; ctx.textAlign = 'center'; ctx.fillText(`Meine Tiersammlung ${currentSystemYear}`, 300, 50);
+        
+        const h = getHistoryForYear(currentSystemYear);
+        let total = Object.values(h).reduce((a,b)=>a+(b.total||0),0);
+        
+        let topAnimal = null; 
+        if(animals.length) topAnimal = animals.map((a,i)=>{ 
+            let c=0; Object.values(h).forEach(day=>{if(day&&day.perAnimal&&day.perAnimal[i])c+=day.perAnimal[i].length}); 
+            return {n:a.name, c:c, e:a.emoji}; 
+        }).sort((a,b)=>b.c-a.c)[0];
+        
+        ctx.font = 'bold 60px system-ui'; ctx.fillStyle = '#2196f3'; ctx.fillText(total, 300, 150);
+        ctx.font = '20px system-ui'; ctx.fillStyle = dark ? '#bbb' : '#555'; ctx.fillText("Sichtungen Gesamt", 300, 180);
+        if(topAnimal && topAnimal.c > 0) { ctx.fillStyle = dark ? '#fff' : '#000'; ctx.font = '30px system-ui'; ctx.fillText(`🏆 Top Tier: ${topAnimal.e} ${topAnimal.n} (${topAnimal.c})`, 300, 250); }
+        ctx.font = 'italic 16px system-ui'; ctx.fillStyle = '#888'; ctx.fillText("Erstellt mit Tier-Tracker Ultimate", 300, 370);
+        const link = document.createElement('a'); link.download = `tier-stats-${currentSystemYear}.png`; link.href = canvas.toDataURL(); link.click();
+    } catch(e) { showErrorToast("Bild-Export Fehler: " + e.message); }
+}
+
+function saveNotifySettings(){
+    notifyConfig.enabled = getEl('notifyToggle').checked;
+    notifyConfig.days = parseInt(getEl('notifyDays').value) || 7;
+    localStorage.setItem('notifyConfig', JSON.stringify(notifyConfig));
+    showErrorToast("Einstellungen gespeichert", true);
+    closeModal('notifyModal');
+}
+
+function testNotification(){
+    if (Notification.permission === "granted") {
+        new Notification("Tier-Tracker", { body: "Test-Erinnerung: Zeit zu zählen! 🐾" });
+    } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") new Notification("Tier-Tracker", { body: "Danke! Erinnerungen aktiviert." });
+        });
+    } else {
+        showErrorToast("Benachrichtigungen im Browser blockiert");
+    }
+}
+
+function downloadICS() {
+    let ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//TierTracker//DE\n";
+    const freq = getEl('icsFreq').value;
+    const time = getEl('icsTime').value.replace(':','');
+    const day = getEl('icsDay').value;
+    
+    ics += "BEGIN:VEVENT\n";
+    ics += "SUMMARY:Tiere zählen 🐾\n";
+    ics += "RRULE:FREQ=" + freq + (freq==='WEEKLY' ? ";BYDAY="+day : "") + "\n";
+    ics += "DTSTART:" + todayStr().replace(/-/g,'') + "T" + time + "00\n";
+    ics += "DURATION:PT15M\n";
+    ics += "DESCRIPTION:Zeit deine Beobachtungen einzutragen!\n";
+    ics += "END:VEVENT\nEND:VCALENDAR";
+    
+    const a = document.createElement('a'); a.href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
+    a.download = 'tiere-erinnerung.ics'; a.click();
+}
+
 // === UI UTILS ===
 function switchView(viewId, btn) {
     document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
@@ -1238,7 +1334,6 @@ function toggleDarkMode(){ dark=!dark; document.body.classList.toggle('dark'); l
 function openNotifySettings(){ getEl('notifyModal').style.display='block'; }
 function closeModal(id){ getEl(id).style.display='none'; }
 window.onclick = e => { if(e.target.classList.contains('modal')) e.target.style.display='none'; }
-function generateShareCard() { showErrorToast("Screenshot Funktion (simuliert)", true); }
 
 // === GPS & ICON EDIT ===
 const osmIn = getEl('osmInput'), osmRes = getEl('osmResults');
