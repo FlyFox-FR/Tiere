@@ -394,6 +394,72 @@ input:checked + .slider:before { transform: translateX(22px); }
     transform: scale(1.1) rotate(5deg);
     background: #fff;
 }
+/* === DETAIL DASHBOARD V8.0 === */
+
+/* Container für die Statistik-Karten */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 Spalten */
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* Einzelne Stat-Karte */
+.stat-card {
+    background: var(--bg);
+    border-radius: 16px;
+    padding: 12px;
+    text-align: center;
+    border: 1px solid var(--btn);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--accent);
+    margin: 5px 0;
+}
+
+.stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.6;
+}
+
+/* Bunter Tageszeit-Balken (Segmented Bar) */
+.time-bar-container {
+    display: flex;
+    height: 24px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 10px;
+    background: var(--btn);
+}
+.time-segment {
+    height: 100%;
+    transition: width 0.5s ease-out;
+}
+/* Farben für Tageszeiten */
+.ts-morgens { background: #FFC107; } /* Gelb */
+.ts-mittags { background: #FF9800; } /* Orange */
+.ts-abends  { background: #F44336; } /* Rot */
+.ts-nachts  { background: #3F51B5; } /* Dunkelblau */
+
+.time-legend {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    margin-top: 5px;
+    opacity: 0.7;
+}
+
+/* Verbessertes Monats-Chart */
+.chart-bar {
+    border-radius: 4px 4px 0 0; /* Runde Ecken oben */
+    background: linear-gradient(to top, var(--accent), #64b5f6); /* Verlauf */
+}
 
 </style>
 </head>
@@ -1209,6 +1275,7 @@ async function openDetail(i){
     modal.style.display = 'block';
 }
 
+// === DETAIL DASHBOARD LOGIK ===
 function updateDetailChart() {
     const i = detailAnimalIdx; 
     const y = parseInt(getEl('detailYearSelect').value);
@@ -1217,70 +1284,132 @@ function updateDetailChart() {
     const a = animals[i];
     if(!a) return;
 
-    let total=0, locs={}, months=new Array(12).fill(0), historyList=[];
+    let total = 0;
+    let locs = {};
+    let months = new Array(12).fill(0);
+    let historyList = [];
     
-    // Daten sammeln
+    // Neue Stats Variablen
+    let dailyCounts = {}; 
+    let times = { morgens:0, mittags:0, abends:0, nachts:0 }; // 5-11, 11-17, 17-22, 22-5
+
+    // DATEN SAMMELN
     Object.entries(h).forEach(([dateStr, entry]) => {
         if(entry.perAnimal?.[i]){
             const list = entry.perAnimal[i];
             const d = new Date(dateStr);
-            total += list.length; months[d.getMonth()] += list.length;
+            
+            // Basic Stats
+            total += list.length; 
+            months[d.getMonth()] += list.length;
+            
+            // Rekord Tag Berechnung
+            dailyCounts[dateStr] = (dailyCounts[dateStr] || 0) + list.length;
+
             list.forEach((item, arrIdx) => {
                 historyList.push({ date:dateStr, item, arrIdx });
                 if(item.location) locs[item.location] = (locs[item.location]||0)+1;
+                
+                // Tageszeit Analyse
+                if(item.time) {
+                    const hour = parseInt(item.time.split(':')[0]);
+                    if(hour >= 5 && hour < 11) times.morgens++;
+                    else if(hour >= 11 && hour < 17) times.mittags++;
+                    else if(hour >= 17 && hour < 22) times.abends++;
+                    else times.nachts++;
+                }
             });
         }
     });
     
-    // Sortieren: Neueste zuerst
+    // Sortieren & Maxima finden
     historyList.sort((a,b) => b.date.localeCompare(a.date) || (b.item.time||'').localeCompare(a.item.time||''));
-
-    // --- Statistik oben ---
-    let html = `<div style="text-align:center; padding-bottom:15px; border-bottom:1px solid var(--btn)">Gesamt ${y}: <strong style="font-size:1.2em">${total}</strong></div>`;
+    const maxDayVal = Math.max(...Object.values(dailyCounts), 0);
     
+    // --- HTML ZUSAMMENBAUEN ---
+    
+    // 1. HEADER (Die großen Zahlen)
+    let html = `
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Gesamt ${y}</div>
+            <div class="stat-value">${total}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Tages-Rekord</div>
+            <div class="stat-value">${maxDayVal}</div>
+        </div>
+    </div>`;
+
+    // 2. TAGESZEITEN (Der bunte Balken) - Nur anzeigen wenn Daten da sind
+    if(total > 0) {
+        const pctM = (times.morgens / total) * 100;
+        const pctMi = (times.mittags / total) * 100;
+        const pctA = (times.abends / total) * 100;
+        const pctN = (times.nachts / total) * 100;
+        
+        html += `
+        <div class="card-section" style="padding:15px; margin-bottom:15px;">
+            <h4 style="margin:0 0 10px 0; font-size:14px;">⏱️ Tageszeit</h4>
+            <div class="time-bar-container">
+                <div class="time-segment ts-morgens" style="width:${pctM}%" title="Morgens"></div>
+                <div class="time-segment ts-mittags" style="width:${pctMi}%" title="Mittags"></div>
+                <div class="time-segment ts-abends" style="width:${pctA}%" title="Abends"></div>
+                <div class="time-segment ts-nachts" style="width:${pctN}%" title="Nachts"></div>
+            </div>
+            <div class="time-legend">
+                <span>🌅 ${times.morgens}</span>
+                <span>☀️ ${times.mittags}</span>
+                <span>🌇 ${times.abends}</span>
+                <span>🌙 ${times.nachts}</span>
+            </div>
+        </div>`;
+    }
+
+    // 3. TOP ORTE (Nur wenn vorhanden)
     const sortedLocs = Object.entries(locs).sort((a,b)=>b[1]-a[1]).slice(0,3);
     if(sortedLocs.length) {
-        html += `<h4>📍 Top Orte</h4>`;
+        html += `<div class="card-section" style="padding:15px; margin-bottom:15px;"><h4 style="margin:0 0 10px 0; font-size:14px;">📍 Top Orte</h4>`;
         sortedLocs.forEach(([name, val])=>{
             const pct = (val/sortedLocs[0][1])*100;
             html += `<div class="hbar-row"><div class="hbar-label">${name}</div><div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;"></div></div><div class="hbar-val">${val}</div></div>`;
         });
+        html += `</div>`;
     }
 
-    html += `<h4>🗓️ Jahrestrend</h4><div class="chart-wrap" style="height:80px; padding-top:10px">`;
-    const maxM = Math.max(...months, 1); const mN = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+    // 4. JAHRESTREND (Monate)
+    html += `<div class="card-section" style="padding:15px; margin-bottom:15px;">
+        <h4 style="margin:0 0 5px 0; font-size:14px;">🗓️ Jahrestrend</h4>
+        <div class="chart-wrap" style="height:80px; padding-top:10px; margin-top:0;">`;
+    const maxM = Math.max(...months, 1); 
+    const mN = ['J','F','M','A','M','J','J','A','S','O','N','D'];
     months.forEach((v, idx)=> html += `<div class="chart-col"><div class="chart-bar" style="height:${v===0?1:(v/maxM)*100}%; opacity:${v===0?0.1:1}"></div><div class="chart-label">${mN[idx]}</div></div>`);
-    html += `</div>`;
+    html += `</div></div>`;
 
-    // --- Verlauf Liste (Neu mit Trennern) ---
+    // 5. LISTE (Verlauf mit Sticky Header)
     if(historyList.length === 0) html += '<p style="text-align:center; opacity:0.6; margin-top:20px">Keine Sichtungen.</p>';
     else {
-        html += `<div style="margin-top:15px; max-height:350px; overflow-y:auto; padding-right:5px;">`;
-        
+        html += `<div style="margin-top:5px; max-height:350px; overflow-y:auto; padding-right:5px;">`;
         let lastDate = '';
         const today = new Date().toISOString().slice(0,10);
 
         historyList.forEach(row => {
-            // Datums-Überschrift einfügen, wenn neuer Tag
             if(row.date !== lastDate) {
-                let displayDate = row.date.split('-').reverse().slice(0,2).join('.'); // DD.MM.
+                let displayDate = row.date.split('-').reverse().slice(0,2).join('.');
                 if(row.date === today) displayDate = "Heute";
-                
                 html += `<div style="position:sticky; top:0; background:var(--card-solid); border:1px solid var(--btn); padding:4px 12px; border-radius:15px; font-size:12px; font-weight:bold; margin:15px auto 5px auto; width:fit-content; z-index:5; box-shadow:0 2px 5px rgba(0,0,0,0.05);">📅 ${displayDate}</div>`;
                 lastDate = row.date;
             }
-
-            // Der eigentliche Eintrag
             html += `
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:8px 10px; margin-bottom:6px; background:var(--bg); border-radius:12px; font-size:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:10px; margin-bottom:6px; background:var(--bg); border-radius:12px; font-size:14px;">
                 <div>
                     <span style="font-weight:bold; opacity:0.8">⌚ ${row.item.time||'--:--'}</span>
                     ${row.item.location ? `<br><span style="font-size:12px; opacity:0.7">📍 ${row.item.location}</span>` : ''}
-                    ${row.item.note ? `<br><span style="background:var(--warn-bg); color:var(--warn-text); padding:2px 6px; border-radius:4px; font-size:11px; display:inline-block; margin-top:2px;">📝 ${row.item.note}</span>` : ''}
+                    ${row.item.note ? `<br><span style="background:var(--warn-bg); color:var(--warn-text); padding:2px 6px; border-radius:4px; font-size:11px; display:inline-block; margin-top:4px;">📝 ${row.item.note}</span>` : ''}
                 </div>
                 <div style="display:flex; gap:5px;">
-                    <button style="padding:6px; font-size:14px; background:var(--card-solid); border:1px solid var(--btn); border-radius:8px;" onclick="safeRun(deleteHistoryItem, '${row.date}', ${i}, ${row.arrIdx})">🗑️</button>
-                    <button style="padding:6px; font-size:14px; background:var(--card-solid); border:1px solid var(--btn); border-radius:8px;" onclick="safeRun(openNoteModal, ${i}, '${row.date}', ${row.arrIdx})">✏️</button>
+                    <button style="padding:6px; font-size:14px; background:var(--card-solid); border:1px solid var(--btn); border-radius:8px; cursor:pointer;" onclick="safeRun(deleteHistoryItem, '${row.date}', ${i}, ${row.arrIdx})">🗑️</button>
+                    <button style="padding:6px; font-size:14px; background:var(--card-solid); border:1px solid var(--btn); border-radius:8px; cursor:pointer;" onclick="safeRun(openNoteModal, ${i}, '${row.date}', ${row.arrIdx})">✏️</button>
                 </div>
             </div>`;
         });
@@ -1288,7 +1417,7 @@ function updateDetailChart() {
     }
     
     // Lösch-Button unten
-    html += `<div style="margin-top:20px; text-align:center"><button onclick="safeRun(moveToTrash, ${i})" style="background:var(--err-bg); color:var(--err-text); font-size:12px; padding:10px 20px;">Tier in Papierkorb verschieben</button></div>`;
+    html += `<div style="margin-top:20px; text-align:center"><button onclick="safeRun(moveToTrash, ${i})" style="background:var(--err-bg); color:var(--err-text); font-size:12px; padding:10px 20px; border-radius:20px;">Tier in Papierkorb</button></div>`;
     
     body.innerHTML = html;
 }
