@@ -1354,6 +1354,177 @@ body.dark .row-main:active { background: rgba(255,255,255,0.05); }
 /* Dark Mode Anpassung */
 body.dark .list-toggle-btn { border-color: rgba(255,255,255,0.1); background: rgba(30,30,30,0.6); }
 
+/* === NEUE KPI BUBBLES === */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 Spalten */
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.kpi-bubble {
+    background: var(--card);
+    border-radius: 24px;
+    padding: 15px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: transform 0.2s;
+}
+
+.kpi-bubble:active { transform: scale(0.96); }
+
+/* Farb-Akzente für die KPIs */
+.kpi-blue   { background: linear-gradient(145deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.02)); border-color: rgba(33, 150, 243, 0.3); }
+.kpi-green  { background: linear-gradient(145deg, rgba(76, 209, 55, 0.1), rgba(76, 209, 55, 0.02)); border-color: rgba(76, 209, 55, 0.3); }
+.kpi-orange { background: linear-gradient(145deg, rgba(255, 159, 67, 0.1), rgba(255, 159, 67, 0.02)); border-color: rgba(255, 159, 67, 0.3); }
+.kpi-purple { background: linear-gradient(145deg, rgba(156, 39, 176, 0.1), rgba(156, 39, 176, 0.02)); border-color: rgba(156, 39, 176, 0.3); }
+
+.kpi-icon { font-size: 24px; margin-bottom: 5px; opacity: 0.9; }
+.kpi-val { font-size: 26px; font-weight: 900; color: var(--text); line-height: 1.1; }
+.kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; font-weight: bold; margin-top: 5px; }
+
+
+/* === NEUE ROADMAP (LEVEL LISTE) === */
+.roadmap-container {
+    position: relative;
+    padding-left: 20px; /* Platz für die Linie links */
+    margin-top: 15px;
+}
+
+/* Die Linie im Hintergrund */
+.roadmap-line {
+    position: absolute;
+    left: 10px; /* Mittig im Padding */
+    top: 15px;
+    bottom: 30px;
+    width: 4px;
+    background: var(--btn);
+    border-radius: 2px;
+    z-index: 0;
+}
+
+/* Ein einzelnes Level-Item (Bubble) */
+.roadmap-item {
+    position: relative;
+    background: var(--card);
+    border-radius: 20px;
+    padding: 12px 15px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid transparent;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1; /* Über der Linie */
+}
+
+/* Der Punkt auf der Linie */
+.roadmap-dot {
+    position: absolute;
+    left: -24px; /* Auf der Linie positionieren */
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--sub);
+    border: 3px solid var(--bg); /* Kleiner Abstand zur Linie */
+    transition: all 0.3s;
+}
+
+/* Zone Colors für die Bubbles */
+.rm-garden { border-left: 4px solid #a8e063; }
+.rm-forest { border-left: 4px solid #134E5E; }
+.rm-water  { border-left: 4px solid #00c6ff; }
+.rm-savanna{ border-left: 4px solid #f5af19; }
+.rm-legend { border-left: 4px solid #654ea3; }
+
+/* Das AKTUELLE Level (Hervorgehoben) */
+.roadmap-item.active {
+    transform: scale(1.03) translateX(5px);
+    background: var(--card-solid);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    border-color: var(--accent);
+}
+.roadmap-item.active .roadmap-dot {
+    background: var(--accent);
+    transform: scale(1.5);
+    box-shadow: 0 0 10px var(--accent);
+}
+.roadmap-xp { margin-left: auto; font-weight: bold; font-size: 12px; opacity: 0.6; background: var(--btn); padding: 4px 8px; border-radius: 10px; }
+
+/* === HEATMAP UPGRADE === */
+.heatmap-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 300px; /* Passt gut auf Mobile */
+    margin: 0 auto;
+}
+
+.heatmap-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    width: 100%;
+    margin-bottom: 5px;
+    gap: 4px;
+}
+
+.heatmap-day-label {
+    font-size: 10px;
+    text-align: center;
+    opacity: 0.5;
+    font-weight: bold;
+}
+
+.heatmap-grid { 
+    display: grid; 
+    grid-template-columns: repeat(7, 1fr); 
+    gap: 4px; 
+    width: 100%;
+}
+
+.heat-cell { 
+    aspect-ratio: 1; 
+    border-radius: 6px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 10px; 
+    color: transparent; /* Zahl unsichtbar, außer bei Hover/Klick */
+    background: var(--btn); 
+    cursor: pointer;
+    transition: transform 0.1s, border 0.1s;
+}
+
+.heat-cell:active, .heat-cell.selected {
+    transform: scale(1.1);
+    border: 1px solid var(--text);
+    color: white !important; /* Zahl zeigen bei Klick */
+    font-weight: bold;
+    z-index: 2;
+}
+
+.heat-cell.is-today {
+    border: 1px solid var(--accent);
+}
+
+.heatmap-info-line {
+    margin-top: 10px;
+    font-size: 12px;
+    height: 16px; /* Reservierter Platz damit nichts springt */
+    opacity: 0.8;
+    text-align: center;
+    font-weight: bold;
+    color: var(--accent);
+}
+
 </style>
 
 </head>
@@ -3738,51 +3909,84 @@ function renderStats(){
     
 // ... (Dein Code davor bleibt gleich) ...
 
-    // 2. Level Tabelle (Roadmap)
-    // Wir bauen die Zeilen dynamisch mit Zonen-Logik
-    const tableRows = levels.map((l, i) => {
-        let zoneClass = 'row-garden';
-        let zoneIcon = '🐞'; // Default Garten
+ // === 2. LEVEL ROADMAP (Timeline Style) ===
+    // Wir bauen die Zeilen dynamisch als Bubbles
+    const roadmapItems = levels.map((l, i) => {
+        let zoneClass = 'rm-garden';
+        let zoneIcon = '🐞'; 
 
-        // Zonen-Logik (muss zur oberen Logik passen!)
-        if (i < 4) { zoneClass = 'row-garden'; zoneIcon = '🐞'; }
-        else if (i < 8) { zoneClass = 'row-forest'; zoneIcon = '🌲'; }
-        else if (i < 12) { zoneClass = 'row-water'; zoneIcon = '🐬'; }
-        else if (i < 16) { zoneClass = 'row-savanna'; zoneIcon = '🦁'; }
-        else { zoneClass = 'row-legend'; zoneIcon = '👑'; }
+        // Zonen-Logik
+        if (i < 4) { zoneClass = 'rm-garden'; zoneIcon = '🐞'; }
+        else if (i < 8) { zoneClass = 'rm-forest'; zoneIcon = '🌲'; }
+        else if (i < 12) { zoneClass = 'rm-water'; zoneIcon = '🐬'; }
+        else if (i < 16) { zoneClass = 'rm-savanna'; zoneIcon = '🦁'; }
+        else { zoneClass = 'rm-legend'; zoneIcon = '👑'; }
 
         // Aktuelles Level markieren
         const isCurrent = (i === lvlIdx);
-        const rowClass = isCurrent ? `current-level ${zoneClass}` : zoneClass;
-        const displayIcon = isCurrent ? '📍' : zoneIcon; // Aktueller Ort bekommt Pin
+        const activeClass = isCurrent ? 'active' : '';
+        const displayIcon = isCurrent ? '📍' : zoneIcon; 
+        const opacity = i > lvlIdx ? '0.5' : '1'; // Zukünftige Levels leicht ausblenden
 
         return `
-        <tr class="${rowClass}">
-            <td>
-                <span style="display:inline-block; width:20px; text-align:center; margin-right:5px;">${displayIcon}</span>
-                Lvl ${i + 1} • ${l.name}
-            </td>
-            <td>${l.xp.toLocaleString()} XP</td>
-        </tr>`;
+        <div class="roadmap-item ${zoneClass} ${activeClass}" style="opacity:${opacity}">
+            <div class="roadmap-dot"></div>
+            <div style="font-size:20px;">${displayIcon}</div>
+            <div style="display:flex; flex-direction:column;">
+                <span style="font-weight:bold; font-size:13px;">${l.name}</span>
+                <span style="font-size:10px; opacity:0.7;">Level ${i+1}</span>
+            </div>
+            <div class="roadmap-xp">${l.xp.toLocaleString()} XP</div>
+        </div>`;
     }).join('');
 
+    // Akkordeon Container für die Roadmap
     html += `
-    <details style="margin-bottom:20px; border:1px solid var(--btn); border-radius:12px; padding:10px; background:var(--card);">
-        <summary style="font-weight:bold; color:var(--sub); cursor:pointer; list-style:none;">🗺️ Deine Reise-Route (Level Liste)</summary>
-        <div style="max-height:300px; overflow-y:auto; margin-top:10px;">
-            <table class="level-table">
-                ${tableRows}
-            </table>
+    <details style="margin-bottom:25px; border:1px solid rgba(0,0,0,0.05); border-radius:24px; padding:15px; background:var(--card); box-shadow:var(--shadow);">
+        <summary style="font-weight:800; color:var(--text); cursor:pointer; list-style:none; display:flex; align-items:center; gap:10px;">
+            <span style="font-size:20px;">🗺️</span> Deine Reise-Route <span style="opacity:0.5; font-weight:normal; font-size:12px; margin-left:auto;">(Alle Level) ▼</span>
+        </summary>
+        <div class="roadmap-container">
+            <div class="roadmap-line"></div>
+            ${roadmapItems}
         </div>
     </details>`;
 
     if(gTot === 0) { ct.innerHTML = html+'<div style="text-align:center">Noch keine Daten.</div>'; return; }
 
-    // ... (Hier folgen deine KPIs, Top 3, etc. - füge die einfach wieder an) ...
-    // Da du sagtest "nur das neue anhängen":
-
-    // 3. KPIs
-    html += `<div class="stat-kpi-row"><div class="stat-kpi"><h2>${yTot}</h2><small>Sichtungen ${sYr}</small></div><div class="stat-kpi"><h2>${yDistinct.size}</h2><small>Arten ${sYr}</small></div><div class="stat-kpi"><h2>${streak}</h2><small>Streak</small></div></div>`;
+    // === 3. NEUE KPI BUBBLES (Grid) ===
+    html += `
+    <div class="kpi-grid">
+        <!-- Sichtungen (Blau) -->
+        <div class="kpi-bubble kpi-blue">
+            <div class="kpi-icon">👁️</div>
+            <div class="kpi-val">${yTot}</div>
+            <div class="kpi-label">Sichtungen</div>
+        </div>
+        
+        <!-- Arten (Grün) -->
+        <div class="kpi-bubble kpi-green">
+            <div class="kpi-icon">🧬</div>
+            <div class="kpi-val">${yDistinct.size}</div>
+            <div class="kpi-label">Arten</div>
+        </div>
+        
+        <!-- Streak (Orange) -->
+        <div class="kpi-bubble kpi-orange">
+            <div class="kpi-icon">🔥</div>
+            <div class="kpi-val">${streak}</div>
+            <div class="kpi-label">Tage Streak</div>
+        </div>
+        
+        <!-- Aktivste Zeit (Lila) -->
+        <div class="kpi-bubble kpi-purple">
+            <div class="kpi-icon">⌚</div>
+            <div class="kpi-val" style="font-size:18px; margin-top:4px;">
+                ${Object.entries(time).sort((a,b)=>b[1]-a[1])[0][0]}
+            </div>
+            <div class="kpi-label">Top Zeit</div>
+        </div>
+    </div>`;
 
     // 4. TOP 3 (Deine Logik, beibehalten)
     const sortedTop = Object.entries(animalCounts)
@@ -3821,17 +4025,81 @@ function renderStats(){
     // 7. JAHRES CHART
     html += `<div class="card-section"><h3>🗓️ Jahr ${sYr}</h3><div class="chart-wrap">`+mCounts.map((v,i)=>`<div class="chart-col"><div class="chart-bar" style="height:${v?(v/Math.max(...mCounts))*100:1}%;opacity:${v?1:0.1}"></div><div class="chart-label">${['J','F','M','A','M','J','J','A','S','O','N','D'][i]}</div></div>`).join('')+`</div></div>`;
     
-    // 8. HEATMAP
+  
+// === 8. HEATMAP (Kalender-orientiert) ===
+    
+    // 1. FEHLENDE DEFINITION WIEDER EINGEFÜGT:
+    // Wenn aktuelles Jahr gewählt: Heute. Wenn vergangenes Jahr: 31. Dezember.
     let refDate = (sYr === currentSystemYear) ? new Date() : new Date(sYr, 11, 31);
-    html += `<div class="card-section"><h3>🔥 30 Tage Heatmap</h3><div class="heatmap-grid">`;
-    for(let i=27; i>=0; i--){
-        const d = new Date(refDate); d.setDate(d.getDate() - i); const iso = d.toISOString().slice(0,10);
-        const count = getHistory(d.getFullYear())[iso]?.total || 0;
-        html += `<div class="heat-cell" style="background:${count>0?`rgba(33, 150, 243, ${Math.min(count*0.2+0.2,1)})`:'var(--btn)'}; color:${count>0?'#fff':'transparent'}; font-weight:bold;">${count||''}</div>`;
+    
+    const today = new Date(refDate);
+    const dayOfWeek = today.getDay(); // 0 (So) - 6 (Sa)
+    
+    // JS: Sonntag ist 0, wir wollen Montag als Start (0). 
+    const daysSinceMonday = (dayOfWeek + 6) % 7;
+    
+    // Startdatum berechnen (Der Montag vor ca. 4 Wochen)
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - (28 + daysSinceMonday));
+
+    // HTML Header
+    html += `
+    <div class="card-section">
+        <h3>🔥 Aktivität (30 Tage)</h3>
+        <div class="heatmap-container">
+            <!-- Wochentage Header -->
+            <div class="heatmap-weekdays">
+                <div class="heatmap-day-label">Mo</div>
+                <div class="heatmap-day-label">Di</div>
+                <div class="heatmap-day-label">Mi</div>
+                <div class="heatmap-day-label">Do</div>
+                <div class="heatmap-day-label">Fr</div>
+                <div class="heatmap-day-label">Sa</div>
+                <div class="heatmap-day-label">So</div>
+            </div>
+            
+            <div class="heatmap-grid" id="heatmapGrid">`;
+
+    // Zellen generieren (5 Wochen = 35 Zellen)
+    for (let i = 0; i < 35; i++) { 
+        const d = new Date(startDate);
+        d.setDate(startDate.getDate() + i + 1); 
+        
+        const iso = d.toISOString().slice(0,10);
+        const isFuture = d > today;
+        
+        if (isFuture) {
+            // Leere Zellen für die Zukunft
+            html += `<div class="heat-cell" style="background:transparent; cursor:default;"></div>`;
+        } else {
+            const count = getHistory(d.getFullYear())[iso]?.total || 0;
+            const isToday = (iso === todayStr());
+            
+            // Farbe berechnen
+            let bg = 'var(--btn)';
+            if(count > 0) bg = `rgba(33, 150, 243, ${Math.min(count*0.25 + 0.2, 1)})`; 
+            
+            // Info Text vorbereiten
+            const dayName = d.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit' });
+            
+            html += `
+            <div class="heat-cell ${isToday?'is-today':''}" 
+                 style="background:${bg}; color:${count>0?'rgba(255,255,255,0.3)':'transparent'}"
+                 onclick="showHeatmapInfo(this, '${dayName}', ${count})">
+                 ${count || ''}
+            </div>`;
+        }
     }
-    html += `</div></div>`;
+
+    html += `
+            </div>
+            <!-- Hier erscheint der Text beim Klicken -->
+            <div id="heatmapInfoText" class="heatmap-info-line">Tippe auf einen Tag 👆</div>
+        </div>
+    </div>`;
     
     ct.innerHTML = html;
+ 
 }
     
 
@@ -4604,6 +4872,19 @@ function openAnimalMenu(idx, event) {
 
     openContextMenu(x, y, items);
 }
+
+// Zeigt Details unter der Heatmap an
+function showHeatmapInfo(el, dateStr, count) {
+    // 1. Text aktualisieren
+    const infoBox = document.getElementById('heatmapInfoText');
+    if(count === 0) infoBox.innerText = `${dateStr}: Keine Sichtungen`;
+    else infoBox.innerText = `${dateStr}: ${count} Tier${count!==1?'e':''} entdeckt!`;
+    
+    // 2. Visuelles Feedback (Active State für alle anderen entfernen)
+    document.querySelectorAll('.heat-cell.selected').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+}
+
 
 // Neuer Helper für das Modal
 function openInfoModal() {
