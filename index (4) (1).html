@@ -1622,6 +1622,15 @@ body.dark .list-toggle-btn { border-color: rgba(255,255,255,0.1); background: rg
     box-shadow: 0 4px 12px var(--accent-glow);
     transform: scale(1.05);
 }
+
+/* Farbige Hintergründe für Icons */
+.animal-icon.color-0 { background: rgba(255, 99, 72, 0.15); border-color: rgba(255, 99, 72, 0.3); color: #ff6348; }
+.animal-icon.color-1 { background: rgba(46, 213, 115, 0.15); border-color: rgba(46, 213, 115, 0.3); color: #2ed573; }
+.animal-icon.color-2 { background: rgba(30, 144, 255, 0.15); border-color: rgba(30, 144, 255, 0.3); color: #1e90ff; }
+.animal-icon.color-3 { background: rgba(255, 165, 2, 0.15);  border-color: rgba(255, 165, 2, 0.3);  color: #ffa502; }
+.animal-icon.color-4 { background: rgba(162, 155, 254, 0.15); border-color: rgba(162, 155, 254, 0.3); color: #a29bfe; }
+.animal-icon.color-5 { background: rgba(255, 71, 87, 0.15);  border-color: rgba(255, 71, 87, 0.3);  color: #ff4757; }
+
 </style>
 
 </head>
@@ -2699,11 +2708,13 @@ function render() {
         hero.onclick = () => safeRun(openTodayModal); 
         
         hero.innerHTML = `
-            <h2>${todayTotal}</h2>
+<h2><span id="heroCount">0</span></h2>
             <p>Tiere heute entdeckt 👆</p>
             <div class="hero-bg-icon">🐾</div>
         `;
         list.appendChild(hero);
+// Startet die Animation von 0 auf den echten Wert in 1 Sekunde
+animateValue(document.getElementById('heroCount'), 0, todayTotal, 1000);
     }
 
     // 3. TOGGLE BUTTON (JETZT HIER: Zwischen Hero und Favoriten)
@@ -2848,9 +2859,21 @@ function render() {
 
             const highlightedName = highlightText(item.name, searchVal);
             
-            // Bild
-            let iconHTML = `<div class="animal-icon">${item.emoji}</div>`;
+// Farbe basierend auf dem Namen wählen (Hash-Trick)
+            const colorIndex = item.name.length % 6; 
+           
+      // Bild
+        //    let iconHTML = `<div class="animal-icon">${item.emoji}</div>`;
 
+ 
+            // Wenn Bild da ist, Bild zeigen, sonst Emoji mit Farbe
+            let iconHTML = `<div class="animal-icon color-${colorIndex}">${item.emoji}</div>`;
+            if(item.imageId) { 
+                // Wenn echtes Bild: Farbe ignorieren oder als Border nutzen (hier clean gelassen)
+                // Wir laden das Bild asynchron nach, der Container bleibt gleich
+            }
+
+   
             // CLEAN LIST STRUKTUR: Main (Details) | Dead Zone | Menu
             div.innerHTML = `
                 <!-- ZONE 1: Hauptbereich (Details öffnen) -->
@@ -4057,29 +4080,32 @@ function renderStats(){
         <!-- Sichtungen (Blau) -->
         <div class="kpi-bubble kpi-blue">
             <div class="kpi-icon">👁️</div>
-            <div class="kpi-val">${yTot}</div>
+            <!-- HIER GEÄNDERT: ID hinzugefügt und Startwert 0 -->
+            <div class="kpi-val" id="kpi-stat-total">0</div>
             <div class="kpi-label">Sichtungen</div>
         </div>
         
         <!-- Arten (Grün) -->
         <div class="kpi-bubble kpi-green">
             <div class="kpi-icon">🧬</div>
-            <div class="kpi-val">${yDistinct.size}</div>
+            <!-- HIER GEÄNDERT: ID hinzugefügt und Startwert 0 -->
+            <div class="kpi-val" id="kpi-stat-species">0</div>
             <div class="kpi-label">Arten</div>
         </div>
         
         <!-- Streak (Orange) -->
         <div class="kpi-bubble kpi-orange">
             <div class="kpi-icon">🔥</div>
-            <div class="kpi-val">${streak}</div>
+            <!-- HIER GEÄNDERT: ID hinzugefügt und Startwert 0 -->
+            <div class="kpi-val" id="kpi-stat-streak">0</div>
             <div class="kpi-label">Tage Streak</div>
         </div>
         
-        <!-- Aktivste Zeit (Lila) -->
+        <!-- Aktivste Zeit (Lila) - Bleibt Text, daher kein Tacho -->
         <div class="kpi-bubble kpi-purple">
             <div class="kpi-icon">⌚</div>
             <div class="kpi-val" style="font-size:18px; margin-top:4px;">
-                ${Object.entries(time).sort((a,b)=>b[1]-a[1])[0][0]}
+                ${Object.entries(time).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-'}
             </div>
             <div class="kpi-label">Top Zeit</div>
         </div>
@@ -4196,8 +4222,25 @@ function renderStats(){
     </div>`;
     
     ct.innerHTML = html;
- 
-}
+    
+    // === ANIMATION STARTEN (TACHO EFFEKT) ===
+    // Wir warten 50ms, damit der Browser das HTML erst mal "malen" kann
+    setTimeout(() => {
+        // Prüfen ob die animateValue Funktion existiert (die haben wir vorhin angelegt)
+        if(typeof animateValue === 'function') {
+            // Von 0 auf den Zielwert in 1500ms
+            animateValue(document.getElementById('kpi-stat-total'), 0, yTot, 1500);
+            animateValue(document.getElementById('kpi-stat-species'), 0, yDistinct.size, 1500);
+            animateValue(document.getElementById('kpi-stat-streak'), 0, streak, 1500);
+        } else {
+            // Fallback, falls die Animation-Funktion fehlt: Werte direkt setzen
+            if(document.getElementById('kpi-stat-total')) document.getElementById('kpi-stat-total').innerText = yTot;
+            if(document.getElementById('kpi-stat-species')) document.getElementById('kpi-stat-species').innerText = yDistinct.size;
+            if(document.getElementById('kpi-stat-streak')) document.getElementById('kpi-stat-streak').innerText = streak;
+        }
+    }, 50);
+
+} // Ende der Funktion renderStats
     
 
 /* === ULTIMATE SHARE CARD GENERATOR (V2) === */
@@ -4982,6 +5025,19 @@ function showHeatmapInfo(el, dateStr, count) {
     el.classList.add('selected');
 }
 
+function animateValue(obj, start, end, duration) {
+    if(!obj) return;
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        obj.innerHTML = Math.floor(progress * (end - start) + start);
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        }
+    };
+    window.requestAnimationFrame(step);
+}
 
 // Neuer Helper für das Modal
 function openInfoModal() {
