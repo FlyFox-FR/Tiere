@@ -3645,14 +3645,190 @@ function renderStats(){
 }
     
 
-function generateShareCard() {
-    const canvas = document.createElement('canvas'); canvas.width = 600; canvas.height = 400; const ctx = canvas.getContext('2d');
-    ctx.fillStyle = dark ? '#1e1e1e' : '#f4f4f4'; ctx.fillRect(0,0,600,400);
-    ctx.fillStyle = dark ? '#fff' : '#000'; ctx.font = 'bold 30px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`Meine Tiersammlung ${currentSystemYear}`, 300, 50);
-    const h = getHistory(currentSystemYear); let total = 0; Object.values(h).forEach(d=>total+=d.total||0);
-    ctx.font = 'bold 80px sans-serif'; ctx.fillStyle = '#2196f3'; ctx.fillText(total, 300, 180);
-    ctx.font = '20px sans-serif'; ctx.fillStyle = '#888'; ctx.fillText("Sichtungen Gesamt", 300, 220);
-    const link = document.createElement('a'); link.download = `tier-stats-${currentSystemYear}.png`; link.href = canvas.toDataURL(); link.click();
+/* === ULTIMATE SHARE CARD GENERATOR (V2) === */
+async function generateShareCard() {
+    showErrorToast("🎨 Erstelle Grafik...", true); // Feedback geben
+
+    // 1. SETUP & DATEN
+    const width = 800;
+    const height = 1200;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    
+    const year = parseInt(getEl('statsYearSelect').value) || currentSystemYear;
+    const h = getHistory(year);
+    
+    // Daten berechnen (Gesamt & Top 1)
+    let total = 0;
+    let counts = {}; // { animalIndex: count }
+    
+    Object.entries(h).forEach(([date, d]) => {
+        total += d.total || 0;
+        if(d.perAnimal) {
+            Object.entries(d.perAnimal).forEach(([idx, list]) => {
+                counts[idx] = (counts[idx] || 0) + list.length;
+            });
+        }
+    });
+
+    // Top 1 finden
+    let topAnimal = null;
+    let topCount = 0;
+    const sortedIdx = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
+    if(sortedIdx.length > 0) {
+        topAnimal = animals[parseInt(sortedIdx[0])];
+        topCount = counts[sortedIdx[0]];
+    }
+
+    // Level berechnen (für den Header)
+    // Wir nutzen hier eine vereinfachte XP Rechnung nur für die Karte, 
+    // oder holen uns die XP global, falls verfügbar.
+    // Wir nehmen hier einfach den "Rang Titel" basierend auf der Total-Zahl (Quick Hack)
+    // oder besser: Wir berechnen kurz die echten XP wie in renderStats.
+    // (Hier gekürzt auf Basis von Total für Geschwindigkeit):
+    const titleText = `Mein Tierjahr ${year}`;
+
+    // 2. HINTERGRUND (Modern Gradient)
+    const grad = ctx.createLinearGradient(0, 0, width, height);
+    grad.addColorStop(0, '#2b1055'); // Dunkel Lila
+    grad.addColorStop(1, '#7597de'); // Hellblau
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Partikel im Hintergrund (Sterne/Glitzer)
+    ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+    for(let i=0; i<40; i++) {
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        const r = Math.random() * 4;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+    }
+
+    // 3. GLAS-CARD (Container in der Mitte)
+    const cardX = 50, cardY = 150, cardW = 700, cardH = 900;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+    ctx.shadowColor = "rgba(0,0,0,0.3)"; ctx.shadowBlur = 30; ctx.shadowOffsetY = 20;
+    
+    // Rounded Rect Helper
+    roundRect(ctx, 50, 100, 700, 1000, 40); 
+    ctx.fill();
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; // Reset Shadow
+
+    // 4. TEXTE & INHALT
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+
+    // Header
+    ctx.font = 'bold 40px sans-serif';
+    ctx.fillText("TIER TICKER 🐾", width/2, 180);
+    ctx.font = '30px sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.fillText(titleText, width/2, 230);
+
+    // TOTAL COUNT (Riesig)
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 180px sans-serif';
+    ctx.shadowColor = "rgba(0,0,0,0.2)"; ctx.shadowBlur = 10;
+    ctx.fillText(total, width/2, 450);
+    ctx.shadowBlur = 0;
+    
+    ctx.font = '30px sans-serif';
+    ctx.fillStyle = '#4cd137'; // Grün
+    ctx.fillText("GESAMT SICHTUNGEN", width/2, 500);
+
+    // TRENNLINIE
+    ctx.strokeStyle = "rgba(255,255,255,0.2)";
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(150, 560); ctx.lineTo(650, 560); ctx.stroke();
+
+    // 5. TOP 1 TIER (MVP)
+    if(topAnimal) {
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.font = 'bold 35px sans-serif';
+        ctx.fillText("🏆 MEIST ENTDECKT", width/2, 620);
+
+        const imgY = 670;
+        const imgSize = 220;
+        
+        // Versuchen Bild zu laden
+        let imgDrawn = false;
+        if(topAnimal.imageId) {
+            try {
+                const src = await dbGetImg(topAnimal.imageId);
+                if(src) {
+                    const img = new Image();
+                    img.src = src;
+                    await new Promise(r => img.onload = r);
+                    
+                    // Bild Rund ausschneiden
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(width/2, imgY + imgSize/2, imgSize/2, 0, Math.PI*2);
+                    ctx.closePath();
+                    ctx.clip();
+                    
+                    // Bild zeichnen & skalieren (Cover fit)
+                    const scale = Math.max(imgSize/img.width, imgSize/img.height);
+                    const x = (width/2) - (img.width/2) * scale;
+                    const y = (imgY + imgSize/2) - (img.height/2) * scale;
+                    ctx.drawImage(img, x, y, img.width*scale, img.height*scale);
+                    
+                    // Goldener Rand
+                    ctx.beginPath();
+                    ctx.arc(width/2, imgY + imgSize/2, imgSize/2, 0, Math.PI*2);
+                    ctx.lineWidth = 10; ctx.strokeStyle = "#ffd700"; ctx.stroke();
+                    
+                    ctx.restore();
+                    imgDrawn = true;
+                }
+            } catch(e) { console.log("Bildfehler", e); }
+        }
+
+        // Fallback Emoji (wenn kein Bild oder Fehler)
+        if(!imgDrawn) {
+            ctx.font = '150px serif';
+            ctx.fillText(topAnimal.emoji, width/2, imgY + 160);
+        }
+
+        // Name & Count des Top Tiers
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 50px sans-serif';
+        ctx.fillText(topAnimal.name, width/2, 960);
+        
+        ctx.fillStyle = '#ffd700'; // Gold
+        ctx.font = 'bold 40px sans-serif';
+        ctx.fillText(`${topCount} mal gesehen`, width/2, 1020);
+    } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.font = '30px sans-serif';
+        ctx.fillText("Noch keine Favoriten...", width/2, 800);
+    }
+
+    // FOOTER
+    ctx.font = '20px sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillText("Erstellt mit Tier Ticker App", width/2, 1150);
+
+    // DOWNLOAD
+    const link = document.createElement('a');
+    link.download = `TierTicker-Share-${year}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+
+// Helper für runde Ecken im Canvas
+function roundRect(ctx, x, y, w, h, r) {
+  if (w < 2 * r) r = w / 2;
+  if (h < 2 * r) r = h / 2;
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
 }
 
 // === NOTIFICATIONS & UTILS ===
