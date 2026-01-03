@@ -704,7 +704,7 @@ transform: rotate(-2deg); display:inline-block;
 /* === FIX: EMOJI FARBE ERZWINGEN (Schatten-Trick) === */
 .paw {
     position: absolute;
-    font-size: 14px;
+    font-size: 22px;
     z-index: 100;
     opacity: 0;
     pointer-events: none;
@@ -725,15 +725,15 @@ body.dark .paw {
 
 /* Pfote 1: Unten Rechts */
 .paw-br {
-    bottom: -4px; 
-    right: -8px;
+    bottom: -14px; 
+    right: -10px;
     /* Eigener Zeitplan, 8 Sekunden Loop */
     animation: pawCycle1 8s ease-out infinite;
 }
 
 /* Pfote 2: Oben Links */
 .paw-tl {
-    top: -12px;
+    top: -18px;
     left: -4px;
     /* Eigener Zeitplan (Startet verzögert im Keyframe selbst) */
     animation: pawCycle2 8s ease-out infinite;
