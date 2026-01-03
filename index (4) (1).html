@@ -4084,7 +4084,7 @@ function renderStats(){
             
             html += `
             <div class="heat-cell ${isToday?'is-today':''}" 
-                 style="background:${bg}; color:${count>0?'rgba(255,255,255,0.3)':'transparent'}"
+                 style="background:${bg}; color:${count>0?'#ffffff':'transparent'}; text-shadow:0 1px 2px rgba(0,0,0,0.3); font-weight:bold;"
                  onclick="showHeatmapInfo(this, '${dayName}', ${count})">
                  ${count || ''}
             </div>`;
