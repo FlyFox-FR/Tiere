@@ -1003,7 +1003,30 @@ body.dark .btn-sighting-large:active {
 }
 
 @keyframes popIn { from{transform:translate(-50%,-50%) scale(0.5);opacity:0} to{transform:translate(-50%,-50%) scale(1);opacity:1} }
+/* === FIX: Stern Farbe angepasst (var(--sub) statt var(--btn)) === */
+.fav-btn {
+    background: none; 
+    border: none; 
+    font-size: 24px; 
+    
+    /* HIER DIE ÄNDERUNG: */
+    color: var(--sub); /* Hellgrau im Dark Mode, Dunkelgrau im Light Mode */
+    
+    cursor: pointer; 
+    padding: 0 4px; 
+    margin-right: -4px; 
+    transition: transform 0.2s;
+}
 
+.fav-btn:active { transform: scale(1.3); }
+
+/* Der gelbe Stern bleibt wie er ist */
+.fav-btn.active { 
+    color: #ffb300 !important; /* Wichtig, damit es das Grau überschreibt */
+    filter: drop-shadow(0 0 2px rgba(255,179,0,0.5)); 
+}
+
+   
 </style>
 
 </head>
