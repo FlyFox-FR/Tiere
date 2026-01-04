@@ -3051,6 +3051,93 @@ body.dark .deck-card { box-shadow: 0 15px 40px rgba(0,0,0,0.4); border-color: rg
     color: var(--text); 
     transform: scale(0.95);
 }
+/* === SEARCH FUSION & SEMANTIC CONTROLS === */
+
+/* Container Header Layout optimiert */
+.list-header { 
+    display: flex; gap: 10px; margin-bottom: 15px; position: relative; z-index: 5; align-items: center; 
+}
+
+/* Der neue Wrapper für die Suche (Nimmt jetzt maximalen Platz) */
+.search-fusion-wrapper {
+    flex: 1; /* Nimmt den ganzen freien Platz */
+    display: flex; align-items: center;
+    background: var(--card-solid);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding-right: 4px; 
+    transition: all 0.2s;
+    height: 50px;
+    position: relative; /* Wichtig für Overlay */
+    overflow: hidden;
+}
+
+.search-fusion-wrapper:focus-within {
+    outline: 2px solid var(--accent);
+    box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+/* Das Eingabefeld */
+.sf-input {
+    flex: 1; width: 100%;
+    background: transparent !important;
+    border: none !important; box-shadow: none !important;
+    padding: 0 10px 0 16px; 
+    font-size: 15px; color: var(--text); outline: none; height: 100%;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+/* SEMANTIC CONTROLS (Die Text-Buttons) */
+.sem-controls {
+    display: flex; gap: 4px; padding-left: 6px;
+    border-left: 1px solid var(--btn); height: 32px; align-items: center;
+}
+
+.sem-btn {
+    min-width: 40px; height: 36px; padding: 0 8px;
+    border-radius: 12px;
+    background: transparent; color: var(--sub);
+    border: none;
+    font-family: 'JetBrains Mono', monospace, sans-serif; /* Tech Font Look */
+    font-size: 13px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s; user-select: none;
+}
+
+.sem-btn:active { transform: scale(0.92); background: var(--btn); color: var(--text); }
+.sem-btn.active { color: var(--accent); background: rgba(33, 150, 243, 0.1); }
+
+/* STATUS FEEDBACK OVERLAY (Der "Sprechende Balken") */
+.status-overlay {
+    position: absolute; left: 16px; top: 0; bottom: 0;
+    display: flex; align-items: center;
+    color: var(--accent); font-weight: bold; font-size: 14px;
+    opacity: 0; pointer-events: none;
+    transform: translateY(15px);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: var(--card-solid); /* Deckt Input ab */
+    z-index: 10;
+    padding-right: 20px;
+}
+.status-overlay.show { opacity: 1; transform: translateY(0); }
+
+/* Input ausblenden wenn Status da ist (optional, Overlay liegt eh drüber) */
+.search-fusion-wrapper.feedback-active .sf-input { 
+    opacity: 0; transform: translateY(-10px); 
+}
+
+/* NEUER KOMPAKTER SICHTUNGS-BUTTON */
+.btn-sighting-compact {
+    flex-shrink: 0; /* Darf nicht schrumpfen */
+    width: 50px; height: 50px;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 18px;
+    font-size: 26px; font-weight: 400;
+    box-shadow: var(--shadow); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s;
+}
+.btn-sighting-compact:active { transform: scale(0.9); box-shadow: 0 0 10px var(--accent-glow); }
 </style>
 </head>
 <body>
@@ -3103,24 +3190,27 @@ body.dark .deck-card { box-shadow: 0 15px 40px rgba(0,0,0,0.4); border-color: rg
 <!-- VIEW LIST HEADER -->
 <div class="list-header">
     
-    <!-- NEU: Search Fusion Wrapper -->
-    <div class="search-fusion-wrapper">
-        <!-- Input (ID listSearch behalten!) -->
-        <input id="listSearch" class="sf-input" placeholder="🔍 Tier suchen..." oninput="safeRun(debouncedRender)">
+    <!-- SEARCH FUSION (Semantic Version) -->
+    <div class="search-fusion-wrapper" id="sfWrapper">
+        <input id="listSearch" class="sf-input" placeholder="Suche..." oninput="safeRun(debouncedRender)">
         
-        <!-- Controls (IDs viewToggleBtn & sortBtn behalten!) -->
-        <div class="sf-controls">
-            <button class="sf-btn" onclick="safeRun(toggleViewMode)" id="viewToggleBtn" title="Ansicht">📜</button>
-            <button class="sf-btn" onclick="safeRun(cycleSort)" id="sortBtn" title="Sortieren">⭐</button>
+        <!-- Status Feedback Element -->
+        <div class="status-overlay" id="sfStatus">Sortiert: A-Z</div>
+
+        <!-- Semantic Controls -->
+        <div class="sem-controls">
+            <!-- View Toggle (LIST/GRID) -->
+            <div class="sem-btn" onclick="safeRun(toggleViewMode)" id="viewToggleBtn">LIST</div>
+            <!-- Sort Toggle (A-Z, NEU, etc.) -->
+            <div class="sem-btn active" onclick="safeRun(cycleSort)" id="sortBtn">★</div>
         </div>
     </div>
     
-    <!-- Großer Button bleibt daneben -->
-    <button class="btn-sighting-large" onclick="safeRun(openQuickSighting)">
-        <span style="font-size:18px; font-weight:900;">+</span> Sichtung
+    <!-- Kompakter Sichtungs Button -->
+    <button class="btn-sighting-compact" onclick="safeRun(openQuickSighting)" title="Schnell-Sichtung">
+        +
     </button>
 </div>
-
 
 
   <!-- Tag Filter bleibt hier -->
@@ -4181,11 +4271,6 @@ function render() {
     if(favCont) favCont.innerHTML = '';
     if(toggleCont) toggleCont.innerHTML = '';
 
-    // Button Texte aktualisieren
-    const viewBtn = document.getElementById('viewToggleBtn');
-    const sortBtn = document.getElementById('sortBtn');
-    if(viewBtn) viewBtn.innerText = viewMode === 'list' ? '📜' : '▦';
-    if(sortBtn) sortBtn.innerText = sortMode === 'fav' ? '⭐' : (sortMode === 'name' ? '🔤' : (sortMode === 'count' ? '🔢' : '🕒'));
 
     const searchVal = document.getElementById('listSearch').value.toLowerCase();
     
@@ -4543,19 +4628,64 @@ displayList.forEach((item, loopIdx) => {
     }
 }
 function filterTags(t) { currentFilter=t; render(); }
+
+/* === SEMANTIC SORT & FEEDBACK LOGIC === */
+
+// Hilfsfunktion für den Feedback-Effekt
+let fbTimer;
+function showFeedback(text) {
+    const wrap = document.getElementById('sfWrapper');
+    const stat = document.getElementById('sfStatus');
+    
+    if(!wrap || !stat) return;
+
+    stat.innerText = text;
+    wrap.classList.add('feedback-active');
+    stat.classList.add('show');
+    
+    clearTimeout(fbTimer);
+    fbTimer = setTimeout(() => {
+        wrap.classList.remove('feedback-active');
+        stat.classList.remove('show');
+    }, 1200); // Zeigt den Text für 1.2 Sekunden
+}
+
 function cycleSort() { 
-    // Reihenfolge: Fav -> Zeit (Last) -> Name -> Anzahl -> Fav...
+    // Reihenfolge: Fav (★) -> Zeit (NEU) -> Name (A-Z) -> Anzahl (1-9)
     if(sortMode === 'fav') sortMode = 'last';
     else if(sortMode === 'last') sortMode = 'name';
     else if(sortMode === 'name') sortMode = 'count';
-    else sortMode = 'fav'; // Fallback & Reset auf Fav
+    else sortMode = 'fav'; 
+
+    localStorage.setItem('sortMode', sortMode);
     
-    // Kleines Feedback (optional)
-    // if(navigator.vibrate) navigator.vibrate(5);
+    // Feedback Text & Button Update
+    let fbText = "";
+    const btn = document.getElementById('sortBtn');
     
+    switch(sortMode) {
+        case 'fav':   btn.innerText = "★";   fbText = "Sortiert: Favoriten"; break;
+        case 'last':  btn.innerText = "NEU"; fbText = "Sortiert: Neueste"; break;
+        case 'name':  btn.innerText = "A-Z"; fbText = "Sortiert: Name"; break;
+        case 'count': btn.innerText = "1-9"; fbText = "Sortiert: Anzahl"; break;
+    }
+    
+    showFeedback(fbText);
     render(); 
 }
-function toggleViewMode() { viewMode = viewMode==='list'?'grid':'list'; localStorage.setItem('viewMode',viewMode); render(); }
+
+function toggleViewMode() { 
+    viewMode = viewMode === 'list' ? 'grid' : 'list'; 
+    localStorage.setItem('viewMode', viewMode);
+    
+    const btn = document.getElementById('viewToggleBtn');
+    if(btn) btn.innerText = viewMode === 'list' ? 'LIST' : 'GRID';
+    
+    showFeedback(viewMode === 'list' ? "Ansicht: Liste" : "Ansicht: Raster");
+    render(); 
+}
+
+
 
 // === DETAILS & EDIT ===
 
