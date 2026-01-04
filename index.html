@@ -2932,6 +2932,7 @@ body.dark .deck-card { box-shadow: 0 15px 40px rgba(0,0,0,0.4); border-color: rg
     50% { background-position: 100% 50%; } 
     100% { background-position: 0% 50%; transform: rotate(360deg); } 
 }
+
 /* Container reparieren */
 .tag-scroll {
     display: flex;
@@ -2974,7 +2975,17 @@ body.dark .deck-card { box-shadow: 0 15px 40px rgba(0,0,0,0.4); border-color: rg
     transform: scale(1.05);
     border-color: transparent;
 }
-   
+
+/* Kleiner Stern in der Liste */
+.list-fav-indicator {
+    display: inline-block;
+    color: #ffb300; /* Golden */
+    font-size: 14px;
+    margin-left: 6px; /* Abstand zum Namen */
+    vertical-align: middle;
+    filter: drop-shadow(0 0 3px rgba(255, 179, 0, 0.4)); /* Leichter Glow */
+    animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Kleiner Pop-Effekt */
+}
 </style>
 </head>
 <body>
@@ -6760,7 +6771,6 @@ function closeContextMenu() {
 }
 
 // 2. Das Menü für die LISTE (Startseite)
-
 /* === UPDATED CONTEXT MENU (Mit Favoriten-Option) === */
 function openItemMenu(idx, event) {
     if(event) event.stopPropagation();
