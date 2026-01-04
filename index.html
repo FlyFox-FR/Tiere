@@ -2932,6 +2932,49 @@ body.dark .deck-card { box-shadow: 0 15px 40px rgba(0,0,0,0.4); border-color: rg
     50% { background-position: 100% 50%; } 
     100% { background-position: 0% 50%; transform: rotate(360deg); } 
 }
+/* Container reparieren */
+.tag-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 10px 15px 4px;
+    scrollbar-width: none;
+    mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    
+    /* DER FIX: Vertikal zentrieren statt strecken */
+    align-items: center; 
+}
+
+/* Die Buttons reparieren */
+.tag-pill {
+    /* Style beibehalten */
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(5px);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+
+    /* DER FIX: Text intern zentrieren & feste Höhe nutzen */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px; /* Feste Höhe, etwas kleiner als der Ring (42px) */
+    padding: 0 16px; /* Seitliches Padding */
+}
+
+/* Active State bleibt gleich */
+.tag-pill.active {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 4px 12px var(--accent-glow);
+    transform: scale(1.05);
+    border-color: transparent;
+}
+   
 </style>
 </head>
 <body>
