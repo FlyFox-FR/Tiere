@@ -4891,20 +4891,70 @@ function quickCreate(name) {
 }
 
 // === EXPORT / IMPORT ===
+// === INTELLIGENTES BACKUP (Share API + Fallback) ===
 async function downloadBackup(){
-    const fullHistory = {}; getAvailableYears().forEach(y => fullHistory[y] = getHistory(y));
+    // 1. Daten sammeln
+    const fullHistory = {}; 
+    getAvailableYears().forEach(y => fullHistory[y] = getHistory(y));
+    
     const images = {};
     if(animals.length) {
-        showErrorToast("Backup wird erstellt... das kann kurz dauern.", true);
-        for(let a of animals) { if(a.imageId) { const data = await dbGetImg(a.imageId); if(data) images[a.imageId] = data; } }
+        showErrorToast("Backup wird gepackt...", true);
+        for(let a of animals) { 
+            if(a.imageId) { 
+                const data = await dbGetImg(a.imageId); 
+                if(data) images[a.imageId] = data; 
+            } 
+        }
     }
-    const exportObj = { meta:{v:"6.3", date:new Date()}, animals, locations, locCoords, fullHistory, images, notifyConfig };
-    const blob = new Blob([JSON.stringify(exportObj)], {type:'application/json'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `tiere-backup-${todayStr()}.json`; a.click();
-    //Nach dem Download:
- localStorage.setItem('lastBackup', Date.now()); 
-// Sofort prüfen -> Das entfernt den Punkt und die Box sofort!
- checkBackupHealth(); showErrorToast("Backup erstellt! Super 👍", true); // Positives Feedback
+    
+    // 2. Objekt bauen
+    const exportObj = { 
+        meta: { v: "6.4", date: new Date().toISOString() }, 
+        animals, 
+        locations, 
+        locCoords, 
+        fullHistory, 
+        images, 
+        notifyConfig 
+    };
+
+    // 3. Datei erstellen
+    const jsonStr = JSON.stringify(exportObj);
+    const fileName = `tier-backup-${new Date().toISOString().slice(0,10)}.json`;
+    const file = new File([jsonStr], fileName, { type: "application/json" });
+
+    // 4. CLEVERER TEIL: Versuchen zu "Teilen" (Mobile), sonst Download (Desktop)
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+            await navigator.share({
+                title: 'Tiere Zählen Backup',
+                text: 'Hier ist mein aktuelles Backup.',
+                files: [file]
+            });
+            showErrorToast("Backup erfolgreich übergeben!", true);
+        } catch (err) {
+            // Wenn der User abbricht, nichts tun oder Fallback
+            console.log("Teilen abgebrochen, versuche Download...");
+            triggerDownload(file);
+        }
+    } else {
+        // Fallback für Desktop oder Browser ohne Share-Support
+        triggerDownload(file);
+    }
+}
+
+// Hilfsfunktion für den klassischen Download
+function triggerDownload(file) {
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showErrorToast("Backup in Downloads gespeichert", true);
 }
 function importBackup(e){
     const file = e.target.files[0]; if(!file) return;
