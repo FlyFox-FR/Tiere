@@ -2644,10 +2644,19 @@ body.dark .deck-card { box-shadow: 0 15px 40px rgba(0,0,0,0.4); border-color: rg
     margin-bottom: auto; /* Schiebt Datum nach unten */
 }
 
+/* Neuer Profi-Look für Datum & Uhrzeit */
 .dc-date {
-    font-size: 11px; text-transform: uppercase; 
-    color: var(--sub); font-weight: bold; letter-spacing: 1px;
-    margin-top: 10px;
+    font-family: ui-monospace, 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace; /* Tech Font */
+    font-size: 12px; 
+    font-weight: 700;
+    color: var(--accent); /* Deine Akzentfarbe */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(128, 128, 128, 0.3); /* Feine Trennlinie */
+    display: flex; 
+    justify-content: space-between; /* Datum links, Zeit rechts */
 }
 
 /* Animation beim Wegwerfen */
@@ -6568,20 +6577,24 @@ async function initMemoryDeck() {
                     const idx = parseInt(idxStr);
                     const animal = animals[idx];
                     if(!animal) return;
-                    
+                     // Datum schön formatieren (von YYYY-MM-DD zu DD.MM.YYYY)
+                    const [yStr, mStr, dStr] = d.date.split('-');
+                    const dateFormatted = `${dStr}.${mStr}.${yStr}`;
+                   
                     list.forEach(entry => {
                         // Priorisiere Einträge mit Bild (vom Tier) oder Notiz
                         if(entry.note || animal.imageId) {
-                            candidates.push({
-                                animalIdx: idx,
-                                name: animal.name,
-                                emoji: animal.emoji,
-                                date: entry.time ? `${entry.time} Uhr` : d.date, // Datum oder Zeit
-                                fullDate: d.date, // Für Anzeige
-                                note: entry.note || "Ein schöner Moment.",
-                                loc: entry.location || "Unbekannt",
-                                imageId: animal.imageId
-                            });
+                      candidates.push({
+                      animalIdx: idx,
+                      name: animal.name,
+                      emoji: animal.emoji,
+                      // HIER NEU: Datum und Zeit getrennt speichern
+                      dateDisplay: dateFormatted,
+                      timeDisplay: entry.time ? `${entry.time} Uhr` : '--:--', 
+                      note: entry.note || "Ein schöner Moment.",
+                      loc: entry.location || "Unbekannt",
+                      imageId: animal.imageId
+                        });
                         }
                     });
                 });
@@ -6633,19 +6646,25 @@ async function initMemoryDeck() {
         // Format Date
         const niceDate = item.fullDate ? item.fullDate.split('-').reverse().slice(0,2).join('.') + "." : item.date;
 
-        el.innerHTML = `
-            <div class="dc-img-area">
-                ${imgHTML}
-                <div class="dc-overlay"></div>
-                <div class="dc-badge">📍 ${item.loc}</div>
-            </div>
-            <div class="dc-body">
-                <div class="dc-title">${item.emoji} ${item.name}</div>
-                <div class="dc-note">"${item.note}"</div>
-                <div class="dc-date">📅 ${niceDate}</div>
-            </div>
-        `;
+
+       el.innerHTML = `
+    <div class="dc-img-area">
+        ${imgHTML}
+        <div class="dc-overlay"></div>
+        <div class="dc-badge">📍 ${item.loc}</div>
+    </div>
+    <div class="dc-body">
+        <div class="dc-title">${item.emoji} ${item.name}</div>
+        <div class="dc-note">"${item.note}"</div>
         
+        <!-- HIER NEU: Datum und Zeit getrennt -->
+        <div class="dc-date">
+            <span>📅 ${item.dateDisplay}</span>
+            <span>⌚ ${item.timeDisplay}</span>
+        </div>
+    </div>
+`;
+              
         container.appendChild(el);
         deckCards.push(el); // Array zum Verwalten
         
