@@ -2614,12 +2614,6 @@ body.dark .deck-card { box-shadow: 0 15px 40px rgba(0,0,0,0.4); border-color: rg
     background: linear-gradient(to top, var(--card-solid), transparent);
 }
 
-/* Text-Bereich */
-.dc-body {
-    flex: 1; padding: 15px; position: relative;
-    display: flex; flex-direction: column;
-}
-
 .dc-badge {
     position: absolute; top: 5px; right: 15px;
     background: var(--card-solid); 
@@ -2635,28 +2629,50 @@ body.dark .deck-card { box-shadow: 0 15px 40px rgba(0,0,0,0.4); border-color: rg
     color: var(--text);
 }
 
-/* Die Handschrift-Notiz */
-.dc-note {
-    font-family: 'Caveat', cursive; 
-    font-size: 22px; line-height: 1.2;
-    color: var(--text); opacity: 0.8;
-    transform: rotate(-1deg);
-    margin-bottom: auto; /* Schiebt Datum nach unten */
+/* Update für Karten-Layout */
+.dc-body {
+    flex: 1; 
+    padding: 15px; 
+    position: relative;
+    display: flex; 
+    flex-direction: column;
+    overflow: hidden; /* Wichtig */
 }
 
-/* Neuer Profi-Look für Datum & Uhrzeit */
+.dc-note {
+    font-family: 'Caveat', cursive; 
+    font-size: 22px; 
+    line-height: 1.1;
+    color: var(--text); 
+    opacity: 0.85;
+    transform: rotate(-1deg);
+    
+    /* NEU: Text abschneiden nach 4 Zeilen */
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    
+    margin-bottom: 10px;
+}
+
 .dc-date {
-    font-family: ui-monospace, 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace; /* Tech Font */
-    font-size: 12px; 
+    /* NEU: Drückt das Datum immer nach ganz unten */
+    margin-top: auto; 
+    
+    /* Dein bestehender Style */
+    font-family: ui-monospace, 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+    font-size: 11px; 
     font-weight: 700;
-    color: var(--accent); /* Deine Akzentfarbe */
+    color: var(--accent);
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-top: 15px;
     padding-top: 10px;
-    border-top: 1px dashed rgba(128, 128, 128, 0.3); /* Feine Trennlinie */
+    border-top: 1px dashed rgba(128, 128, 128, 0.3);
     display: flex; 
-    justify-content: space-between; /* Datum links, Zeit rechts */
+    justify-content: space-between;
+    flex-shrink: 0; /* Darf nicht kleiner werden */
 }
 
 /* Animation beim Wegwerfen */
@@ -6566,17 +6582,13 @@ async function initMemoryDeck() {
     const container = document.getElementById('cardDeck');
     if(!wrapper || !container) return;
 
-    // 1. Alle interessanten Einträge sammeln
     let candidates = [];
     const years = getAvailableYears();
     
     years.forEach(y => {
         const h = getHistory(y);
-        
-        // KORREKTUR: Object.entries nutzen, um Datum (Key) und Daten (Value) zu bekommen
         Object.entries(h).forEach(([dateStr, d]) => {
-            
-            // Datum hier formatieren (YYYY-MM-DD -> DD.MM.YYYY)
+            // Datum formatieren
             const [yStr, mStr, dVal] = dateStr.split('-');
             const dateFormatted = `${dVal}.${mStr}.${yStr}`;
 
@@ -6586,19 +6598,23 @@ async function initMemoryDeck() {
                     const animal = animals[idx];
                     if(!animal) return;
                     
-                    list.forEach(entry => {
-                        // Nur Einträge mit Bild oder Notiz nehmen
+                    // WICHTIG: entryIndex (i) mit erfassen!
+                    list.forEach((entry, entryIndex) => {
                         if(entry.note || animal.imageId) {
                             candidates.push({
-                                animalIdx: idx,
+                                // Daten für die Anzeige
                                 name: animal.name,
                                 emoji: animal.emoji,
-                                // HIER: Getrennte Felder für Datum & Zeit
                                 dateDisplay: dateFormatted,
                                 timeDisplay: entry.time ? `${entry.time} Uhr` : '--:--',
                                 note: entry.note || "Ein schöner Moment.",
                                 loc: entry.location || "Unbekannt",
-                                imageId: animal.imageId
+                                imageId: animal.imageId,
+                                
+                                // WICHTIG: Daten für den Klick (zum Öffnen)
+                                rawDate: dateStr, // YYYY-MM-DD
+                                animalIdx: idx,
+                                arrIdx: entryIndex
                             });
                         }
                     });
@@ -6607,18 +6623,13 @@ async function initMemoryDeck() {
         });
     });
 
-    // Wenn zu wenig da ist, gar nicht anzeigen
-    if(candidates.length < 3) {
-        wrapper.style.display = 'none';
-        return;
-    }
+    if(candidates.length < 3) { wrapper.style.display = 'none'; return; }
 
-    // 2. Zufällige 5 auswählen (Shuffle)
+    // Shuffle & Pick 5
     candidates.sort(() => 0.5 - Math.random());
     const selection = candidates.slice(0, 5);
 
-    // 3. Karten bauen
-    // Erst leeren (außer empty state div)
+    // Reset Container
     const emptyState = container.querySelector('.deck-empty');
     container.innerHTML = '';
     if(emptyState) container.appendChild(emptyState);
@@ -6626,24 +6637,18 @@ async function initMemoryDeck() {
 
     wrapper.style.display = 'block';
 
-    // Async Loop um Bilder zu laden
     for (let i = 0; i < selection.length; i++) {
         const item = selection[i];
-        
         const el = document.createElement('div');
         el.className = 'deck-card';
         
         let imgSrc = '';
-        if(item.imageId) {
-            try { imgSrc = await dbGetImg(item.imageId); } catch(e){}
-        }
+        if(item.imageId) { try { imgSrc = await dbGetImg(item.imageId); } catch(e){} }
         
-        // Fallback Bild oder Farbe wenn kein Bild
         const imgHTML = imgSrc 
             ? `<img src="${imgSrc}" class="dc-img">` 
             : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:60px; background:var(--bg);">${item.emoji}</div>`;
 
-        // HIER DAS NEUE HTML MIT GETRENNTEM DATUM/ZEIT
         el.innerHTML = `
             <div class="dc-img-area">
                 ${imgHTML}
@@ -6653,7 +6658,6 @@ async function initMemoryDeck() {
             <div class="dc-body">
                 <div class="dc-title">${item.emoji} ${item.name}</div>
                 <div class="dc-note">"${item.note}"</div>
-                
                 <div class="dc-date">
                     <span>📅 ${item.dateDisplay}</span>
                     <span>⌚ ${item.timeDisplay}</span>
@@ -6664,12 +6668,13 @@ async function initMemoryDeck() {
         container.appendChild(el);
         deckCards.push(el);
         
-        // Physik hinzufügen
-        if(typeof makeCardDraggable === 'function') makeCardDraggable(el);
+        // NEU: Wir übergeben das 'item' Objekt an die Drag Funktion!
+        if(typeof makeCardDraggable === 'function') makeCardDraggable(el, item);
     }
     
     if(typeof updateDeckVisuals === 'function') updateDeckVisuals();
 }
+
 function updateDeckVisuals() {
     // Die Karten liegen im DOM übereinander. 
     // Wir wollen aber das Array 'deckCards' von vorne abarbeiten (Shift).
@@ -6711,27 +6716,31 @@ function updateDeckVisuals() {
     });
 }
 
-function makeCardDraggable(card) {
-    let startX = 0, currentX = 0, isDragging = false;
+function makeCardDraggable(card, dataItem) {
+    let startX = 0, startY = 0, currentX = 0, currentY = 0;
+    let isDragging = false;
+    let startTime = 0;
     
     const start = (e) => {
-        // Nur wenn es die oberste Karte ist
         if(card !== deckCards[0]) return;
-        
         isDragging = true;
+        
+        // Koordinaten und Zeit merken
         startX = e.clientX || e.touches[0].clientX;
-        card.style.transition = 'none'; // Direktes Feedback
+        startY = e.clientY || e.touches[0].clientY;
+        startTime = Date.now();
+        
+        card.style.transition = 'none';
     };
     
     const move = (e) => {
         if(!isDragging) return;
-        // Scrollen verhindern auf Mobile beim Wischen
-        // (Optional: nur wenn Bewegung horizontal ist)
-        
         const clientX = e.clientX || e.touches[0].clientX;
-        currentX = clientX - startX;
+        const clientY = e.clientY || e.touches[0].clientY; // Y auch tracken
         
-        // Rotation
+        currentX = clientX - startX;
+        currentY = clientY - startY;
+        
         const rot = currentX * 0.05;
         card.style.transform = `translateX(${currentX}px) rotate(${rot}deg)`;
     }
@@ -6740,43 +6749,52 @@ function makeCardDraggable(card) {
         if(!isDragging) return;
         isDragging = false;
         
-        // Schwelle zum Wegwerfen
+        // === KLICK ERKENNUNG ===
+        // Wenn Bewegung sehr klein (< 10px) UND kurz (< 200ms) war
+        const dist = Math.sqrt(currentX*currentX + currentY*currentY);
+        const timeDiff = Date.now() - startTime;
+        
+        if (dist < 10 && timeDiff < 300) {
+            // Es war ein Klick! -> Detail öffnen
+            // Nutzt deine existierende Funktion viewNoteDetail
+            safeRun(viewNoteDetail, dataItem.animalIdx, dataItem.rawDate, dataItem.arrIdx);
+            
+            // Karte zurücksetzen (falls minimal bewegt)
+            card.style.transform = 'scale(1) translateY(0) rotate(0deg)';
+            return;
+        }
+        
+        // === SWIPE LOGIK ===
         if(Math.abs(currentX) > 100) {
-            // Wegwerfen
             const dir = currentX > 0 ? 1 : -1;
-            const endX = window.innerWidth; // Weit weg
+            const endX = window.innerWidth;
             
             card.classList.add('is-flying');
             card.style.transform = `translateX(${dir * endX}px) rotate(${dir * 30}deg)`;
             
             setTimeout(() => {
-                card.remove(); // Aus DOM
-                deckCards.shift(); // Aus Array (erstes Element weg)
-                updateDeckVisuals(); // Nachrücker stylen
+                card.remove(); 
+                deckCards.shift(); 
+                updateDeckVisuals();
             }, 300);
             
-            // Haptic
             if(navigator.vibrate) navigator.vibrate(10);
-            
         } else {
-            // Reset (Zurückfedern)
+            // Reset
             card.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
             card.style.transform = 'scale(1) translateY(0) rotate(0deg)';
         }
         currentX = 0;
+        currentY = 0;
     }
     
     card.addEventListener('mousedown', start);
     card.addEventListener('touchstart', start, {passive: true});
-    
     document.addEventListener('mousemove', move);
-    document.addEventListener('touchmove', move, {passive: false}); // passive: false wichtig für preventDefault falls nötig
-    
+    document.addEventListener('touchmove', move, {passive: false});
     document.addEventListener('mouseup', end);
     document.addEventListener('touchend', end);
 }
-
-
 // Neuer Helper für das Modal
 function openInfoModal() {
     getEl('infoModal').style.display = 'block';
