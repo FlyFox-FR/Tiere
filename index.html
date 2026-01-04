@@ -4417,37 +4417,34 @@ displayList.forEach((item, loopIdx) => {
                 </div>`;
 
             // --- 3. HTML BAUEN ---
-          /* === LIST VIEW RENDER FIX === */
-div.innerHTML = `
-    <!-- ZONE 1: Hauptbereich -->
-    <div class="row-main" onclick="openDetail(${item.idx})">
-        
-        <!-- BILD / ICON -->
-        <div class="list-visual">
-            ${imgHTML}
-        </div>
+            div.innerHTML = `
+                <!-- ZONE 1: Hauptbereich -->
+                <div class="row-main" onclick="openDetail(${item.idx})">
+                    
+                    <!-- BILD / ICON -->
+                    <div class="list-visual">
+                        ${imgHTML}
+                    </div>
 
-        <!-- TEXT INFO -->
-        <div class="list-content">
-            <div class="list-top-line">
-                <span class="list-name">${item.name}</span>
-                
-                <!-- HIER DER FIX: Klickbarer Button statt nur Anzeige -->
-                <button class="fav-btn ${item.isFav ? 'active' : ''}" onclick="toggleFav(${item.idx}, event)">★</button>
-            </div>
-            <div class="list-sub-line">
-                <span style="font-size:14px; margin-right:6px;">${timeIcon}</span> 
-                <span>${subText}</span>
-            </div>
-        </div>
-        
-        <!-- ZÄHLER -->
-        <div class="count-badge"><span>${item.count}</span></div>
-    </div>
+                    <!-- TEXT INFO -->
+                    <div class="list-content">
+                        <div class="list-top-line">
+                            <span class="list-name">${item.name}</span>
+                            ${item.isFav ? '<span class="list-fav-star">★</span>' : ''}
+                        </div>
+                        <div class="list-sub-line">
+                            <span style="font-size:14px; margin-right:6px;">${timeIcon}</span> 
+                            <span>${subText}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- ZÄHLER -->
+                    <div class="count-badge"><span>${item.count}</span></div>
+                </div>
 
-    <!-- ZONE 2: Menü -->
-    <div class="row-menu" onclick="openItemMenu(${item.idx}, event)">⋮</div>
-`;
+                <!-- ZONE 2: Menü -->
+                <div class="row-menu" onclick="openItemMenu(${item.idx}, event)">⋮</div>
+            `;
             
             // Bild nachladen
             if(item.imageId) { 
