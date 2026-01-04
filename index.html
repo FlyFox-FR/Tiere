@@ -3785,14 +3785,9 @@ displayList.forEach((item, loopIdx) => {
                     timeIcon = '📅'; 
                 }
             } else {
-                // WENN NOCH NIE GESEHEN -> Fallback auf Kategorie
-                if (item.tags && item.tags.length > 0) {
-                    subText = item.tags[0]; // z.B. "Vogel"
-                    timeIcon = '🏷️';
-                } else {
+                // WENN NOCH NIE GESEHEN
                     subText = "Noch nie gesehen";
                     timeIcon = '🌑';
-                }
             }
 
             // --- 2. DYNAMISCHE FARBE FÜR EMOJI-HINTERGRUND ---
