@@ -4892,83 +4892,19 @@ function quickCreate(name) {
 
 // === EXPORT / IMPORT ===
 async function downloadBackup(){
-    // 1. Daten sammeln
-    const fullHistory = {}; 
-    getAvailableYears().forEach(y => fullHistory[y] = getHistory(y));
+    const fullHistory = {}; getAvailableYears().forEach(y => fullHistory[y] = getHistory(y));
     const images = {};
     if(animals.length) {
-        showErrorToast("Backup wird gepackt...", true);
-        for(let a of animals) { 
-            if(a.imageId) { 
-                const data = await dbGetImg(a.imageId); 
-                if(data) images[a.imageId] = data; 
-            } 
-        }
+        showErrorToast("Backup wird erstellt... das kann kurz dauern.", true);
+        for(let a of animals) { if(a.imageId) { const data = await dbGetImg(a.imageId); if(data) images[a.imageId] = data; } }
     }
-    const exportObj = { 
-        meta: { v: "6.4", date: new Date().toISOString() }, 
-        animals, locations, locCoords, fullHistory, images, notifyConfig 
-    };
-
-    const jsonStr = JSON.stringify(exportObj);
-    const fileName = `tier-backup-${new Date().toISOString().slice(0,10)}.json`;
-
-    // TRICK: Wir nutzen 'text/plain' statt 'application/json', 
-    // weil manche Handys JSON im Share-Sheet blockieren.
-    const file = new File([jsonStr], fileName, { type: "text/plain" });
-
-    // Debugging: Prüfen, ob API überhaupt da ist
-    if (!navigator.canShare) {
-        // Falls das hier kommt: Du bist wahrscheinlich nicht auf HTTPS oder der Browser ist zu alt
-        // alert("Fehler: Dein Browser unterstützt das Teilen von Dateien nicht (oder kein HTTPS).");
-        triggerDownloadFallback(file);
-        return;
-    }
-
-    // Prüfen, ob speziell DIESE Datei geteilt werden darf
-    if (navigator.canShare({ files: [file] })) {
-        try {
-            await navigator.share({
-                title: 'Tiere Zählen Backup',
-                text: 'Backup Datei',
-                files: [file]
-            });
-            showErrorToast("Erfolgreich übergeben!", true);
-        } catch (err) {
-            // User hat abgebrochen oder Fehler
-            console.log(err);
-            // Kein Fehler-Toast nötig, wenn User einfach nur das Menü zu macht
-        }
-    } else {
-        // Wenn wir hier landen, unterstützt der Browser zwar Sharing, aber nicht für diesen Dateityp
-        // alert("Info: Dein Gerät erlaubt das Teilen dieser Datei nicht. Start Download...");
-        triggerDownloadFallback(file);
-    }
-}
-
-// Fallback bleibt gleich
-function triggerDownloadFallback(file) {
-    const url = URL.createObjectURL(file);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = file.name;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showErrorToast("Backup lokal gespeichert", true);
-}
-// Hilfsfunktion für den klassischen Download
-function triggerDownload(file) {
-    const url = URL.createObjectURL(file);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = file.name;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showErrorToast("Backup in Downloads gespeichert", true);
+    const exportObj = { meta:{v:"6.3", date:new Date()}, animals, locations, locCoords, fullHistory, images, notifyConfig };
+    const blob = new Blob([JSON.stringify(exportObj)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `tiere-backup-${todayStr()}.json`; a.click();
+    //Nach dem Download:
+ localStorage.setItem('lastBackup', Date.now()); 
+// Sofort prüfen -> Das entfernt den Punkt und die Box sofort!
+ checkBackupHealth(); showErrorToast("Backup erstellt! Super 👍", true); // Positives Feedback
 }
 function importBackup(e){
     const file = e.target.files[0]; if(!file) return;
