@@ -3848,6 +3848,43 @@ body.no-scroll {
     text-transform: uppercase; color: var(--accent);
     margin-bottom: 10px; letter-spacing: 1px;
 }
+/* === QUIZ MODES STYLES === */
+.quiz-mode-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.quiz-mode-card {
+    background: var(--card);
+    border: 2px solid var(--btn);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+}
+.quiz-mode-card:active { transform: scale(0.96); }
+.quiz-mode-card:hover { border-color: var(--accent); }
+
+.qmc-icon { font-size: 32px; }
+.qmc-info { text-align: left; }
+.qmc-title { font-weight: 800; font-size: 15px; display: block; margin-bottom: 2px; }
+.qmc-desc { font-size: 12px; opacity: 0.7; }
+
+/* Lügendetektor Buttons (2 Spalten Layout) */
+.quiz-options-grid.lie-mode {
+    flex-direction: row; /* Nebeneinander */
+}
+.quiz-options-grid.lie-mode .quiz-btn {
+    flex: 1; /* Gleich breit */
+    flex-direction: column;
+    padding: 20px 10px;
+}
+
 </style>
 </head>
 <body>
@@ -4746,20 +4783,69 @@ body.no-scroll {
   </div>
 </div>
 
+<!-- QUIZ MENU MODAL -->
+<div id="quizMenuModal" class="modal">
+  <div class="modal-content">
+    <div class="close-btn" onclick="closeModal('quizMenuModal')">✕</div>
+    
+    <div style="text-align:center; margin-bottom:20px;">
+        <div style="font-size:50px; margin-bottom:5px;">🎮</div>
+        <h3 style="margin:0;">Wähle deinen Modus</h3>
+    </div>
+
+    <div class="quiz-mode-grid">
+        <!-- Modus 1 -->
+        <div class="quiz-mode-card" onclick="selectQuizMode('cloze')">
+            <div class="qmc-icon">🧩</div>
+            <div class="qmc-info">
+                <span class="qmc-title">Lückentext</span>
+                <span class="qmc-desc">Errate das fehlende Tier.</span>
+            </div>
+        </div>
+
+        <!-- Modus 2 -->
+        <div class="quiz-mode-card" onclick="selectQuizMode('lie')">
+            <div class="qmc-icon">🤥</div>
+            <div class="qmc-info">
+                <span class="qmc-title">Wahr oder Quatsch?</span>
+                <span class="qmc-desc">Stimmt der Fakt zum Tier?</span>
+            </div>
+        </div>
+
+        <!-- Modus 3 -->
+        <div class="quiz-mode-card" onclick="selectQuizMode('mixed')">
+            <div class="qmc-icon">🔀</div>
+            <div class="qmc-info">
+                <span class="qmc-title">Alles Gemischt</span>
+                <span class="qmc-desc">Überraschung bei jeder Frage!</span>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+
 <script>
 /** 
  * === TIER TICKER CORE ===
  * Fixes: Disabled Swipe for Details View
  */
 
+/* === QUIZ ENGINE V2 (MULTI-MODE) === */
 
-/* === QUIZ ENGINE (AUTO-GENERATED) === */
-
-let currentQuizAnswer = null; // Speichert die Lösung
+let currentQuizAnswer = null; // Speichert die Lösung (String für Cloze, Boolean für Lie)
 let isQuizLocked = false;     // Verhindert Mehrfach-Klicks
+let activeQuizMode = 'mixed'; // 'cloze', 'lie', 'mixed'
 
+// 1. Start: Öffnet das Menü
 function startQuiz() {
-    closeContextMenu(); // Menü zu, falls offen
+    closeContextMenu(); 
+    document.getElementById('quizMenuModal').style.display = 'block';
+}
+
+// 2. Modus gewählt -> Start Game
+function selectQuizMode(mode) {
+    activeQuizMode = mode;
+    closeModal('quizMenuModal');
     document.getElementById('quizModal').style.display = 'block';
     updateQuizHeader();
     nextQuizQuestion();
@@ -4769,83 +4855,153 @@ function updateQuizHeader() {
     document.getElementById('quizScoreHeader').innerText = `Quiz XP: ${quizXP}`;
 }
 
+// 3. Frage generieren (Router)
 function nextQuizQuestion() {
     // UI Reset
     isQuizLocked = false;
     document.getElementById('quizNextBtn').style.display = 'none';
     const qBox = document.getElementById('quizQuestionBox');
     const oBox = document.getElementById('quizOptionsBox');
+    
+    // Grid Reset (falls vorher Lie-Mode war)
+    oBox.className = 'quiz-options-grid'; 
     oBox.innerHTML = '';
     qBox.innerHTML = '<div class="loader-spinner" style="width:20px; height:20px; border-width:2px;"></div>';
 
-    // 1. Geeigneten Fakt finden (Muss Tiernamen enthalten)
-    // Wir versuchen es max 50x, sonst Abbruch (Schutz vor Endlosschleife)
-    let candidate = null;
-    let attempts = 0;
-    
-    while (!candidate && attempts < 50) {
-        const rand = allGlobalFacts[Math.floor(Math.random() * allGlobalFacts.length)];
-        // Check: Enthält der Text den Tiernamen? (Case Insensitive)
-        if (rand.text.toLowerCase().includes(rand.animal.toLowerCase())) {
-            candidate = rand;
-        }
-        attempts++;
+    // Modus entscheiden (bei Mixed wird gewürfelt)
+    let currentRoundMode = activeQuizMode;
+    if (activeQuizMode === 'mixed') {
+        currentRoundMode = Math.random() < 0.5 ? 'cloze' : 'lie';
     }
 
-    if (!candidate) {
-        qBox.innerText = "Keine geeignete Frage gefunden. Versuch's nochmal!";
-        return;
+    // Passende Funktion aufrufen
+    if (currentRoundMode === 'lie') {
+        renderLieDetector(qBox, oBox);
+    } else {
+        renderClozeTest(qBox, oBox);
     }
+}
 
-    currentQuizAnswer = candidate.animal;
+// --- MODUS A: LÜCKENTEXT (CLOZE) ---
+function renderClozeTest(qBox, oBox) {
+    const candidate = findValidFact();
+    if (!candidate) { qBox.innerText = "Fehler: Keine Fragen mehr."; return; }
 
-    // 2. Text zensieren (Case Insensitive Replace)
-    // Wir nutzen Regex, um das Wort überall zu finden und Formatierung zu erhalten
+    currentQuizAnswer = candidate.animal; // Lösung ist der Name
+
+    // Text zensieren
     const regex = new RegExp(candidate.animal, "gi");
     const questionText = candidate.text.replace(regex, "___________");
-    qBox.innerText = `"${questionText}"`;
+    qBox.innerHTML = `<div style="font-size:12px;opacity:0.6;margin-bottom:5px;text-transform:uppercase;">🧩 Welches Tier passt?</div>"${questionText}"`;
 
-    // 3. Falsche Antworten generieren
+    // Falsche Antworten
     const wrongs = new Set();
     while (wrongs.size < 2) {
         const w = allGlobalFacts[Math.floor(Math.random() * allGlobalFacts.length)].animal;
         if (w !== candidate.animal) wrongs.add(w);
     }
 
-    // 4. Mischen
-    const options = [candidate.animal, ...Array.from(wrongs)];
-    options.sort(() => 0.5 - Math.random());
+    const options = [candidate.animal, ...Array.from(wrongs)].sort(() => 0.5 - Math.random());
 
-    // 5. Buttons rendern
     options.forEach(opt => {
         const btn = document.createElement('div');
         btn.className = 'quiz-btn';
         btn.innerText = opt;
-        btn.onclick = () => solveQuiz(btn, opt);
+        // Wir übergeben 'cloze' als Typ
+        btn.onclick = () => solveQuiz(btn, opt, 'cloze');
         oBox.appendChild(btn);
     });
 }
 
-function solveQuiz(btnElement, selectedAnswer) {
+// --- MODUS B: LÜGENDETEKTOR (TRUE/FALSE) ---
+function renderLieDetector(qBox, oBox) {
+    const candidate = findValidFact();
+    if (!candidate) { qBox.innerText = "Fehler: Keine Fragen mehr."; return; }
+
+    // Münzwurf: Zeigen wir das richtige oder ein falsches Tier?
+    const isTrueStatement = Math.random() < 0.5;
+    currentQuizAnswer = isTrueStatement; // Lösung ist Boolean
+
+    let displayAnimal = candidate.animal;
+    let displayIcon = candidate.icon;
+
+    if (!isTrueStatement) {
+        // Wir brauchen ein FALSCHES Tier
+        let fake = null;
+        while (!fake || fake.animal === candidate.animal) {
+            fake = allGlobalFacts[Math.floor(Math.random() * allGlobalFacts.length)];
+        }
+        displayAnimal = fake.animal;
+        displayIcon = fake.icon;
+    }
+
+    // Text zensieren (damit der Name im Text nicht verrät, dass es falsch ist!)
+    // Wir ersetzen den ECHTEN Namen im Text durch "Dieses Tier"
+    const regex = new RegExp(candidate.animal, "gi");
+    const cleanText = candidate.text.replace(regex, "dieses Tier");
+
+    qBox.innerHTML = `
+        <div style="font-size:12px;opacity:0.6;margin-bottom:10px;text-transform:uppercase;">🤥 Wahr oder Quatsch?</div>
+        <div style="font-size:40px;margin-bottom:5px;">${displayIcon}</div>
+        <div style="font-weight:900;margin-bottom:10px;color:var(--accent);">${displayAnimal}</div>
+        "${cleanText}"
+    `;
+
+    // Buttons (Layout ändern)
+    oBox.classList.add('lie-mode');
+
+    // Wahr Button
+    const btnTrue = document.createElement('div');
+    btnTrue.className = 'quiz-btn';
+    btnTrue.innerHTML = '<span style="font-size:24px">✅</span> WAHR';
+    btnTrue.onclick = () => solveQuiz(btnTrue, true, 'lie');
+    oBox.appendChild(btnTrue);
+
+    // Falsch Button
+    const btnFalse = document.createElement('div');
+    btnFalse.className = 'quiz-btn';
+    btnFalse.innerHTML = '<span style="font-size:24px">❌</span> QUATSCH';
+    btnFalse.onclick = () => solveQuiz(btnFalse, false, 'lie');
+    oBox.appendChild(btnFalse);
+}
+
+// Helper: Findet einen Fakt, der den Tiernamen enthält
+function findValidFact() {
+    let candidate = null;
+    let attempts = 0;
+    while (!candidate && attempts < 50) {
+        const rand = allGlobalFacts[Math.floor(Math.random() * allGlobalFacts.length)];
+        if (rand.text.toLowerCase().includes(rand.animal.toLowerCase())) {
+            candidate = rand;
+        }
+        attempts++;
+    }
+    return candidate;
+}
+
+// 4. Auflösung
+function solveQuiz(btnElement, userChoice, mode) {
     if (isQuizLocked) return;
     isQuizLocked = true;
 
-    const isCorrect = (selectedAnswer === currentQuizAnswer);
+    // Check Logic
+    const isCorrect = (userChoice === currentQuizAnswer);
     
     if (isCorrect) {
         // RICHTIG
         btnElement.classList.add('correct');
-        btnElement.innerHTML = `✅ ${selectedAnswer}`;
         playSound('pop');
         
-        // XP Belohnung
+        // XP
         const reward = 40;
         quizXP += reward;
         localStorage.setItem('quizXP', quizXP);
         updateQuizHeader();
-        showErrorToast(`Richtig! +${reward} XP`, true);
         
-        // Konfetti
+        // Feedback Text je nach Modus
+        const msg = mode === 'lie' ? (userChoice ? "Stimmt genau!" : "Gut erkannt, das war gelogen!") : "Richtig!";
+        showErrorToast(`${msg} +${reward} XP`, true);
+        
         if(typeof spawnParticle === 'function') {
             const rect = btnElement.getBoundingClientRect();
             spawnParticle(rect.left + rect.width/2, rect.top, "🎉");
@@ -4853,22 +5009,27 @@ function solveQuiz(btnElement, selectedAnswer) {
     } else {
         // FALSCH
         btnElement.classList.add('wrong');
-        btnElement.innerHTML = `❌ ${selectedAnswer}`;
         if(navigator.vibrate) navigator.vibrate(200);
         
-        // Richtige Antwort zeigen
-        const buttons = document.querySelectorAll('.quiz-btn');
-        buttons.forEach(b => {
-            if (b.innerText === currentQuizAnswer) {
-                b.classList.add('correct'); // Grün markieren
-                b.style.opacity = '1';
-            }
-        });
+        // Lösung anzeigen
+        if (mode === 'cloze') {
+            // Bei Cloze: Richtigen Button grün machen
+            document.querySelectorAll('.quiz-btn').forEach(b => {
+                if (b.innerText === currentQuizAnswer) {
+                    b.classList.add('correct');
+                    b.style.opacity = '1';
+                }
+            });
+        } else {
+            // Bei Lie: Einfach Text anzeigen
+            showErrorToast(currentQuizAnswer ? "Das war eigentlich wahr!" : "Das war eigentlich Quatsch!");
+        }
     }
 
-    // Weiter-Button zeigen
     document.getElementById('quizNextBtn').style.display = 'block';
 }
+/* === END QUIZ ENGINE === */
+
 
 // === 1. SWIPE GESTURE HANDLER (FIXED VERSION) ===
 function initSwipeGestures() {
