@@ -4659,7 +4659,7 @@ body:not(.dark) .nav-island {
  * Fixes: Disabled Swipe for Details View
  */
 
-// === 1. SWIPE GESTURE HANDLER ===
+// === 1. SWIPE GESTURE HANDLER (FIXED VERSION) ===
 function initSwipeGestures() {
     let startY = 0;
     let currentModalContent = null;
@@ -4668,15 +4668,20 @@ function initSwipeGestures() {
         const handle = e.target.closest('.sheet-handle');
         const content = e.target.closest('.modal-content');
         
-        // HIER WIRD DIE ÄNDERUNG GEMACHT:
-        // Wenn das Modal die ID 'detailModal' hat, brechen wir ab (kein Swipe)
-        if (content && content.parentElement.id === 'detailModal') return;
+        if (!content) return;
 
-        // Only allow swipe if touching handle OR touching content at the very top (scrolled up)
-        if (content && (handle || content.scrollTop === 0)) {
+        // === HIER IST DER FIX ===
+        // Diese Modals dürfen NICHT gewischt werden (nur Scrollen erlaubt):
+        const lockedModals = ['detailModal', 'libraryModal', 'flavorModal'];
+        
+        // Wenn wir in einem dieser Modals sind -> Abbrechen!
+        if (lockedModals.includes(content.parentElement.id)) return;
+        // ========================
+
+        // Für alle anderen Modals (z.B. Quick Note): Swipe erlaubt
+        if (handle || content.scrollTop === 0) {
             currentModalContent = content;
             startY = e.touches[0].clientY;
-            // Remove transition for instant drag response
             currentModalContent.style.transition = 'none';
         }
     }, {passive: true});
@@ -4686,9 +4691,8 @@ function initSwipeGestures() {
         const currentY = e.touches[0].clientY;
         const delta = currentY - startY;
 
-        // Only move if dragging DOWN
         if (delta > 0) {
-            e.preventDefault(); // Prevent scrolling body
+            e.preventDefault(); 
             currentModalContent.style.transform = `translateY(${delta}px)`;
         }
     }, {passive: false});
@@ -4697,25 +4701,21 @@ function initSwipeGestures() {
         if (!currentModalContent) return;
         const delta = e.changedTouches[0].clientY - startY;
 
-        // Restore transition for smooth bounce back or exit
         currentModalContent.style.transition = 'transform 0.3s ease-out';
 
-        if (delta > 120) { // Threshold to close
+        if (delta > 120) { 
             const modalId = currentModalContent.parentElement.id;
             closeModal(modalId);
-            // Reset transform AFTER animation closes it (timeout matches css transition)
             setTimeout(() => { 
                 currentModalContent.style.transform = ''; 
                 currentModalContent.style.transition = '';
             }, 300);
         } else {
-            // Bounce back
             currentModalContent.style.transform = '';
         }
         currentModalContent = null;
     });
 }
-
 // === 2. INDEXED DB WRAPPER (Async Image Storage) ===
 const DB_NAME = 'TierAppDB';
 const STORE_IMGS = 'images';
