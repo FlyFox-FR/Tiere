@@ -1,6 +1,5 @@
 [
   {
-    "id": "f_001",
     "animal": "Rotfuchs",
     "icon": "🦊",
     "text": "Füchse nutzen das Magnetfeld der Erde, um bei der Jagd im Schnee die Entfernung zur Beute exakt zu bestimmen.",
@@ -8,7 +7,6 @@
     "source": "NatGeo"
   },
   {
-    "id": "f_002",
     "animal": "Honigbiene",
     "icon": "🐝",
     "text": "Bienen kommunizieren die Entfernung und Richtung von Futterquellen durch einen speziellen 'Schwänzeltanz'.",
@@ -16,7 +14,6 @@
     "source": "Biologie heute"
   },
   {
-    "id": "f_003",
     "animal": "Blauwal",
     "icon": "🐋",
     "text": "Das Herz eines Blauwals ist so groß wie ein VW Käfer und man könnte durch die Aorta schwimmen.",
@@ -24,7 +21,6 @@
     "source": "Meeresinstitut"
   },
   {
-    "id": "f_004",
     "animal": "Oktopus",
     "icon": "🐙",
     "text": "Kraken haben drei Herzen und blaues Blut. Zwei Herzen pumpen Blut zu den Kiemen, eins zum Rest des Körpers.",
@@ -32,7 +28,6 @@
     "source": "DeepSea Facts"
   },
   {
-    "id": "f_005",
     "animal": "Faultier",
     "icon": "🦥",
     "text": "Faultiere kommen nur einmal pro Woche vom Baum herunter, um auf die Toilette zu gehen. Ein riskantes Manöver!",
@@ -40,7 +35,6 @@
     "source": "Rainforest Alliance"
   },
   {
-    "id": "f_006",
     "animal": "Rotfuchs",
     "icon": "🦊",
     "text": "Füchse sind Einzelgänger, die ihre Beute oft vergraben, um sie später zu fressen (Caching).",
