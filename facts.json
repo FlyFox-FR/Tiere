@@ -1,5 +1,355 @@
 [
     {
+    "animal": "Känguru",
+    "icon": "🦘",
+    "text": "Der Beutel eines Kängurus öffnet sich nach hinten, damit beim Hüpfen und Graben keine Erde ins Gesicht des Babys fliegt.",
+    "tags": ["Praktisch", "Design", "Australien"],
+    "source": "Wild Life"
+  },
+  {
+    "animal": "Strauß",
+    "icon": "🦁",
+    "text": "Ein Strauß kann brüllen wie ein Löwe. Das Geräusch ist tief und vibrierend, wird aber oft mit Raubtieren verwechselt.",
+    "tags": ["Sound", "Verwirrung", "Vögel"],
+    "source": "Safari Guide"
+  },
+  {
+    "animal": "Garnele",
+    "icon": "🦐",
+    "text": "Das Herz einer Garnele befindet sich in ihrem Kopf.",
+    "tags": ["Anatomie", "Kurios", "Meer"],
+    "source": "Meeresbiologie"
+  },
+  {
+    "animal": "Elefant",
+    "icon": "🤰",
+    "text": "Elefanten sind 22 Monate lang schwanger – das ist die längste Tragzeit aller Landsäugetiere.",
+    "tags": ["Geduld", "Rekord", "Afrika"],
+    "source": "Zoologie"
+  },
+  {
+    "animal": "Clownfisch",
+    "icon": "🐠",
+    "text": "Alle Clownfische werden als Männchen geboren. Wenn das dominante Weibchen stirbt, wandelt sich das stärkste Männchen zur Frau um.",
+    "tags": ["Verwandlung", "Biologie", "Meer"],
+    "source": "Riff Forschung"
+  },
+  {
+    "animal": "Kuh",
+    "icon": "🐄",
+    "text": "Kühe können Treppen zwar hochlaufen, aber physikalisch nicht wieder runter, weil ihre Knie sich nicht richtig beugen lassen.",
+    "tags": ["Lustig", "Fail", "Bauernhof"],
+    "source": "Veterinär Wissen"
+  },
+  {
+    "animal": "Taube",
+    "icon": "🍼",
+    "text": "Tauben produzieren eine Art 'Milch' im Kropf, um ihre Küken zu füttern. Das können sonst nur Flamingos und Pinguine.",
+    "tags": ["Säuger-Neid", "Vögel", "Stadt"],
+    "source": "Ornithologie"
+  },
+  {
+    "animal": "Koboldmaki",
+    "icon": "👀",
+    "text": "Die Augen eines Koboldmakis sind größer als sein Gehirn. Er kann sie nicht bewegen, dafür aber den Kopf um 180 Grad drehen.",
+    "tags": ["Gruselig", "Anatomie", "Nacht"],
+    "source": "Primaten Zentrum"
+  },
+  {
+    "animal": "Spinne",
+    "icon": "♻️",
+    "text": "Viele Spinnen fressen am Morgen ihr eigenes Netz auf, um die Proteine zu recyceln, und bauen abends ein neues.",
+    "tags": ["Nachhaltig", "Essen", "Insekten"],
+    "source": "Spinnen Forschung"
+  },
+  {
+    "animal": "Echse",
+    "icon": "🩸",
+    "text": "Die Krötenechse kann zur Verteidigung gezielt Blut aus ihren Augen spritzen, um Angreifer zu verwirren.",
+    "tags": ["Ekelig", "Metal", "Wüste"],
+    "source": "Herpetologie"
+  },
+  {
+    "animal": "Basilisk",
+    "icon": "🦎",
+    "text": "Der Basilisk (eine Echse) kann so schnell rennen, dass er kurzzeitig über Wasser laufen kann. Man nennt ihn daher 'Jesus-Echse'.",
+    "tags": ["Magisch", "Speed", "Dschungel"],
+    "source": "Physik Natur"
+  },
+  {
+    "animal": "Leierschwanz",
+    "icon": "🎤",
+    "text": "Der Leierschwanz (Vogel) ist der beste Imitator der Welt. Er kann Kettensägen, Kameraverschlüsse und Autoalarmanlagen perfekt nachahmen.",
+    "tags": ["Sound", "Talent", "Australien"],
+    "source": "BBC Earth"
+  },
+  {
+    "animal": "Mistkäfer",
+    "icon": "💪",
+    "text": "Der Mistkäfer ist das stärkste Tier der Welt (relativ zur Größe). Er kann das 1.141-fache seines Körpergewichts ziehen.",
+    "tags": ["Kraft", "Insekten", "Rekord"],
+    "source": "Insekten Studie"
+  },
+  {
+    "animal": "Krähe",
+    "icon": "💀",
+    "text": "Krähen halten 'Beerdigungen' ab. Sie versammeln sich um tote Artgenossen, nicht um zu trauern, sondern um herauszufinden, was die Gefahr war.",
+    "tags": ["Gruselig", "Schlau", "Vögel"],
+    "source": "Verhaltensbio"
+  },
+  {
+    "animal": "Maulwurf",
+    "icon": "👃",
+    "text": "Maulwürfe können 'in Stereo' riechen. Sie wissen genau, ob ein Geruch von links oder rechts kommt.",
+    "tags": ["Sinne", "Garten", "Navigation"],
+    "source": "Sinnesforschung"
+  },
+  {
+    "animal": "Seestern",
+    "icon": "⭐",
+    "text": "Wenn ein Seestern einen Arm verliert, wächst er nach. Manchmal wächst aus dem abgetrennten Arm sogar ein komplett neuer Seestern.",
+    "tags": ["Zombie", "Wunder", "Meer"],
+    "source": "Meeresbiologie"
+  },
+  {
+    "animal": "Schnecke",
+    "icon": "🐌",
+    "text": "Schnecken haben vier Nasen: Zwei Fühler zum Riechen und zwei weitere zum Tasten und Schmecken.",
+    "tags": ["Anatomie", "Garten", "Sinne"],
+    "source": "Biologie"
+  },
+  {
+    "animal": "Nilpferd",
+    "icon": "🏃",
+    "text": "Obwohl sie plump aussehen, können Nilpferde an Land schneller rennen als ein Mensch (bis zu 30 km/h).",
+    "tags": ["Gefahr", "Speed", "Afrika"],
+    "source": "Safari Fakten"
+  },
+  {
+    "animal": "Katze",
+    "icon": "💧",
+    "text": "Das Schlüsselbein von Katzen ist nicht mit dem Skelett verbunden ('schwimmend'). Deshalb passen sie durch jede Lücke, durch die ihr Kopf passt.",
+    "tags": ["Liquid", "Anatomie", "Haustier"],
+    "source": "Veterinär Medizin"
+  },
+  {
+    "animal": "Goldfisch",
+    "icon": "🧠",
+    "text": "Goldfische haben keineswegs ein 3-Sekunden-Gedächtnis. Sie können sich Dinge monatelang merken.",
+    "tags": ["Mythos", "Intelligenz", "Wasser"],
+    "source": "Verhaltensstudie"
+  },
+  {
+    "animal": "Schmetterling",
+    "icon": "🌡️",
+    "text": "Schmetterlinge können nicht fliegen, wenn ihnen zu kalt ist. Sie brauchen eine Körpertemperatur von etwa 30°C.",
+    "tags": ["Sonne", "Flug", "Insekten"],
+    "source": "Entomologie"
+  },
+  {
+    "animal": "Krokodil",
+    "icon": "🦷",
+    "text": "Krokodile können ihre Zunge nicht herausstrecken, da sie am Gaumen festgewachsen ist.",
+    "tags": ["Anatomie", "Reptilien", "Wissen"],
+    "source": "Zoo Info"
+  },
+  {
+    "animal": "Ratte",
+    "icon": "🚀",
+    "text": "Ratten vermehren sich so schnell, dass ein einziges Paar theoretisch in einem Jahr 15.000 Nachkommen haben könnte.",
+    "tags": ["Menge", "Mathe", "Nager"],
+    "source": "Populationsdynamik"
+  },
+  {
+    "animal": "Eule",
+    "icon": "🤫",
+    "text": "Eulen sind die leisesten Vögel der Welt. Ihre Federn haben spezielle Fransen, die den Schall beim Fliegen schlucken.",
+    "tags": ["Ninja", "Jagd", "Vögel"],
+    "source": "Bionik"
+  },
+  {
+    "animal": "Ameisenbär",
+    "icon": "👅",
+    "text": "Die Zunge eines Ameisenbären ist ca. 60 cm lang und bewegt sich bis zu 160 Mal pro Minute rein und raus.",
+    "tags": ["Speed", "Anatomie", "Südamerika"],
+    "source": "Wild Life"
+  },
+  {
+    "animal": "Hai",
+    "icon": "⏳",
+    "text": "Einige weibliche Haie können sich ohne Männchen fortpflanzen (Parthenogenese), wenn kein Partner in der Nähe ist.",
+    "tags": ["Wunder", "Evolution", "Meer"],
+    "source": "Genetik"
+  },
+  {
+    "animal": "Fledermaus",
+    "icon": "👶",
+    "text": "Fledermäuse bringen ihre Babys kopfüber hängend zur Welt und fangen sie mit ihren Flügeln auf.",
+    "tags": ["Akrobatik", "Geburt", "Nacht"],
+    "source": "Fledermaus Schutz"
+  },
+  {
+    "animal": "Rentier",
+    "icon": "🦴",
+    "text": "Rentiere sind die einzige Hirschart, bei der auch die Weibchen ein Geweih tragen.",
+    "tags": ["Gleichberechtigung", "Winter", "Arktis"],
+    "source": "Nordische Natur"
+  },
+  {
+    "animal": "Kolibri",
+    "icon": "🍫",
+    "text": "Kolibris haben einen extrem schnellen Stoffwechsel. Sie müssen täglich das Doppelte ihres Gewichts an Nektar trinken, um nicht zu verhungern.",
+    "tags": ["Hunger", "Energie", "Vögel"],
+    "source": "Ornithologie"
+  },
+  {
+    "animal": "Qualle",
+    "icon": "☀️",
+    "text": "Quallen bestehen zu etwa 95% bis 98% aus Wasser. Wenn sie am Strand stranden, verdunsten sie fast vollständig.",
+    "tags": ["Chemie", "Meer", "Kurios"],
+    "source": "Meereskunde"
+  },
+  {
+    "animal": "Stinktier",
+    "icon": "🎯",
+    "text": "Ein Stinktier kann sein stinkendes Sekret bis zu 3 Meter weit und extrem zielgenau spritzen.",
+    "tags": ["Waffe", "Ekelig", "Wald"],
+    "source": "Wildtier Schutz"
+  },
+  {
+    "animal": "Löwe",
+    "icon": "💤",
+    "text": "Löwen sind extrem faul. Sie schlafen oder ruhen bis zu 20 Stunden am Tag und jagen nur kurz.",
+    "tags": ["Chill", "Katzen", "Afrika"],
+    "source": "Safari Beobachtung"
+  },
+  {
+    "animal": "Libelle",
+    "icon": "👀",
+    "text": "Die Augen einer Libelle bestehen aus bis zu 30.000 einzelnen Linsen. Sie sehen fast 360 Grad um sich herum.",
+    "tags": ["Sicht", "Anatomie", "Insekten"],
+    "source": "Biologie"
+  },
+  {
+    "animal": "Schwan",
+    "icon": "😡",
+    "text": "Schwäne können extrem aggressiv sein und sind stark genug, um einem Menschen mit einem Flügelschlag den Arm zu brechen (theoretisch).",
+    "tags": ["Gefahr", "Vögel", "Park"],
+    "source": "Tier Verhalten"
+  },
+  {
+    "animal": "Komodowaran",
+    "icon": "🦠",
+    "text": "Der Komodowaran tötet seine Beute nicht durch den Biss selbst, sondern durch Gift und extrem aggressive Bakterien im Speichel.",
+    "tags": ["Gefahr", "Ekelig", "Reptilien"],
+    "source": "Insel Forschung"
+  },
+  {
+    "animal": "Fuchs",
+    "icon": "🐾",
+    "text": "Füchse können ihre Krallen teilweise einziehen, ähnlich wie Katzen. Sie sind die 'Katzen' unter den Hunden.",
+    "tags": ["Vergleich", "Anatomie", "Wald"],
+    "source": "Zoologie"
+  },
+  {
+    "animal": "Otter",
+    "icon": "💩",
+    "text": "Otter markieren ihr Revier mit Kot, der seltsamerweise nach Veilchen oder frischem Heu riecht.",
+    "tags": ["Geruch", "Kurios", "Wasser"],
+    "source": "Naturführer"
+  },
+  {
+    "animal": "Papagei",
+    "icon": "👵",
+    "text": "Einige Papageienarten (wie Kakadus) können über 80 Jahre alt werden und überleben oft ihre Besitzer.",
+    "tags": ["Alter", "Haustier", "Vögel"],
+    "source": "Vogelpflege"
+  },
+  {
+    "animal": "Erdmännchen",
+    "icon": "🏫",
+    "text": "Erdmännchen betreiben Schulen. Erwachsene bringen den Jungen schrittweise bei, wie man giftige Skorpione jagt, ohne gestochen zu werden.",
+    "tags": ["Bildung", "Sozial", "Afrika"],
+    "source": "Verhaltensforschung"
+  },
+  {
+    "animal": "Zebra",
+    "icon": "🦓",
+    "text": "Zebra-Streifen dienen als Insektenschutz. Das Muster verwirrt Tsetsefliegen, sodass sie seltener landen und stechen.",
+    "tags": ["Tarnung", "Nützlich", "Afrika"],
+    "source": "Wissenschaft"
+  },
+  {
+    "animal": "Oktopus",
+    "icon": "🩸",
+    "text": "Das Blut von Oktopussen ist blau, weil es auf Kupfer (Hämocyanin) basiert, nicht auf Eisen wie bei uns.",
+    "tags": ["Chemie", "Alien", "Meer"],
+    "source": "Meeresbiologie"
+  },
+  {
+    "animal": "Gecko",
+    "icon": "👅",
+    "text": "Geckos haben keine Augenlider. Um ihre Augen zu befeuchten, lecken sie mit ihrer Zunge über den Augapfel.",
+    "tags": ["Anatomie", "Ekelig", "Reptilien"],
+    "source": "Reptilien Welt"
+  },
+  {
+    "animal": "Kugelfisch",
+    "icon": "🐡",
+    "text": "Kugelfische sind extrem giftig. Ein einziger Fisch enthält genug Tetrodotoxin, um 30 erwachsene Menschen zu töten.",
+    "tags": ["Gefahr", "Gift", "Meer"],
+    "source": "Toxikologie"
+  },
+  {
+    "animal": "Schneeleopard",
+    "icon": "🐆",
+    "text": "Schneeleoparden nutzen ihren extrem langen, dicken Schwanz im Schlaf als Schal, um ihre Nase vor Kälte zu schützen.",
+    "tags": ["Kuschelig", "Winter", "Katzen"],
+    "source": "Gebirgsforschung"
+  },
+  {
+    "animal": "Marienkäfer",
+    "icon": "🐞",
+    "text": "Ein Marienkäfer kann in seinem Leben bis zu 5.000 Blattläuse fressen. Sie sind die besten Freunde des Gärtners.",
+    "tags": ["Hunger", "Garten", "Insekten"],
+    "source": "Gartenbau"
+  },
+  {
+    "animal": "Koala",
+    "icon": "🐨",
+    "text": "Koalas schlafen bis zu 22 Stunden am Tag, weil Eukalyptusblätter fast keine Energie liefern und schwer verdaulich sind.",
+    "tags": ["Müde", "Ernährung", "Australien"],
+    "source": "Bio Fakten"
+  },
+  {
+    "animal": "Tigerhai",
+    "icon": "🗑️",
+    "text": "Tigerhaie fressen alles. In ihren Mägen wurden schon Nummernschilder, Reifen und alte Ritterrüstungen gefunden.",
+    "tags": ["Hunger", "Müllschlucker", "Meer"],
+    "source": "Hai Magen"
+  },
+  {
+    "animal": "Waschbär",
+    "icon": "🏙️",
+    "text": "Waschbären haben sich perfekt an Städte angepasst. Sie sind dort oft intelligenter und gesünder als ihre Artgenossen im Wald.",
+    "tags": ["Evolution", "Stadt", "Schlau"],
+    "source": "Urban Ecology"
+  },
+  {
+    "animal": "Alpaka",
+    "icon": "💇",
+    "text": "Alpakas können nicht schwitzen (außer an den Füßen). Deshalb müssen sie im Sommer geschoren werden, sonst erleiden sie einen Hitzschlag.",
+    "tags": ["Pflege", "Sommer", "Haustier"],
+    "source": "Farm Wissen"
+  },
+  {
+    "animal": "Wanderfalke",
+    "icon": "🚀",
+    "text": "Im Sturzflug erreicht der Wanderfalke über 320 km/h. Der Aufprall auf die Beute ist so hart, dass diese sofort tot ist.",
+    "tags": ["Speed", "Jagd", "Vögel"],
+    "source": "Physik"
+  },
+    {
     "animal": "Quokka",
     "icon": "🐻",
     "text": "Quokkas haben keine natürlichen Feinde auf ihrer Insel und haben deshalb verlernt, Angst zu haben. Sie lächeln immer.",
