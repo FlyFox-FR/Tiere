@@ -3751,6 +3751,37 @@ body:not(.dark) .nav-island {
     margin-left: 5px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Kleiner Schatten */
 }
+/* === FLAVOR SEARCH STYLES === */
+.flavor-scroll-area {
+    max-height: 250px;       /* Maximale Höhe */
+    overflow-y: auto;        /* Scrollen bei Bedarf */
+    padding: 5px;            /* Etwas Platz für Fokus-Rahmen */
+    
+    /* Scrollbar Design */
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) transparent;
+}
+
+/* Design für die Tag-Buttons im Picker */
+.flavor-picker-item {
+    background: var(--card); 
+    border: 1px solid var(--btn);
+    padding: 8px 12px; 
+    border-radius: 12px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; 
+    display: flex; align-items: center; justify-content: space-between;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+/* Wenn ausgewählt */
+.flavor-picker-item.selected {
+    background: rgba(33, 150, 243, 0.15); /* Leicht Blau */
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 800;
+}
 
 </style>
 </head>
@@ -4589,31 +4620,36 @@ body:not(.dark) .nav-island {
   </div>
 </div>
 
-<!-- FLAVOR MODAL (THEMEN MIXER - V2.0) -->
+<!-- FLAVOR MODAL (TAG SEARCH ENGINE) -->
 <div id="flavorModal" class="modal">
   <div class="modal-content">
     <div class="sheet-handle"></div>
     <div class="close-btn" onclick="closeModal('flavorModal')">✕</div>
     
-    <h3>🎛️ Themen-Mixer</h3>
+    <h3>🎛️ Themen-Filter</h3>
     <p style="opacity:0.7; font-size:13px; margin-bottom:15px;">
-        Bestimme, welche Fakten auf deinem Dashboard erscheinen.
+        Suche und wähle Themen, die du im Widget sehen möchtest.
     </p>
 
-    <!-- Aktive Filter -->
-    <div class="flavor-section-title">DEINE AUSWAHL</div>
-    <div id="flavorActiveList" class="flavor-grid" style="min-height:40px; margin-bottom:10px;">
-        <div style="font-size:13px; opacity:0.5; padding:5px;">Keine Filter aktiv (Zeige alles)</div>
+    <!-- 1. Aktive Filter (Schnellansicht) -->
+    <div id="flavorActiveWrapper" style="display:none; margin-bottom:15px;">
+        <div class="flavor-section-title">DEINE AUSWAHL</div>
+        <div id="flavorActiveList" class="flavor-grid"></div>
     </div>
 
-    <!-- Vorschläge -->
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
-        <div class="flavor-section-title" style="margin:0;">VORSCHLÄGE</div>
-        <div onclick="renderFlavorSuggestions()" style="font-size:20px; cursor:pointer;" title="Neu würfeln">🎲</div>
+    <!-- 2. Suche -->
+    <div class="search-fusion-wrapper" style="margin-bottom:15px; height:44px;">
+        <input id="flavorSearchInput" class="sf-input" placeholder="Thema suchen..." oninput="safeRun(renderFlavorAllList)">
+        <div style="padding-right:12px; opacity:0.5;">🔍</div>
     </div>
-    <div id="flavorSuggestList" class="flavor-grid" style="margin-top:10px;"></div>
 
-    <button onclick="saveFlavorSettings()" style="width:100%; background:var(--accent); color:#fff; padding:15px; margin-top:25px; border-radius:16px;">Fertig</button>
+    <!-- 3. Alle Tags Liste (Scrollbar) -->
+    <div class="flavor-section-title">ALLE THEMEN</div>
+    <div id="flavorListContainer" class="flavor-grid flavor-scroll-area">
+        <!-- Wird per JS gefüllt -->
+    </div>
+
+    <button onclick="saveFlavorSettings()" style="width:100%; background:var(--accent); color:#fff; padding:15px; margin-top:20px; border-radius:16px;">Speichern & Anwenden</button>
   </div>
 </div>
 
@@ -8975,7 +9011,7 @@ async function loadRandomFact() {
 function openFactMenu(e) {
     if(e) e.stopPropagation();
     const items = [
-        { label: '🔍 Weltweit suchen', icon: '🌍', action: 'openLibraryModal()' },
+        { label: '🔍 Fakten durchsuchen', icon: '🌍', action: 'openLibraryModal()' },
         { label: '🎛️ Themen-Mixer', icon: '🎨', action: 'openFlavorModal()' }
     ];
     let x = e.clientX - 180; 
@@ -9225,55 +9261,114 @@ function toggleFromLib(factText, btnEl) {
     checkHeartStatus(); 
 }
 
-// 5. FLAVOR / THEMEN MIXER
+// 5. FLAVOR / TAG SEARCH ENGINE
 function openFlavorModal() {
-    renderFlavorSuggestions();
-    renderActiveFlavor();
+    // Input leeren
+    const input = document.getElementById('flavorSearchInput');
+    if(input) input.value = '';
+    
+    renderFlavorAllList(); // Liste aller Tags rendern
+    renderActiveFlavor();  // Aktive Chips rendern
+    
     document.getElementById('flavorModal').style.display = 'block';
 }
 
+// Rendert die "Chips" oben (Nur die ausgewählten)
 function renderActiveFlavor() {
     const list = document.getElementById('flavorActiveList');
+    const wrapper = document.getElementById('flavorActiveWrapper');
+    
     list.innerHTML = '';
     
     if (userFlavorTags.length === 0) {
-        list.innerHTML = '<div style="font-size:13px; opacity:0.5; padding:5px;">Keine Filter aktiv (Zeige alles)</div>';
+        wrapper.style.display = 'none'; // Ausblenden wenn leer
         return;
     }
+    
+    wrapper.style.display = 'block';
 
     userFlavorTags.forEach(tag => {
         const el = document.createElement('div');
         el.className = 'flavor-tag active';
         el.innerHTML = `${tag} <span>✕</span>`;
         el.onclick = () => {
-            userFlavorTags = userFlavorTags.filter(t => t !== tag);
-            renderActiveFlavor();
+            toggleFlavorTag(tag); // Abwählen
         };
         list.appendChild(el);
     });
 }
 
-function renderFlavorSuggestions() {
-    const list = document.getElementById('flavorSuggestList');
-    list.innerHTML = '';
+// Rendert die große, durchsuchbare Liste unten
+function renderFlavorAllList() {
+    const container = document.getElementById('flavorListContainer');
+    const query = document.getElementById('flavorSearchInput').value.toLowerCase();
+    container.innerHTML = '';
 
-    const allTags = new Set();
-    allGlobalFacts.forEach(f => { if(f.tags) f.tags.forEach(t => allTags.add(t)); });
+    // 1. Alle Tags aus der DB sammeln
+    const tagMap = new Map(); // Tag -> Anzahl
     
-    let candidates = Array.from(allTags).filter(t => !userFlavorTags.includes(t));
-    candidates = candidates.sort(() => 0.5 - Math.random()).slice(0, 6);
-
-    candidates.forEach(tag => {
-        const el = document.createElement('div');
-        el.className = 'flavor-tag';
-        el.innerText = tag;
-        el.onclick = () => {
-            if(!userFlavorTags.includes(tag)) userFlavorTags.push(tag);
-            renderActiveFlavor();
-            renderFlavorSuggestions(); 
-        };
-        list.appendChild(el);
+    allGlobalFacts.forEach(f => {
+        if(f.tags) {
+            f.tags.forEach(t => {
+                const count = tagMap.get(t) || 0;
+                tagMap.set(t, count + 1);
+            });
+        }
     });
+    
+    // 2. Zu Array wandeln & Sortieren (Alphabetisch)
+    let allTags = Array.from(tagMap.keys()).sort();
+
+    // 3. Filtern nach Sucheingabe
+    if(query.length > 0) {
+        allTags = allTags.filter(t => t.toLowerCase().includes(query));
+    }
+
+    if(allTags.length === 0) {
+        container.innerHTML = '<div style="opacity:0.5; padding:10px; width:100%; text-align:center;">Kein Thema gefunden.</div>';
+        return;
+    }
+
+    // 4. Liste bauen
+    allTags.forEach(tag => {
+        const isSelected = userFlavorTags.includes(tag);
+        const count = tagMap.get(tag);
+        
+        const el = document.createElement('div');
+        // Neue Klasse für die Liste
+        el.className = `flavor-picker-item ${isSelected ? 'selected' : ''}`;
+        
+        // Inhalt: Tag-Name + Anzahl
+        el.innerHTML = `
+            <span>${tag}</span>
+            <span style="font-size:10px; opacity:0.6; background:var(--bg); padding:2px 6px; border-radius:8px;">${count}</span>
+        `;
+        
+        el.onclick = () => toggleFlavorTag(tag);
+        container.appendChild(el);
+    });
+}
+
+// Zentrale Toggle Funktion
+function toggleFlavorTag(tag) {
+    if (userFlavorTags.includes(tag)) {
+        userFlavorTags = userFlavorTags.filter(t => t !== tag);
+    } else {
+        userFlavorTags.push(tag);
+    }
+    
+    // UI sofort updaten (beide Listen)
+    renderActiveFlavor();
+    renderFlavorAllList(); 
+}
+
+function saveFlavorSettings() {
+    localStorage.setItem('userFlavorTags', JSON.stringify(userFlavorTags));
+    closeModal('flavorModal');
+    showErrorToast("Filter gespeichert!", true);
+    
+    // Sofort anwenden: Neuen Fakt laden
+    loadRandomFact(); 
 }
 
 function saveFlavorSettings() {
