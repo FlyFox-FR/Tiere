@@ -8190,90 +8190,228 @@ function openQuickSighting() {
     modal.style.display = 'block';
 }
 
-/* === TUTORIAL LOGIC === */
+/* === TUTORIAL LOGIC V3.2 (ULTIMATE JOURNEY) === */
 let currentStep = 0;
+
+// Definition der Tour
 const tourSteps = [
-    { target: null, title: "Willkommen! 👋", text: "Schön, dass du da bist! <b>Tier Ticker</b> ist dein Begleiter für die Natur.<br><br>Ich zeige dir kurz die wichtigsten Funktionen." },
-    { target: '.btn-sighting-large', title: "Schnell-Sichtung", text: "Tippe hier, um sofort ein Tier zu notieren. Du kannst weitere Details hinzufügen." },
-    { target: '#listSearch', title: "Suche & Filter", text: "Finde Tiere schnell wieder oder filtere nach Kategorien (z.B. Vögel)." },
-    { target: '.bottom-nav', title: "Alles im Griff", text: "Hier wechselst du zwischen Liste, Karte, Statistik und Einstellungen." },
-    { target: '.icon-btn-header.info', title: "Hilfe & Infos", text: "Hier findest du dieses Tutorial jederzeit wieder!" }
+    // 1. START (Liste)
+    { 
+        view: 'view-list', 
+        target: null, 
+        title: "Willkommen bei Tier Ticker! 🚀", 
+        text: "Die App ist riesig geworden! <br>Lass uns eine Runde drehen. Ich zeige dir den Workflow." 
+    },
+    // 2. SUCHE
+    { 
+        view: 'view-list',
+        target: '#sfWrapper', 
+        title: "1. Deep Search 🔍", 
+        text: "Tippe einen Tiernamen (z.B. 'Fuchs'), um sofort in den <b>Filter-Modus</b> zu wechseln." 
+    },
+    // 3. ACTION
+    { 
+        view: 'view-list',
+        target: '.nav-main-fab', 
+        title: "2. Schnell-Erfassung ⚡", 
+        text: "Der wichtigste Knopf. Drücke ihn, um eine Sichtung in Sekunden festzuhalten." 
+    },
+    // 4. NAV-BAR (NEU: Übergang)
+    { 
+        view: 'view-list',
+        target: '.nav-island', 
+        title: "3. Die Steuerzentrale 🧭", 
+        text: "Hier unten wechselst du die Ansichten. <br>Wir gehen jetzt mal rüber zu den <b>Statistiken</b>..." 
+    },
+    // 5. STATS -> WIDGET (Mit Force-Load Fix)
+    { 
+        view: 'view-stats', 
+        target: '#factWidget', 
+        title: "4. Dein Wissens-Feed 🧠", 
+        text: "Jeden Tag ein neuer Fakt! <br>Nutze das Herz ❤️ zum Speichern oder die <b>drei Punkte (⋮)</b> für das <b>Quiz</b>." 
+    },
+    // 6. STATS -> SOLAR
+    { 
+        view: 'view-stats',
+        target: '#solarWidget', 
+        title: "5. Astro-Daten ☀️", 
+        text: "Passend zu deinem Standort: Sonnenaufgang, Dämmerung und Tageslicht." 
+    },
+    // 7. MAP -> SLIDER
+    { 
+        view: 'view-map', 
+        target: '.map-slider-container', 
+        title: "6. Zeitreise ⏳", 
+        text: "Schau dir auf der Karte an, wo du im Sommer oder Winter unterwegs warst." 
+    },
+    // 8. ADMIN -> SETTINGS (Oben)
+    { 
+        view: 'view-admin', 
+        target: '.admin-tools-grid', 
+        title: "7. System ⚙️", 
+        text: "Hier oben findest du die Grundeinstellungen und die Hilfe." 
+    },
+    // 9. ADMIN -> BACKUP (NEU: Highlight)
+    // Wir nutzen nth-of-type(3), da es die 3. Karte ist (1. Neu, 2. Orte, 3. Daten)
+    { 
+        view: 'view-admin', 
+        target: '.card-section:nth-of-type(3)', 
+        title: "8. Daten & Sicherheit 💾", 
+        text: "Sehr wichtig! Hier erstellst du <b>Backups</b>. <br>Mach das regelmäßig, damit deine Sammlung sicher ist." 
+    },
+    // 10. ADMIN -> TRASH (NEU: Highlight)
+    { 
+        view: 'view-admin', 
+        target: '#trashSection', 
+        title: "9. Der Papierkorb 🗑️", 
+        text: "Aus Versehen gelöscht? Kein Problem. <br>Hier kannst du Tiere 30 Tage lang wiederherstellen." 
+    }
 ];
 
 function startTutorial(force = false) {
-    if (!force && localStorage.getItem('tutorial_done') === 'true') return;
+    if (!force && localStorage.getItem('tutorial_v3_done') === 'true') return;
+
+    // Alles resetten
     document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
     window.scrollTo({top: 0, behavior: 'smooth'});
+    
     currentStep = 0;
     
-    // UI anzeigen
+    // Overlay sofort zeigen
     document.getElementById('onboardingOverlay').style.display = 'block';
     document.getElementById('onboardingBubble').style.display = 'block';
     
-    setTimeout(() => { showStep(0); }, 100);
+    // Starten
+    processStep(0);
 }
 
-function showStep(index) {
+// Die intelligente Steuerungs-Funktion
+function processStep(index) {
     if (index >= tourSteps.length) { endTutorial(true); return; }
+    
     const step = tourSteps[index];
+    
+    // 1. View Wechsel Logik (Automatisch)
+    if (step.view) {
+        // Nav-Button Mapping: Liste=0, Stats=1, Map=3, Admin=4
+        let btnIndex = 0;
+        if(step.view === 'view-stats') btnIndex = 1;
+        if(step.view === 'view-map') btnIndex = 3;
+        if(step.view === 'view-admin') btnIndex = 4;
+
+        const navBtns = document.querySelectorAll('.nav-item');
+        if(navBtns[btnIndex]) {
+            // Echten Klick simulieren oder View wechseln
+            switchView(step.view, navBtns[btnIndex]);
+        }
+        
+        // SPEZIAL-FIX für Step 5 (Fact Widget):
+        // Das Widget ist oft ausgeblendet (display:none), bis ein Fakt geladen ist.
+        // Wir erzwingen das Laden, damit das Highlight funktioniert.
+        if (step.target === '#factWidget') {
+            loadRandomFact(); 
+        }
+        
+        // SPEZIAL-FIX für Step 9 & 10 (Admin):
+        // Falls wir zu Admin wechseln, kurz warten und nach unten scrollen für Backup/Trash
+        if (step.view === 'view-admin' && (index === 8 || index === 9)) {
+             setTimeout(() => {
+                 const el = document.querySelector(step.target);
+                 if(el) el.scrollIntoView({behavior: 'smooth', block: 'center'});
+             }, 650); // Etwas mehr Zeit geben
+        }
+    }
+
+    // 2. Zeit zum Rendern geben (Delay erhöht für flüssigere Animation)
+    setTimeout(() => {
+        showStepVisuals(step, index);
+    }, 600);
+}
+
+function showStepVisuals(step, index) {
     const bubble = document.getElementById('onboardingBubble');
     const overlay = document.getElementById('onboardingOverlay');
     
-    // Texte
+    // Texte setzen
     document.getElementById('tourTitle').innerText = step.title;
     document.getElementById('tourText').innerHTML = step.text;
-    document.getElementById('tourNextBtn').innerText = index === tourSteps.length - 1 ? "Fertig 🚀" : "Weiter ➔";
+    
+    // Button Text Logik
+    const btn = document.getElementById('tourNextBtn');
+    if (index === tourSteps.length - 1) btn.innerText = "Fertig 🚀";
+    else if (index === 0) btn.innerText = "Starten ➔";
+    else btn.innerText = "Weiter";
 
-    // Clean up
+    // Altes Highlight entfernen
     document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
 
     if (step.target) {
         const el = document.querySelector(step.target);
-        if (el) {
+        
+        // Sicherheits-Check: Ist das Element da und sichtbar?
+        if (el && el.offsetParent !== null) {
             el.scrollIntoView({behavior: 'smooth', block: 'center'});
             el.classList.add('tour-highlight');
             
-            // Wenn Ziel da ist: Overlay transparent, Schatten macht die Arbeit
-            overlay.style.background = 'transparent';
+            overlay.style.background = 'transparent'; // Fokus durch Schatten
 
-            // Bubble Position
+            // Bubble Position berechnen
             const rect = el.getBoundingClientRect();
             bubble.style.top = "auto"; bubble.style.bottom = "auto"; 
             bubble.style.left = "50%"; bubble.style.transform = "translateX(-50%)";
 
+            // Oben oder unten platzieren?
             if (rect.top < window.innerHeight / 2) {
+                // Element ist oben -> Bubble darunter
                 let topPos = rect.bottom + 20;
                 if(topPos > window.innerHeight - 200) topPos = window.innerHeight - 220; 
                 bubble.style.top = topPos + "px";
             } else {
+                // Element ist unten -> Bubble darüber
                 let botPos = (window.innerHeight - rect.top) + 20;
                 bubble.style.bottom = botPos + "px";
             }
+        } else {
+            // Fallback (Element nicht gefunden) -> Mittig zeigen
+            fallbackBubblePosition(overlay, bubble);
         }
     } else {
-        // Start: Overlay dunkel machen (weil kein Element Schatten wirft)
-        overlay.style.background = 'rgba(0, 0, 0, 0.85)';
-        bubble.style.top = "50%"; bubble.style.left = "50%"; 
-        bubble.style.transform = "translate(-50%, -50%)";
+        // Intro (kein Target) -> Mittig zeigen
+        fallbackBubblePosition(overlay, bubble);
     }
 }
 
-function nextStep() { currentStep++; showStep(currentStep); }
+function fallbackBubblePosition(overlay, bubble) {
+    overlay.style.background = 'rgba(0, 0, 0, 0.85)';
+    bubble.style.top = "50%"; bubble.style.left = "50%"; 
+    bubble.style.bottom = "auto";
+    bubble.style.transform = "translate(-50%, -50%)";
+}
+
+function nextStep() { 
+    currentStep++; 
+    processStep(currentStep); 
+}
 
 function endTutorial(completed = false) {
     document.getElementById('onboardingOverlay').style.display = 'none';
     document.getElementById('onboardingBubble').style.display = 'none';
     document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+    
+    // Am Ende zurück zur Startseite
+    const listBtn = document.querySelectorAll('.nav-item')[0]; 
+    switchView('view-list', listBtn);
+    window.scrollTo({top: 0, behavior: 'smooth'});
+
     if (completed) {
-        localStorage.setItem('tutorial_done', 'true');
-        showErrorToast("Viel Spaß! 🐾", true);
+        localStorage.setItem('tutorial_v3_done', 'true');
+        showErrorToast("Alles klar! Viel Spaß! 🐾", true);
         if(typeof playSound === 'function') playSound('fanfare');
     }
 }
 
 /* === CONTEXT MENU LOGIC (DAS HAT GEFEHLT) === */
 
-// 1. Das Menü zeichnen
 // 1. Das Menü zeichnen
 function openContextMenu(x, y, items) {
     // Alte Menüs entfernen
