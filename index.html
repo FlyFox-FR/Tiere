@@ -3693,6 +3693,65 @@ body:not(.dark) .nav-island {
 }
 .fact-refresh-fixed:active { transform: scale(0.95); }
 
+/* === VISUAL POLISH FIXES === */
+
+/* 1. Der "Neu" Button (Jetzt schwebend & rund) */
+.fact-refresh-fixed {
+    position: absolute;
+    bottom: 12px;  /* Abstand vom Boden */
+    right: 12px;   /* Abstand von Rechts */
+    z-index: 10;
+    
+    background: var(--card-solid);
+    border: 1px solid var(--btn);
+    padding: 6px 14px;     /* Etwas größer */
+    border-radius: 30px;   /* Komplett rund (Pille) */
+    
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--accent);
+    cursor: pointer;
+    display: flex; 
+    align-items: center; 
+    gap: 6px;
+    
+    /* Schöner Schatten damit er sich vom Text abhebt */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+    transition: transform 0.2s;
+}
+.fact-refresh-fixed:active { transform: scale(0.95); }
+
+/* 2. Der Footer Button (Größer & Mächtiger) */
+.fact-footer-btn {
+    width: 100%;
+    background: linear-gradient(to bottom, var(--card), var(--bg));
+    border: 1px solid var(--btn);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-radius: 0 0 24px 24px; /* Passt besser zum Widget Radius */
+    
+    padding: 18px; /* MEHR HÖHE (war 12px) */
+    
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 13px; /* Besser lesbar */
+    font-weight: 800; color: var(--sub);
+    cursor: pointer; transition: all 0.2s;
+    margin-bottom: 25px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+.fact-footer-btn:active { background: var(--btn); color: var(--text); transform: scale(0.98); }
+
+/* 3. Der Badge im Footer (Klasse statt Inline-Style) */
+.lib-count-badge {
+    background: var(--accent); 
+    color: #fff; 
+    padding: 4px 10px;    /* Größer */
+    border-radius: 12px; 
+    font-size: 12px;      /* Größer */
+    font-weight: 900;
+    margin-left: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Kleiner Schatten */
+}
+
 </style>
 </head>
 <body>
@@ -4020,12 +4079,14 @@ body:not(.dark) .nav-island {
         </div>
     </div>
 </div>
-  <!-- Der Footer Button (Erscheint nur wenn Widget da ist) -->
-  <div id="factLibraryBtn" class="fact-footer-btn" onclick="safeRun(openLibraryModal)" style="display:none;">
-      <span>📚</span>
-      <span>MEINE SAMMLUNG</span>
-      <span id="libCountBadge" style="background:var(--accent); color:#fff; padding:1px 6px; border-radius:10px; font-size:10px;">0</span>
-  </div>
+
+<!-- Der Footer Button (Größer & besser lesbar) -->
+<div id="factLibraryBtn" class="fact-footer-btn" onclick="safeRun(openLibraryModal)" style="display:none;">
+    <span style="font-size:16px;">📚</span>
+    <span>MEINE SAMMLUNG</span>
+    <span id="libCountBadge" class="lib-count-badge">0</span>
+</div>
+
   <!-- Header: Nur der Button (Rechtsbündig) -->
   <div style="display:flex; justify-content:flex-end; margin-bottom:20px; padding-top:5px;">
       <select id="statsYearSelect" onchange="safeRun(renderStats)" title="Zeitraum wählen"></select>
