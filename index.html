@@ -8747,19 +8747,23 @@ async function loadRandomFact() {
     }
 }
 
+
+
 function checkHeartStatus() {
     const heart = document.getElementById('factHeart');
-    if(!currentFactData) return;
+    if(!currentFactData || !heart) return;
     
     // Prüfen ob Text schon in Sammlung ist
     const isSaved = savedFacts.some(f => f.text === currentFactData.text);
     
+    // WICHTIG: Wir ändern NICHT mehr den Text (innerText), sondern nur die Farbe (Klasse)!
+    // Wir nutzen immer das dicke Herz Symbol: ❤
+    heart.innerText = '❤'; 
+
     if(isSaved) {
         heart.classList.add('active');
-        heart.innerText = '❤️';
     } else {
         heart.classList.remove('active');
-        heart.innerText = '♥'; // Leeres Herz (oder Outline Symbol wenn Font das kann)
     }
 }
 
