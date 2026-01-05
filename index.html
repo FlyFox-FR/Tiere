@@ -3782,6 +3782,19 @@ body:not(.dark) .nav-island {
     color: var(--accent);
     font-weight: 800;
 }
+/* === SCROLL LOCK FIX === */
+
+/* Verhindert Scrollen auf dem Body */
+body.no-scroll {
+    overflow: hidden !important;
+    position: fixed; /* Fixiert den Body für iOS */
+    width: 100%;
+}
+
+/* Verhindert, dass Scrollen im Modal den Hintergrund bewegt (Modern Browser) */
+.modal-content {
+    overscroll-behavior: contain; 
+}
 
 </style>
 </head>
@@ -7474,7 +7487,14 @@ function toggleMuteState() {
 
 // Die bestehende toggleDarkMode Funktion bleibt, 
 // sie wird jetzt vom Switch im Modal aufgerufen.
-function closeModal(id){ getEl(id).style.display='none'; }
+// Schließt Modals und gibt das Scrollen wieder frei
+function closeModal(id){ 
+    getEl(id).style.display='none';
+    document.body.classList.remove('no-scroll'); // Scrollen wieder erlauben
+    
+    // Position vom Body fix lösen (optional, falls es springt, kann man das verfeinern)
+    // Aber meistens reicht das Entfernen der Klasse.
+}
 function hardReset(){ if(confirm("ALLES LÖSCHEN?")) { localStorage.clear(); location.reload(); } }
 
 // === GPS ===
@@ -9054,14 +9074,17 @@ function updateLibBadge() {
 
 // 4. LIBRARY MODAL (DRILL DOWN ENGINE)
 function openLibraryModal() {
-    // Reset beim Öffnen
+    // Scrollen sperren
+    document.body.classList.add('no-scroll');
+
+    // Reset Search State beim Öffnen
     libSearchState = { query: '', animalFilter: null };
-    document.getElementById('libSearchInput').value = '';
+    const searchInp = document.getElementById('libSearchInput');
+    if(searchInp) searchInp.value = '';
     
-    switchLibTab('saved'); // Startet immer lokal
+    switchLibTab('saved'); 
     document.getElementById('libraryModal').style.display = 'block';
 }
-
 function switchLibTab(tab) {
     activeLibTab = tab;
     document.getElementById('tabSaved').className = `tab-btn ${tab==='saved'?'active':''}`;
@@ -9263,16 +9286,17 @@ function toggleFromLib(factText, btnEl) {
 
 // 5. FLAVOR / TAG SEARCH ENGINE
 function openFlavorModal() {
-    // Input leeren
+    // Scrollen sperren
+    document.body.classList.add('no-scroll');
+
     const input = document.getElementById('flavorSearchInput');
     if(input) input.value = '';
     
-    renderFlavorAllList(); // Liste aller Tags rendern
-    renderActiveFlavor();  // Aktive Chips rendern
+    renderFlavorAllList(); 
+    renderActiveFlavor();  
     
     document.getElementById('flavorModal').style.display = 'block';
 }
-
 // Rendert die "Chips" oben (Nur die ausgewählten)
 function renderActiveFlavor() {
     const list = document.getElementById('flavorActiveList');
