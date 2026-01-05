@@ -3590,6 +3590,31 @@ body:not(.dark) .nav-island {
     position: absolute; top: 10px; right: 10px;
     color: #ff4757; font-size: 16px; cursor: pointer;
 }
+/* === WIDGET LAYOUT FIX === */
+.fact-widget-header {
+    display: flex;
+    justify-content: space-between; /* Schiebt Titel nach links, Controls nach rechts */
+    align-items: center;            /* Vertikal mittig */
+    width: 100%;                    /* Volle Breite erzwingen */
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.fact-controls { 
+    display: flex; 
+    gap: 15px;             /* Abstand zwischen Herz und Menü */
+    align-items: center; 
+    flex-shrink: 0;        /* Verhindert Zusammendrücken */
+}
+
+/* Der Titel darf nicht alles verdrängen */
+.fact-widget-header h3 {
+    flex: 1;               /* Nimmt verfügbaren Platz */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 10px;
+}
 
 </style>
 </head>
@@ -8728,8 +8753,7 @@ function setSolarCoords(lat, lon, name) {
 }
 
 
-
-/* === FUSION ENGINE V2.0: DRILL-DOWN & FLAVOR === */
+/* === FUSION ENGINE V2.1: DRILL-DOWN LOGIC === */
 
 // STATE
 let allGlobalFacts = [];            
@@ -8738,8 +8762,8 @@ let userFlavorTags = JSON.parse(localStorage.getItem('userFlavorTags')) || [];
 
 // SEARCH STATE (Drill-Down)
 let libSearchState = {
-    query: '',
-    animalFilter: null // Wenn gesetzt: "Jaguar"
+    query: '',          // Der Text im Suchfeld
+    animalFilter: null  // Das ausgewählte Tier (Drill-Down)
 };
 
 // Start
@@ -8754,10 +8778,8 @@ async function initFactEngine() {
         const rawData = await response.json();
         
         // AUTO-ID GENERIEREN (Hash aus Text)
-        // Damit du keine IDs pflegen musst!
         allGlobalFacts = rawData.map(f => {
             if(!f.id) {
-                // Einfacher Hash aus dem Text erzeugen
                 let hash = 0;
                 for (let i = 0; i < f.text.length; i++) {
                     hash = ((hash << 5) - hash) + f.text.charCodeAt(i);
@@ -8767,8 +8789,7 @@ async function initFactEngine() {
             }
             return f;
         });
-
-        console.log(`Datenbank: ${allGlobalFacts.length} Fakten geladen.`);
+        console.log(`Datenbank: ${allGlobalFacts.length} Fakten.`);
     } catch (e) {
         console.warn("Fakten nicht geladen:", e);
     }
@@ -8817,7 +8838,6 @@ function openFactMenu(e) {
         { label: '🔍 Weltweit suchen', icon: '🌍', action: 'openLibraryModal()' },
         { label: '🎛️ Themen-Mixer', icon: '🎨', action: 'openFlavorModal()' }
     ];
-    // Position des Menüs relativ zum Klick
     let x = e.clientX - 180; 
     let y = e.clientY + 10;
     openContextMenu(x, y, items);
@@ -8827,7 +8847,7 @@ function openFactMenu(e) {
 function checkHeartStatus() {
     const heart = document.getElementById('factHeart');
     if(!currentFactData || !heart) return;
-    const isSaved = savedFacts.some(f => f.text === currentFactData.text); // Check by Text (ID-los)
+    const isSaved = savedFacts.some(f => f.text === currentFactData.text); 
     
     heart.innerText = isSaved ? '❤️' : '🤍';
     heart.style.opacity = isSaved ? '1' : '0.6';
@@ -8848,11 +8868,7 @@ function toggleFactLike() {
     localStorage.setItem('savedFacts', JSON.stringify(savedFacts));
     checkHeartStatus();
     updateLibBadge();
-    
-    // Refresh Library if open
-    if(document.getElementById('libraryModal').style.display === 'block') {
-        renderLibrary();
-    }
+    if(document.getElementById('libraryModal').style.display === 'block') renderLibrary();
 }
 
 function updateLibBadge() {
@@ -8862,11 +8878,11 @@ function updateLibBadge() {
 
 // 4. LIBRARY MODAL (DRILL DOWN ENGINE)
 function openLibraryModal() {
-    // Reset Search State beim Öffnen
+    // Reset beim Öffnen
     libSearchState = { query: '', animalFilter: null };
     document.getElementById('libSearchInput').value = '';
     
-    switchLibTab('saved');
+    switchLibTab('saved'); // Startet immer lokal
     document.getElementById('libraryModal').style.display = 'block';
 }
 
@@ -8877,22 +8893,29 @@ function switchLibTab(tab) {
     renderLibrary();
 }
 
+// Input Handler (nur Text-Query updaten)
 function handleLibInput() {
     const val = document.getElementById('libSearchInput').value;
     libSearchState.query = val.trim().toLowerCase();
     
-    // Kleines Debounce
     clearTimeout(window.libDebounce);
     window.libDebounce = setTimeout(renderLibrary, 300);
 }
 
-// AKTION: Tier-Filter setzen (Drill Down)
-function setAnimalFilter(animalName) {
+// AKTION: Drill-Down in ein Tier
+function drillDownToAnimal(animalName) {
+    // 1. Filter setzen
     libSearchState.animalFilter = animalName;
+    
+    // 2. Suche LEEREN (damit man erst alles sieht)
+    libSearchState.query = '';
+    document.getElementById('libSearchInput').value = '';
+    
+    // 3. Neu rendern (Chip erscheint, Liste filtert nur dieses Tier)
     renderLibrary();
 }
 
-// AKTION: Tier-Filter entfernen
+// AKTION: Filter löschen (Chip X geklickt)
 function removeAnimalFilter() {
     libSearchState.animalFilter = null;
     renderLibrary();
@@ -8904,103 +8927,119 @@ function renderLibrary() {
     const bubbleCont = document.getElementById('libBubbleContainer');
     const filterCont = document.getElementById('libFilterContainer');
     const loadBtn = document.getElementById('libLoadMoreBtn');
-    
+    const emptySaved = document.getElementById('libEmptySaved');
+    const emptySearch = document.getElementById('libEmptySearch');
+
     // 1. Datenquelle wählen
     let sourceData = (activeLibTab === 'saved') ? savedFacts : allGlobalFacts;
     if(activeLibTab === 'saved') document.getElementById('badgeSaved').innerText = `(${savedFacts.length})`;
 
-    // 2. Filtern (Stufe 1: Tier Chip)
-    let filtered = sourceData;
-    if(libSearchState.animalFilter) {
-        // Filtere ALLES raus, was nicht dieses Tier ist
-        filtered = filtered.filter(f => f.animal === libSearchState.animalFilter);
-        
+    // 2. FILTERN (Logik-Pipeline)
+    let finalMatches = sourceData;
+
+    // SCHRITT A: Ist ein Tier-Filter aktiv? (Chip)
+    if (libSearchState.animalFilter) {
         // Chip anzeigen
         filterCont.style.display = 'block';
         document.getElementById('libActiveFilterName').innerText = libSearchState.animalFilter;
-        bubbleCont.style.display = 'none'; // Bubbles ausblenden wenn Filter aktiv
+        bubbleCont.style.display = 'none'; // Keine Bubbles im Drill-Down Modus
+
+        // Harter Filter auf das Tier
+        finalMatches = finalMatches.filter(f => f.animal === libSearchState.animalFilter);
+        
+        // Wenn User JETZT tippt, filtern wir innerhalb dieses Tiers weiter
+        if (libSearchState.query.length > 0) {
+            const q = libSearchState.query;
+            finalMatches = finalMatches.filter(f => 
+                f.text.toLowerCase().includes(q) || 
+                (f.tags && f.tags.some(t => t.toLowerCase().includes(q)))
+            );
+        }
+
     } else {
-        filterCont.style.display = 'none';
-        // Bubbles werden später bearbeitet
-    }
+        // SCHRITT B: Kein Tier-Filter (Gemischte Suche)
+        filterCont.style.display = 'none'; // Chip weg
 
-    // 3. Filtern (Stufe 2: Text Query)
-    let finalMatches = filtered;
-    if(libSearchState.query.length > 0) {
-        const q = libSearchState.query;
-        finalMatches = filtered.filter(f => {
-            const inText = f.text.toLowerCase().includes(q);
-            const inTags = f.tags && f.tags.some(t => t.toLowerCase().includes(q));
-            // Wenn kein Tier-Filter aktiv ist, suchen wir auch im Tiernamen
-            const inAnimal = !libSearchState.animalFilter && f.animal && f.animal.toLowerCase().includes(q);
-            return inText || inTags || inAnimal;
-        });
-    }
-
-    // 4. Bubbles berechnen (Nur wenn kein Tier-Filter aktiv ist)
-    if(!libSearchState.animalFilter) {
-        if(libSearchState.query.length > 0) {
-            // Zeige Tiere, die zur Suche passen
-            const animalsFound = new Set();
-            finalMatches.forEach(f => { if(f.animal) animalsFound.add(f.animal); });
+        if (libSearchState.query.length > 0) {
+            const q = libSearchState.query;
             
-            if(animalsFound.size > 0) {
+            // 1. Suche nach Inhalt, Tags UND Tiernamen
+            finalMatches = finalMatches.filter(f => {
+                const inText = f.text.toLowerCase().includes(q);
+                const inTags = f.tags && f.tags.some(t => t.toLowerCase().includes(q));
+                const inAnimal = f.animal && f.animal.toLowerCase().includes(q);
+                return inText || inTags || inAnimal;
+            });
+
+            // 2. Bubbles berechnen (Tiere die zur Suche passen)
+            const animalsFound = new Set();
+            // Wir schauen, welche Tiere in den Treffern vorkommen
+            // ODER welche Tiernamen direkt gematcht wurden
+            finalMatches.forEach(f => {
+                // Bedingung für Bubble: Tiername matcht Query ODER Query ist im Text dieses Tiers
+                if (f.animal) animalsFound.add(f.animal);
+            });
+
+            // 3. Bubbles anzeigen
+            if (animalsFound.size > 0) {
                 bubbleCont.innerHTML = '';
                 bubbleCont.style.display = 'flex';
                 animalsFound.forEach(anim => {
+                    // Zähle Fakten für dieses Tier in der aktuellen Auswahl
                     const count = finalMatches.filter(m => m.animal === anim).length;
                     const icon = finalMatches.find(m => m.animal === anim).icon || '🐾';
                     
                     const b = document.createElement('div');
                     b.className = 'discovery-bubble';
                     b.innerHTML = `${icon} ${anim} <span>(${count})</span>`;
-                    b.onclick = () => setAnimalFilter(anim); // Trigger Drill Down
+                    
+                    // WICHTIG: Klick löst Drill-Down aus
+                    b.onclick = () => drillDownToAnimal(anim);
+                    
                     bubbleCont.appendChild(b);
                 });
             } else {
                 bubbleCont.style.display = 'none';
             }
+
         } else {
-            bubbleCont.style.display = 'none'; // Keine Suche -> Keine Bubbles
+            // Keine Suche, Kein Filter -> Standard Ansicht
+            bubbleCont.style.display = 'none';
+            
+            // Bei Global ohne Suche: Random Mix (Gatcha)
+            if(activeLibTab === 'discover') {
+                finalMatches = [...sourceData].sort(() => 0.5 - Math.random()).slice(0, 20);
+                if(loadBtn) {
+                    loadBtn.innerText = "🎲 Neu würfeln";
+                    loadBtn.style.display = 'block';
+                    loadBtn.onclick = () => renderLibrary();
+                }
+            } else {
+                // Bei Saved: Chronologisch
+                finalMatches = [...sourceData].reverse();
+                if(loadBtn) loadBtn.style.display = 'none';
+            }
         }
     }
 
-    // 5. Grid Rendern
+    // 3. UI RENDERN (Grid)
     grid.innerHTML = '';
-    const emptySaved = document.getElementById('libEmptySaved');
-    const emptySearch = document.getElementById('libEmptySearch');
     if(emptySaved) emptySaved.style.display = 'none';
     if(emptySearch) emptySearch.style.display = 'none';
-    if(loadBtn) loadBtn.style.display = 'none';
 
-    // Spezialfall: Global Discovery ohne Suche -> Random 20
-    if(activeLibTab === 'discover' && libSearchState.query.length === 0 && !libSearchState.animalFilter) {
-        // Wir zeigen einen Random Mix
-        finalMatches = [...sourceData].sort(() => 0.5 - Math.random()).slice(0, 20);
-        // Button "Mehr laden" ist hier eigentlich "Neu würfeln"
-        if(loadBtn) {
-            loadBtn.innerText = "🎲 Neu würfeln";
-            loadBtn.style.display = 'block';
-            loadBtn.onclick = () => renderLibrary(); // Einfach neu rendern für neuen Random Mix
-        }
-    } else {
-        // Normale Liste (neueste zuerst bei Saved)
-        if(activeLibTab === 'saved') finalMatches = [...finalMatches].reverse();
-    }
-
+    // Empty States
     if (finalMatches.length === 0) {
-        if(activeLibTab === 'saved' && sourceData.length === 0) emptySaved.style.display = 'block';
-        else emptySearch.style.display = 'block';
+        if (libSearchState.query.length > 0 || libSearchState.animalFilter) emptySearch.style.display = 'block';
+        else if (activeLibTab === 'saved') emptySaved.style.display = 'block';
         return;
     }
 
-    // Kacheln bauen
+    // Tiles bauen
     finalMatches.forEach((fact, i) => {
         const isSaved = savedFacts.some(sf => sf.text === fact.text);
-        
         const tile = document.createElement('div');
         tile.className = 'lib-tile fade-in';
-        tile.style.animationDelay = (i * 0.02) + 's'; // Schnelleres Fade
+        tile.style.animationDelay = (i * 0.02) + 's';
         const tagStr = fact.tags ? fact.tags.join(', ') : '';
 
         tile.innerHTML = `
@@ -9021,18 +9060,12 @@ function renderLibrary() {
     });
 }
 
-function loadMoreGlobalFacts() {
-    // Placeholder für Pagination (im aktuellen Random-Modus nicht nötig, aber vorbereitet)
-    renderLibrary();
-}
+function loadMoreGlobalFacts() { renderLibrary(); } // Dummy für Refresh
 
-// Herz im Grid (nutzt Text als ID, da wir IDs abgeschafft haben)
+// Herz im Grid
 function toggleFromLib(factText, btnEl) {
-    // Text zurück-escapen
-    // Suche Fakt in Global oder Saved
     let fact = allGlobalFacts.find(f => f.text === factText) || savedFacts.find(f => f.text === factText);
-    
-    if(!fact) return; // Sollte nicht passieren
+    if(!fact) return;
 
     const isSaved = savedFacts.some(f => f.text === factText);
 
@@ -9040,7 +9073,7 @@ function toggleFromLib(factText, btnEl) {
         savedFacts = savedFacts.filter(f => f.text !== factText);
         btnEl.innerText = '🤍';
         showErrorToast("Entfernt");
-        if (activeLibTab === 'saved') renderLibrary(); // Refresh wenn in Saved Liste
+        if (activeLibTab === 'saved') renderLibrary(); 
     } else {
         savedFacts.push(fact);
         btnEl.innerText = '❤️';
@@ -9049,9 +9082,8 @@ function toggleFromLib(factText, btnEl) {
     
     localStorage.setItem('savedFacts', JSON.stringify(savedFacts));
     updateLibBadge();
-    checkHeartStatus(); // Dashboard Widget auch updaten
+    checkHeartStatus(); 
 }
-
 
 // 5. FLAVOR / THEMEN MIXER
 function openFlavorModal() {
@@ -9076,7 +9108,6 @@ function renderActiveFlavor() {
         el.onclick = () => {
             userFlavorTags = userFlavorTags.filter(t => t !== tag);
             renderActiveFlavor();
-            // Suggestions nicht neu rendern, damit man nicht den Flow verliert
         };
         list.appendChild(el);
     });
@@ -9086,14 +9117,10 @@ function renderFlavorSuggestions() {
     const list = document.getElementById('flavorSuggestList');
     list.innerHTML = '';
 
-    // Alle verfügbaren Tags sammeln
     const allTags = new Set();
     allGlobalFacts.forEach(f => { if(f.tags) f.tags.forEach(t => allTags.add(t)); });
     
-    // Filtern: Nur die, die noch nicht aktiv sind
     let candidates = Array.from(allTags).filter(t => !userFlavorTags.includes(t));
-    
-    // 6 Zufällige auswählen
     candidates = candidates.sort(() => 0.5 - Math.random()).slice(0, 6);
 
     candidates.forEach(tag => {
@@ -9103,7 +9130,7 @@ function renderFlavorSuggestions() {
         el.onclick = () => {
             if(!userFlavorTags.includes(tag)) userFlavorTags.push(tag);
             renderActiveFlavor();
-            renderFlavorSuggestions(); // Neue Vorschläge nachladen
+            renderFlavorSuggestions(); 
         };
         list.appendChild(el);
     });
@@ -9113,10 +9140,10 @@ function saveFlavorSettings() {
     localStorage.setItem('userFlavorTags', JSON.stringify(userFlavorTags));
     closeModal('flavorModal');
     showErrorToast("Präferenzen gespeichert!", true);
-    loadRandomFact(); // Sofort anwenden
+    loadRandomFact(); 
 }
 
-/* === END ENGINE V2 === */
+/* === END ENGINE V2.1 === */
 
 function openInfoModal() {
     getEl('infoModal').style.display = 'block';
