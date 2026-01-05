@@ -1,5 +1,355 @@
 [
     {
+    "animal": "Oktopus",
+    "icon": "🐙",
+    "text": "Ein Oktopus hat drei Herzen. Zwei pumpen Blut durch die Kiemen, das dritte versorgt den Rest des Körpers.",
+    "tags": ["Wow", "Anatomie", "Meer"],
+    "source": "Meeresbiologie"
+  },
+  {
+    "animal": "Schmetterling",
+    "icon": "🦋",
+    "text": "Schmetterlinge schmecken mit ihren Füßen. So prüfen sie sofort beim Landen, ob die Pflanze essbar ist.",
+    "tags": ["Verrückt", "Sinne", "Insekten"],
+    "source": "Entomologie"
+  },
+  {
+    "animal": "Rentier",
+    "icon": "🦌",
+    "text": "Die Augen von Rentieren wechseln die Farbe. Im Sommer sind sie goldgelb, im Winter tiefblau, um mehr Licht zu fangen.",
+    "tags": ["Magisch", "Anatomie", "Arktis"],
+    "source": "Universität London"
+  },
+  {
+    "animal": "Kuh",
+    "icon": "🐄",
+    "text": "Kühe haben beste Freunde. Wenn man sie voneinander trennt, steigt ihr Stresslevel und ihre Herzfrequenz messbar.",
+    "tags": ["Süß", "Sozial", "Bauernhof"],
+    "source": "Verhaltensstudie"
+  },
+  {
+    "animal": "Bärtierchen",
+    "icon": "🦠",
+    "text": "Bärtierchen sind fast unzerstörbar. Sie überleben im Vakuum des Weltalls, in kochendem Wasser und unter extremem Druck.",
+    "tags": ["Unbesiegbar", "Wow", "Mikroskop"],
+    "source": "Astrobiologie"
+  },
+  {
+    "animal": "Schnabeltier",
+    "icon": "🦆",
+    "text": "Schnabeltiere haben keinen Magen. Ihre Speiseröhre geht direkt in den Darm über.",
+    "tags": ["Echt jetzt?", "Anatomie", "Australien"],
+    "source": "Evolution"
+  },
+  {
+    "animal": "Kolibri",
+    "icon": "🐦",
+    "text": "Kolibris sind die einzigen Vögel, die rückwärts fliegen können.",
+    "tags": ["Skill", "Flug", "Vögel"],
+    "source": "Ornithologie"
+  },
+  {
+    "animal": "Tiger",
+    "icon": "🐅",
+    "text": "Tigerspeichel hat antiseptische Eigenschaften. Das Lecken von Wunden hilft ihnen tatsächlich, Infektionen zu verhindern.",
+    "tags": ["Nützlich", "Medizin", "Katzen"],
+    "source": "Zoologie"
+  },
+  {
+    "animal": "Krähe",
+    "icon": "🐦‍⬛",
+    "text": "Krähen verstehen das Prinzip der Wasserverdrängung. Sie werfen Steine in Wassergefäße, um an schwimmendes Futter zu kommen.",
+    "tags": ["Schlau", "Physik", "Vögel"],
+    "source": "Aesop Studie"
+  },
+  {
+    "animal": "Eichhörnchen",
+    "icon": "🐿️",
+    "text": "Eichhörnchen pflanzen versehentlich Millionen von Bäumen, weil sie vergessen, wo sie ihre Nüsse vergraben haben.",
+    "tags": ["Ups", "Natur", "Wald"],
+    "source": "Forstwirtschaft"
+  },
+  {
+    "animal": "Elefant",
+    "icon": "🐘",
+    "text": "Elefanten können sich selbst im Spiegel erkennen. Das ist ein Zeichen für hohes Selbstbewusstsein, das nur wenige Tiere haben.",
+    "tags": ["Intelligenz", "Respekt", "Afrika"],
+    "source": "Spiegeltest"
+  },
+  {
+    "animal": "Blauwal",
+    "icon": "🐋",
+    "text": "Das Herz eines Blauwals wiegt so viel wie ein kleines Auto (ca. 180kg). Ein Mensch könnte durch die Hauptschlagader krabbeln.",
+    "tags": ["Gigantisch", "Anatomie", "Meer"],
+    "source": "Meereskunde"
+  },
+  {
+    "animal": "Mauersegler",
+    "icon": "🐦",
+    "text": "Mauersegler können bis zu 10 Monate am Stück in der Luft bleiben, ohne zu landen. Sie schlafen und essen im Flug.",
+    "tags": ["Ausdauer", "Flug", "Vögel"],
+    "source": "Lund Universität"
+  },
+  {
+    "animal": "Katze",
+    "icon": "🐈",
+    "text": "Hauskatzen teilen 95,6% ihrer DNA mit Tigern.",
+    "tags": ["Wild", "Genetik", "Haustier"],
+    "source": "Genom Studie"
+  },
+  {
+    "animal": "Ameise",
+    "icon": "🐜",
+    "text": "Die Gesamtmasse aller Ameisen auf der Erde entspricht in etwa der Gesamtmasse aller Menschen.",
+    "tags": ["Krass", "Menge", "Insekten"],
+    "source": "Biomasse Studie"
+  },
+  {
+    "animal": "Koala",
+    "icon": "🐨",
+    "text": "Koalas haben Fingerabdrücke, die denen von Menschen so ähnlich sind, dass sie Kriminaltechniker verwirren können.",
+    "tags": ["Verblüffend", "Krimi", "Australien"],
+    "source": "Forensik"
+  },
+  {
+    "animal": "Axolotl",
+    "icon": "🦎",
+    "text": "Axolotl können verlorene Gliedmaßen, Organe und sogar Teile ihres Gehirns vollständig und funktionstüchtig nachwachsen lassen.",
+    "tags": ["Superkraft", "Regeneration", "Wasser"],
+    "source": "Medizin Forschung"
+  },
+  {
+    "animal": "Faultier",
+    "icon": "🦥",
+    "text": "Faultiere können bis zu 40 Minuten die Luft anhalten – länger als Delfine.",
+    "tags": ["Überraschung", "Wasser", "Wald"],
+    "source": "Biologie"
+  },
+  {
+    "animal": "Honigbiene",
+    "icon": "🐝",
+    "text": "Bienen kommunizieren die genaue Lage von Blumen durch einen 'Schwänzeltanz'. Der Winkel des Tanzes zeigt die Himmelsrichtung.",
+    "tags": ["Tanz", "Kommunikation", "Insekten"],
+    "source": "Verhaltensbio"
+  },
+  {
+    "animal": "Wombat",
+    "icon": "📦",
+    "text": "Der Kot von Wombats ist würfelförmig. Das verhindert, dass er wegrollt, da sie ihn nutzen, um ihr Revier auf Felsen zu markieren.",
+    "tags": ["Witzig", "Physik", "Australien"],
+    "source": "Geo Magazin"
+  },
+  {
+    "animal": "Flamingo",
+    "icon": "🦩",
+    "text": "Flamingos sind von Natur aus weiß. Ihre rosa Farbe kommt von Carotinoiden in den Krebsen und Algen, die sie fressen.",
+    "tags": ["Schön", "Ernährung", "Vögel"],
+    "source": "Zoo Wissen"
+  },
+  {
+    "animal": "Strauß",
+    "icon": "👀",
+    "text": "Das Auge eines Straußes ist größer als sein gesamtes Gehirn.",
+    "tags": ["Dumm gelaufen", "Anatomie", "Vögel"],
+    "source": "Tier Anatomie"
+  },
+  {
+    "animal": "Hund",
+    "icon": "🐕",
+    "text": "Hunde haben einen einzigartigen Nasenabdruck, der genauso unverwechselbar ist wie ein menschlicher Fingerabdruck.",
+    "tags": ["Identität", "Haustier", "Wissen"],
+    "source": "Kennel Club"
+  },
+  {
+    "animal": "Giraffe",
+    "icon": "🦒",
+    "text": "Giraffen schlafen extrem wenig: Meist nur etwa 30 Minuten am Tag, aufgeteilt in kurze Nickerchen von wenigen Minuten.",
+    "tags": ["Wach", "Schlaf", "Afrika"],
+    "source": "Schlafforschung"
+  },
+  {
+    "animal": "Pinguin",
+    "icon": "💍",
+    "text": "Esels-Pinguine schenken ihrem Partner einen besonders glatten Kieselstein als Zeichen der Zuneigung.",
+    "tags": ["Romantisch", "Liebe", "Antarktis"],
+    "source": "Tierwelt"
+  },
+  {
+    "animal": "Seepferdchen",
+    "icon": "🫃",
+    "text": "Bei Seepferdchen werden die Männchen schwanger. Das Weibchen legt die Eier in die Bauchtasche des Männchens.",
+    "tags": ["Anders", "Familie", "Meer"],
+    "source": "Meeresbio"
+  },
+  {
+    "animal": "Zebra",
+    "icon": "🦓",
+    "text": "Zebras sind eigentlich schwarz mit weißen Streifen. Das zeigt sich im Embryonalstadium.",
+    "tags": ["Aha-Moment", "Genetik", "Afrika"],
+    "source": "Entwicklungsbio"
+  },
+  {
+    "animal": "Fledermaus",
+    "icon": "🦇",
+    "text": "Fledermäuse machen beim Verlassen ihrer Höhle fast immer eine Linkskurve.",
+    "tags": ["Gewohnheit", "Orientierung", "Nacht"],
+    "source": "Höhlenforschung"
+  },
+  {
+    "animal": "Eisbär",
+    "icon": "🐻‍❄️",
+    "text": "Unter dem weißen Fell haben Eisbären eine pechschwarze Haut, um die Wärme der Sonne besser zu absorbieren.",
+    "tags": ["Clever", "Physik", "Arktis"],
+    "source": "Polar Institut"
+  },
+  {
+    "animal": "Schnecke",
+    "icon": "🐌",
+    "text": "Eine Schnecke kann 3 Jahre lang schlafen, wenn die Umweltbedingungen (Trockenheit) ungünstig sind.",
+    "tags": ["Faul", "Überleben", "Garten"],
+    "source": "Malakologie"
+  },
+  {
+    "animal": "Gürteltier",
+    "icon": "🛡️",
+    "text": "Das Neunbinden-Gürteltier bringt fast immer genetisch identische Vierlinge zur Welt.",
+    "tags": ["Klonen", "Geburt", "Amerika"],
+    "source": "Genetik"
+  },
+  {
+    "animal": "Fangschreckenkrebs",
+    "icon": "🥊",
+    "text": "Der Schlag eines Fangschreckenkrebses ist so schnell wie eine Gewehrkugel und erhitzt das Wasser kurzzeitig auf fast kochende Temperaturen.",
+    "tags": ["Power", "Physik", "Meer"],
+    "source": "Biomechanik"
+  },
+  {
+    "animal": "Frosch",
+    "icon": "🐸",
+    "text": "Der Waldfrosch (Rana sylvatica) kann im Winter komplett einfrieren – sein Herz stoppt – und im Frühling wieder auftauen und weiterleben.",
+    "tags": ["Zombie", "Wunder", "Amphibien"],
+    "source": "Kryobiologie"
+  },
+  {
+    "animal": "Nilpferd",
+    "icon": "🔴",
+    "text": "Nilpferde schwitzen eine ölige, rote Flüssigkeit ('Blutschweiß'), die als Sonnenschutz und Antibiotikum wirkt.",
+    "tags": ["Ekelig", "Schutz", "Afrika"],
+    "source": "Hautforschung"
+  },
+  {
+    "animal": "Libelle",
+    "icon": "🚁",
+    "text": "Libellen haben eine Jagderfolgsquote von über 95%, was sie zu den effizientesten Raubtieren der Welt macht (Löwen schaffen nur ca. 25%).",
+    "tags": ["Killer", "Jagd", "Insekten"],
+    "source": "Harvard Studie"
+  },
+  {
+    "animal": "Ratte",
+    "icon": "😂",
+    "text": "Ratten lachen, wenn man sie kitzelt. Das Geräusch ist im Ultraschallbereich (50 kHz), wurde aber durch Technik hörbar gemacht.",
+    "tags": ["Lustig", "Emotionen", "Wissenschaft"],
+    "source": "Neurowissenschaft"
+  },
+  {
+    "animal": "Hausschwein",
+    "icon": "🐖",
+    "text": "Schweine können physiologisch nicht in den Himmel schauen, da ihre Nackenmuskulatur und Wirbelsäule das verhindern.",
+    "tags": ["Schade", "Anatomie", "Bauernhof"],
+    "source": "Tiermedizin"
+  },
+  {
+    "animal": "Kaninchen",
+    "icon": "🐰",
+    "text": "Kaninchen haben einen fast 360-Grad-Rundumblick und können hinter sich sehen, ohne den Kopf zu drehen.",
+    "tags": ["Überblick", "Sicht", "Haustier"],
+    "source": "Biologie"
+  },
+  {
+    "animal": "Alpensegler",
+    "icon": "🕊️",
+    "text": "Alpensegler können über 6 Monate nonstop fliegen, ohne den Boden zu berühren. Sie schlafen im Flug.",
+    "tags": ["Ausdauer", "Flug", "Vögel"],
+    "source": "Schweizer Vogelwarte"
+  },
+  {
+    "animal": "Gecko",
+    "icon": "🦎",
+    "text": "Geckos haften an Wänden nicht durch Klebstoff, sondern durch Van-der-Waals-Kräfte auf molekularer Ebene an ihren Füßen.",
+    "tags": ["Physik", "Klettern", "Reptilien"],
+    "source": "Nanotechnologie"
+  },
+  {
+    "animal": "Otter",
+    "icon": "🦦",
+    "text": "Seeotter haben eine Hautfalte unter dem Vorderbein, die sie als Tasche nutzen, um ihren Lieblingsstein aufzubewahren.",
+    "tags": ["Niedlich", "Werkzeug", "Wasser"],
+    "source": "Verhaltensbio"
+  },
+  {
+    "animal": "Pottwal",
+    "icon": "😴",
+    "text": "Pottwale schlafen senkrecht im Wasser hängend, wie riesige Säulen.",
+    "tags": ["Skurril", "Schlaf", "Meer"],
+    "source": "National Geographic"
+  },
+  {
+    "animal": "Schimpanse",
+    "icon": "🐒",
+    "text": "Schimpansen nutzen Werkzeuge nicht nur, sie stellen sie her. Sie kauen z.B. Stöcke am Ende weich, um Termiten zu angeln.",
+    "tags": ["Intelligenz", "Werkzeug", "Affen"],
+    "source": "Jane Goodall"
+  },
+  {
+    "animal": "Wanderfalke",
+    "icon": "🦅",
+    "text": "Der Wanderfalke ist das schnellste Tier der Welt. Im Sturzflug erreicht er Geschwindigkeiten von über 300 km/h.",
+    "tags": ["Speed", "Jagd", "Vögel"],
+    "source": "Aerodynamik"
+  },
+  {
+    "animal": "Skorpion",
+    "icon": "🦂",
+    "text": "Skorpione leuchten unter UV-Licht (Schwarzlicht) hellblau-grün. Warum sie das tun, ist wissenschaftlich noch nicht vollständig geklärt.",
+    "tags": ["Party", "Licht", "Wüste"],
+    "source": "Biologie"
+  },
+  {
+    "animal": "Eule",
+    "icon": "🦉",
+    "text": "Eulen haben keine Augäpfel, sondern Augenröhren. Deshalb können sie ihre Augen nicht bewegen und müssen den Kopf drehen.",
+    "tags": ["Gruselig", "Anatomie", "Vögel"],
+    "source": "Vogel Anatomie"
+  },
+  {
+    "animal": "Hai",
+    "icon": "🦈",
+    "text": "Haie gab es schon vor den Bäumen. Haie existieren seit ca. 400 Mio. Jahren, Bäume erst seit ca. 350 Mio. Jahren.",
+    "tags": ["Alt", "Evolution", "Meer"],
+    "source": "Paläontologie"
+  },
+  {
+    "animal": "Dachs",
+    "icon": "🦡",
+    "text": "Dachse bauen riesige unterirdische Burgen ('Baue'), die über Jahrhunderte von Generation zu Generation vererbt werden.",
+    "tags": ["Bauherr", "Wohnen", "Wald"],
+    "source": "Wildtierkunde"
+  },
+  {
+    "animal": "Küken",
+    "icon": "🐣",
+    "text": "Hühnerküken können bereits einfache Rechenaufgaben lösen und Mengen unterscheiden, kurz nachdem sie geschlüpft sind.",
+    "tags": ["Schlau", "Mathe", "Bauernhof"],
+    "source": "Kognitionsforschung"
+  },
+  {
+    "animal": "Blauwal",
+    "icon": "🔊",
+    "text": "Der Gesang eines Blauwals ist lauter als ein Düsenjet und kann unter Wasser über 800 Kilometer weit gehört werden.",
+    "tags": ["Laut", "Kommunikation", "Meer"],
+    "source": "Akustik"
+  },
+    {
     "animal": "Delfin",
     "icon": "🐬",
     "text": "Junge Delfine ärgern manchmal Kugelfische, damit diese Gift abgeben. Davon werden die Delfine 'high'.",
