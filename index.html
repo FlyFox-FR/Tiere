@@ -3908,18 +3908,7 @@ body.no-scroll {
     <span class="brand-icon-pop">+1</span>
 </h1>
 
-<!-- INFO BOX (Anleitung für Endanwender) -->
-<div id="infoBox" class="glass-panel" style="display:none; padding:20px; margin-bottom:20px; border-radius:20px;">
-<h3>📖 Anleitung</h3>
-<p>Willkommen! So benutzt du die App:</p>
-<ul style="line-height:1.6; padding-left:20px;">
-<li><strong>🔢 Zählen:</strong> Tippe auf das (+), um ein Tier zu zählen.</li>
-<li><strong>🔍 Details & Historie:</strong> Tippe auf den Namen oder das Bild eines Tiers, um alle Sichtungen zu sehen. <em>(Schließen nur über das X oben rechts möglich)</em>.</li>
-<li><strong>📝 Notizen:</strong> Klicke auf das 📝 Symbol, um eine Notiz oder eine genaue Uhrzeit einzutragen.</li>
-<li><strong>⭐ Favoriten:</strong> Markiere deine Lieblingstiere mit dem Stern, damit sie oben stehen.</li>
-<li><strong>⚙️ Verwalten:</strong> Unten auf "Admin" kannst du neue Tiere anlegen oder Backups machen.</li>
-</ul>
-</div>
+
 <div id="scrollTopBtn" onclick="window.scrollTo({top:0, behavior:'smooth'})">⬆️</div>
 
 
@@ -3974,7 +3963,7 @@ body.no-scroll {
  <div id="emptyState" style="text-align:center; padding:60px 20px; color:var(--sub); display:none;">
       <div style="font-size:60px; margin-bottom:15px; opacity:0.5">🐾</div>
       <h3>Keine Tiere gefunden</h3>
-      <p>Gehe auf "Admin" um neue Tiere anzulegen.</p>
+      <p>Klicke auf das <b> + </b> um neue Tiere anzulegen.</p>
   </div>
 </div>
 
@@ -4290,7 +4279,7 @@ body.no-scroll {
         <!-- 5. VERWALTUNG (Rechts außen) -->
         <button class="nav-item" onclick="safeRun(switchView, 'view-admin', this)">
             <span class="nav-icon">🛠️</span>
-            <span>Admin</span>
+            <span>System</span>
         </button>
 
     </div>
@@ -4610,7 +4599,8 @@ body.no-scroll {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
 <!-- === NEU: INFO MODAL (Mit Wiederholen-Button) === -->
-<!-- === NEU: INFO MODAL (Mit Anleitung & Wiederholen-Button) === -->
+
+<!-- === INFO MODAL (UPDATED V3.0) === -->
 <div id="infoModal" class="modal">
   <div class="modal-content">
     <div class="sheet-handle"></div>
@@ -4618,39 +4608,54 @@ body.no-scroll {
     
     <div style="text-align:center; margin-bottom:20px;">
         <div style="font-size:40px; margin-bottom:10px;">📖</div>
-        <h2 style="margin:0;">Anleitung & Hilfe</h2>
+        <h2 style="margin:0;">Guide & Features</h2>
+        <p style="opacity:0.6; font-size:13px; margin:5px 0 0 0;">Dein Begleiter für die Natur</p>
     </div>
 
-    <div style="background:var(--bg); padding:20px; border-radius:16px; font-size:14px; line-height:1.6; margin-bottom:20px; color:var(--text); text-align:left;">
-        <p style="margin-top:0;"><strong>Willkommen beim Tier Ticker!</strong> 🐾<br>Deine App, um Beobachtungen in der Natur einfach festzuhalten.</p>
+    <div style="background:var(--bg); padding:20px; border-radius:16px; font-size:14px; line-height:1.6; margin-bottom:20px; color:var(--text); text-align:left; max-height:60vh; overflow-y:auto;">
         
-        <h4 style="margin:15px 0 5px 0; color:var(--accent)">1. Zählen & Erfassen</h4>
-        <p style="margin:0; opacity:0.85;">
-            Drücke oben auf den großen <b style="color:var(--accent)">+ Sichtung</b> Button, um schnell ein Tier zu notieren. Zeit & Ort werden automatisch gespeichert.<br>
-            Alternativ: Tippe auf das kleine <b>+</b> in der Liste, um den Zähler hochzusetzen.
+        <h4 style="margin:0 0 5px 0; color:var(--accent); display:flex; align-items:center; gap:8px;">
+            <span style="font-size:18px;">🐾</span> Beobachten & Zählen
+        </h4>
+        <p style="margin:0 0 15px 0; opacity:0.85;">
+            Nutze den großen <b>+ Button</b> in der Mitte, um schnell ein Tier zu erfassen. 
+            Tippe in der Liste auf ein Tier für <b>Details & Verlauf</b> oder auf das kleine <b>+</b> für eine schnelle Zählung. 
+Klicke auf ein Tier in der Liste oder auf eine Kachel um das Tier zu bearbeiten und Details zu sehen.
         </p>
         
-        <h4 style="margin:15px 0 5px 0; color:var(--accent)">2. Details & Verlauf</h4>
-        <p style="margin:0; opacity:0.85;">
-            Tippe auf den <b>Namen oder das Bild</b> eines Tiers, um alle Sichtungen, Statistiken und Fotos zu sehen. Dort kannst du Einträge auch bearbeiten oder löschen.
+        <h4 style="margin:0 0 5px 0; color:var(--accent); display:flex; align-items:center; gap:8px;">
+            <span style="font-size:18px;">🧠</span> Wissen & Quiz
+        </h4>
+        <p style="margin:0 0 15px 0; opacity:0.85;">
+            Das Widget oben zeigt dir spannende Fakten. 
+            <br>• <b>Herzen (❤️):</b> Speichere Fakten in deiner Sammlung.
+            <br>• <b>Suche (🌍):</b> Finde Fakten über die globale Suche oder durchsuche deine gespeicherten Fakten.
+            <br>• <b>Quiz (🎮):</b> Klicke auf <b>⋮</b> im Widget, um dein Wissen zu testen und <b>XP</b> zu verdienen!
         </p>
-        
-        <h4 style="margin:15px 0 5px 0; color:var(--accent)">3. Verwalten & Backup</h4>
-        <p style="margin:0; opacity:0.85;">
-            Unten unter <b>"Verwaltung"</b> (Werkzeug-Symbol) kannst du manuell neue Arten anlegen, Orte verwalten und Backups erstellen.
+
+        <h4 style="margin:0 0 5px 0; color:var(--accent); display:flex; align-items:center; gap:8px;">
+            <span style="font-size:18px;">📊</span> Statistik & Level
+        </h4>
+        <p style="margin:0 0 15px 0; opacity:0.85;">
+            Sammle XP durch Sichtungen, Fotos und Quiz-Siege. Steige im Level auf – vom "Ameisen-Zähler" zur Legende!
+            <br>Das <b>Solar-Widget</b> zeigt dir Sonnenaufgang und Dämmerung für deinen Standort.
         </p>
-        
-        <div style="margin-top:15px; padding-top:10px; border-top:1px solid var(--btn); font-size:14px; font-style:italic; opacity:0.7;">
-            🔒 Deine Daten bleiben zu 100% offline auf diesem Gerät. Bitte regelmäßig Backupdatei erstellen und herunterladen (im Verwaltungsbereich), sonst sind deine Daten verloren bei Browserdatenlöschung!
-        </div>
+
+        <h4 style="margin:0 0 5px 0; color:var(--accent); display:flex; align-items:center; gap:8px;">
+            <span style="font-size:18px;">⚙️</span> Daten & Sicherheit
+        </h4>
+        <p style="margin:0 0 5px 0; opacity:0.85;">
+            Alle Daten liegen <b>100% offline</b> auf deinem Gerät. 
+            <br>⚠️ <b>Wichtig:</b> Erstelle regelmäßig ein <b>Backup</b> in den System-Einstellungen, damit deine Sammlung bei einem Handy-Wechsel sicher ist.
+        </p>
     </div>
 
     <!-- DER KNOPF ZUM WIEDERHOLEN -->
     <button onclick="startTutorial(true)" style="width:100%; background:var(--card); border:2px solid var(--accent); color:var(--accent); font-weight:bold; padding:15px; border-radius:16px; font-size:15px;">
-        🎓 Tutorial / Führung wiederholen
+        🎓 Geführte Tour starten
     </button>
     
-    <p style="text-align:center; font-size:11px; opacity:0.4; margin-top:15px;">Tier Ticker</p>
+    <p style="text-align:center; font-size:11px; opacity:0.3; margin-top:15px;">Version 3.0 • Tier Ticker Ultimate</p>
   </div>
 </div>
 
