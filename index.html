@@ -3970,6 +3970,13 @@ input:checked + .deck-slider:before { transform: translateX(16px); }
     width: 44px; height: 26px; 
     flex-shrink: 0; /* Darf nicht gequetscht werden */
 }
+/* === ADMIN GRID FIX (Zurück zu 2 Spalten) === */
+.admin-tools-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; /* Wieder 2 statt 3 */
+    gap: 12px; 
+    margin-bottom: 20px; 
+}
 </style>
 </head>
 <body>
@@ -4063,11 +4070,6 @@ input:checked + .deck-slider:before { transform: translateX(16px); }
           <span class="tc-icon">⚙️</span>
           <span class="tc-label">Einstellungen</span>
       </div>
- <!-- NEU: DECK MANAGER -->
-    <div class="tool-card" onclick="safeRun(openDeckManager)">
-        <span class="tc-icon">🗂️</span>
-        <span class="tc-label">Fakten-Decks</span>
-    </div>
       <div class="tool-card" onclick="safeRun(openInfoModal)">
           <span class="tc-icon">ℹ️</span>
           <span class="tc-label">Hilfe & Info</span>
@@ -5183,7 +5185,7 @@ function initSwipeGestures() {
 
         // === HIER IST DER FIX ===
         // Diese Modals dürfen NICHT gewischt werden (nur Scrollen erlaubt):
-        const lockedModals = ['detailModal', 'libraryModal', 'flavorModal','deckModal'];
+        const lockedModals = ['detailModal', 'libraryModal', 'flavorModal', 'deckModal' ];
         
         // Wenn wir in einem dieser Modals sind -> Abbrechen!
         if (lockedModals.includes(content.parentElement.id)) return;
@@ -9552,14 +9554,22 @@ function setSolarCoords(lat, lon, name) {
 
 
 
+/* === FUSION ENGINE V3.6: HYBRID & FALLBACK === */
 
-/* === FUSION ENGINE V3.5: HYBRID DECKS === */
+// 0. NOTFALL-KIT (Direkt im Code, falls facts.json nicht lädt)
+const STARTER_FACTS = [
+  { animal: "Rotfuchs", icon: "🦊", text: "Füchse nutzen das Magnetfeld der Erde, um bei der Jagd im Schnee die Entfernung zur Beute exakt zu bestimmen.", tags: ["Jagd", "Sinne"], source: "Starter-Kit" },
+  { animal: "Honigbiene", icon: "🐝", text: "Bienen kommunizieren die Entfernung und Richtung von Futterquellen durch einen speziellen 'Schwänzeltanz'.", tags: ["Kommunikation"], source: "Starter-Kit" },
+  { animal: "Oktopus", icon: "🐙", text: "Kraken haben drei Herzen und blaues Blut. Zwei Herzen pumpen Blut zu den Kiemen, eins zum Rest des Körpers.", tags: ["Anatomie", "Wasser"], source: "Starter-Kit" },
+  { animal: "Faultier", icon: "🦥", text: "Faultiere kommen nur einmal pro Woche vom Baum herunter, um auf die Toilette zu gehen. Ein riskantes Manöver!", tags: ["Verhalten", "Lustig"], source: "Starter-Kit" },
+  { animal: "Blauwal", icon: "🐋", text: "Das Herz eines Blauwals ist so groß wie ein VW Käfer und man könnte durch die Aorta schwimmen.", tags: ["Anatomie", "Größe"], source: "Starter-Kit" }
+];
 
 // STATE
 let allGlobalFacts = [];            
 let activeLibTab = 'saved';         
 let userFlavorTags = JSON.parse(localStorage.getItem('userFlavorTags')) || []; 
-let activeDeckIDs = JSON.parse(localStorage.getItem('activeDeckIDs')) || ['builtin']; // 'builtin' ist die facts.json
+let activeDeckIDs = JSON.parse(localStorage.getItem('activeDeckIDs')) || ['builtin']; 
 
 // SEARCH STATE
 let libSearchState = { query: '', animalFilter: null };
@@ -9572,19 +9582,26 @@ async function initFactEngine() {
     allGlobalFacts = []; // Reset
     let loadedCount = 0;
 
-    // A) Built-in facts.json laden (falls aktiv)
+    // A) Built-in (Standard Bibliothek)
     if (activeDeckIDs.includes('builtin')) {
         try {
+            // Versuch 1: Externe Datei laden
             const response = await fetch('./facts.json');
             if (response.ok) {
                 const builtIn = await response.json();
-                // IDs generieren & Source markieren
                 const processed = builtIn.map(f => ({ ...f, id: generateFactId(f.text), deckSource: 'Standard' }));
                 allGlobalFacts.push(...processed);
                 loadedCount += processed.length;
+                console.log("Online facts.json geladen.");
+            } else {
+                throw new Error("Datei nicht gefunden");
             }
         } catch (e) {
-            console.warn("Standard-Fakten nicht geladen (Offline/CORS).");
+            // Versuch 2: FALLBACK auf Starter-Kit (wenn Datei fehlt/CORS Fehler)
+            console.warn("Lade Fallback-Fakten (Offline Mode).");
+            const fallback = STARTER_FACTS.map(f => ({ ...f, id: generateFactId(f.text), deckSource: 'Standard (Offline)' }));
+            allGlobalFacts.push(...fallback);
+            loadedCount += fallback.length;
         }
     }
 
@@ -9602,9 +9619,9 @@ async function initFactEngine() {
 
     console.log(`Engine bereit: ${loadedCount} Fakten aus ${activeDeckIDs.length} Quellen.`);
     
-    // UI Update falls nötig
-    if (loadedCount === 0) {
-        showErrorToast("Keine Fakten geladen. Importiere ein Deck!", true);
+    // UI Update (Falls Widget leer war, jetzt füllen)
+    if (document.getElementById('factText').innerText === 'Lade Wissen...') {
+        loadRandomFact();
     }
 }
 
@@ -9618,18 +9635,18 @@ function generateFactId(text) {
     return 'gen_' + Math.abs(hash);
 }
 
-// 2. WIDGET LOGIK (Robust & Fallback)
+// 2. WIDGET LOGIK
 async function loadRandomFact() {
     const widget = document.getElementById('factWidget');
     const footer = document.getElementById('factLibraryBtn');
     
-    // Versuch nachzuladen, falls leer
+    // Versuch nachzuladen
     if (allGlobalFacts.length === 0) await initFactEngine();
 
-    // FALLBACK: Wenn wirklich NICHTS da ist (Offline & keine Decks)
+    // FALLBACK: Wenn ALLES deaktiviert ist
     if (allGlobalFacts.length === 0) {
-        document.getElementById('factText').innerText = "Keine Fakten verfügbar.\nGehe zu Admin > Decks und importiere Wissen! 📂";
-        document.getElementById('factIcon').innerText = "⚠️";
+        document.getElementById('factText').innerText = "Keine Fakten aktiv.\nAktiviere die Standard-Bibliothek oder importiere Decks!";
+        document.getElementById('factIcon').innerText = "📭";
         document.getElementById('factSource').innerText = "";
         widget.style.display = 'block';
         return;
@@ -9655,7 +9672,6 @@ async function loadRandomFact() {
     setTimeout(() => {
         txtEl.innerText = `"${randomFact.text}"`;
         iconEl.innerText = randomFact.icon || '💡';
-        // Zeige Deck-Name als Quelle, falls keine Source da ist
         srcEl.innerText = randomFact.source ? `Quelle: ${randomFact.source}` : `Deck: ${randomFact.deckSource}`;
         checkHeartStatus();
         txtEl.style.opacity = 1;
@@ -9672,9 +9688,8 @@ async function openDeckManager() {
     list.innerHTML = '<div class="loader-spinner"></div>';
     document.getElementById('deckModal').style.display = 'block';
     
-    // Prompt Update (Textfeld zum Kopieren)
     const promptBox = document.getElementById('deckPromptOutput');
-   if(promptBox) {
+    if(promptBox) {
         promptBox.value = `Erstelle mir eine JSON-Liste mit 20 interessanten Fakten über [THEMA].\nNutze exakt dieses Format (Array von Objekten):\n\n[\n  {\n    "animal": "Tiername",\n    "icon": "🦁",\n    "text": "Der Faktentext...",\n    "tags": ["Tag1", "Tag2"],\n    "source": "Quelle"\n  }\n]`;
     }
 
@@ -9686,9 +9701,8 @@ function renderDeckList(decks) {
     const list = document.getElementById('deckListContainer');
     list.innerHTML = '';
 
-    // 1. Built-in Deck (Manuell gebautes HTML für Stabilität)
+    // 1. Built-in Deck
     const isBuiltInActive = activeDeckIDs.includes('builtin');
-    
     const div = document.createElement('div');
     div.className = `deck-card ${isBuiltInActive?'':'disabled'}`;
     div.innerHTML = `
@@ -9696,7 +9710,6 @@ function renderDeckList(decks) {
             <span class="deck-title">📦 Standard Bibliothek</span>
             <span class="deck-meta">Die integrierten Fakten der App.</span>
         </div>
-        <!-- Der Switch -->
         <label class="deck-switch">
             <input type="checkbox" ${isBuiltInActive?'checked':''} onchange="toggleDeck('builtin')">
             <span class="deck-slider"></span>
@@ -9705,10 +9718,6 @@ function renderDeckList(decks) {
     list.appendChild(div);
 
     // 2. Custom Decks
-    if(decks.length === 0) {
-        // Kleiner Hinweis, aber kein störender Block
-    }
-
     decks.forEach(d => {
         const isActive = activeDeckIDs.includes(d.id);
         const el = document.createElement('div');
@@ -9732,70 +9741,40 @@ function renderDeckList(decks) {
 
 function toggleDeck(id) {
     if (activeDeckIDs.includes(id)) {
-        // Deaktivieren (Checkbox aus)
         activeDeckIDs = activeDeckIDs.filter(d => d !== id);
     } else {
-        // Aktivieren (Checkbox an)
         activeDeckIDs.push(id);
     }
     localStorage.setItem('activeDeckIDs', JSON.stringify(activeDeckIDs));
-    
-    // UI Refresh (damit Klasse 'disabled' gesetzt wird)
     openDeckManager(); 
-    // Engine neu laden
-    initFactEngine();
+    initFactEngine(); // Engine neu laden mit neuer Auswahl!
 }
 
 async function importFactDeck(input) {
     if(!input.files[0]) return;
     const file = input.files[0];
     const reader = new FileReader();
-    
     reader.onload = async (e) => {
         try {
             const json = JSON.parse(e.target.result);
-            
-            // Validierung: Ist es ein Array oder ein Objekt mit 'facts'?
-            let facts = [];
-            let name = file.name.replace('.json', '');
-            let desc = "Importiert am " + new Date().toLocaleDateString();
+            let facts = [], name = file.name.replace('.json', ''), desc = "Importiert am " + new Date().toLocaleDateString();
 
-            if (Array.isArray(json)) {
-                facts = json; // Einfaches Array Format
-            } else if (json.facts && Array.isArray(json.facts)) {
-                facts = json.facts; // Advanced Format
-                if(json.meta) {
-                    name = json.meta.name || name;
-                    desc = json.meta.description || desc;
-                }
-            } else {
-                throw new Error("Format nicht erkannt.");
-            }
+            if (Array.isArray(json)) facts = json;
+            else if (json.facts && Array.isArray(json.facts)) {
+                facts = json.facts;
+                if(json.meta) { name = json.meta.name || name; desc = json.meta.description || desc; }
+            } else throw new Error("Format nicht erkannt.");
 
-            // Deck Objekt erstellen
-            const newDeck = {
-                id: 'deck_' + Date.now(),
-                name: name,
-                description: desc,
-                facts: facts
-            };
-
+            const newDeck = { id: 'deck_' + Date.now(), name: name, description: desc, facts: facts };
             await dbSaveDeck(newDeck);
-            
-            // Automatisch aktivieren
             activeDeckIDs.push(newDeck.id);
             localStorage.setItem('activeDeckIDs', JSON.stringify(activeDeckIDs));
             
             showErrorToast(`Deck "${name}" importiert!`, true);
-            
-            // Refresh
             openDeckManager();
             initFactEngine();
-            input.value = ''; // Reset input
-
-        } catch(err) {
-            showErrorToast("Fehler beim Import: " + err.message);
-        }
+            input.value = ''; 
+        } catch(err) { showErrorToast("Import Fehler: " + err.message); }
     };
     reader.readAsText(file);
 }
@@ -9803,30 +9782,32 @@ async function importFactDeck(input) {
 async function deleteDeck(id) {
     if(confirm("Deck wirklich löschen?")) {
         await dbDelDeck(id);
-        // Aus aktiven entfernen
         activeDeckIDs = activeDeckIDs.filter(d => d !== id);
         localStorage.setItem('activeDeckIDs', JSON.stringify(activeDeckIDs));
-        
         openDeckManager();
         initFactEngine();
         showErrorToast("Deck gelöscht.");
     }
 }
 
-
+// ... Restliche Funktionen (openFactMenu, checkHeartStatus, Library Logic) bleiben erhalten ...
 
 function openFactMenu(e) {
     if(e) e.stopPropagation();
     const items = [
-        { label: 'Fakten durchsuchen', icon: '🔍', action: 'openLibraryModal()' },
-        { label: 'Themen filtern', icon: '🎨', action: 'openFlavorModal()' },
+        { label: '🔍 Suchen & Filter', icon: '🌍', action: 'openLibraryModal()' },
+        { label: '🎛️ Themen-Wahl', icon: '🎨', action: 'openFlavorModal()' },
+        // NEU: HIER IST DER UMZUG
+        { label: '🗂️ Quellen & Decks', icon: '📚', action: 'openDeckManager()' },
+        // ---
         { label: 'Quiz spielen', icon: '🎮', action: 'startQuiz()' }
     ];
-    let x = e.clientX - 180; 
+    
+    // Positionierung (leicht angepasst, da das Menü jetzt höher ist)
+    let x = e.clientX - 200; 
     let y = e.clientY + 10;
     openContextMenu(x, y, items);
 }
-
 // 3. HERZ & SPEICHERN
 function checkHeartStatus() {
     const heart = document.getElementById('factHeart');
