@@ -1,4 +1,355 @@
 [
+
+  {
+    "animal": "Giraffe",
+    "icon": "🦒",
+    "text": "Giraffen schlafen nur etwa 30 Minuten pro Tag, und das oft in kurzen Nickerchen von wenigen Minuten.",
+    "tags": ["Schlaf", "Säugetier", "Rekord"],
+    "source": "Zoo Berlin"
+  },
+  {
+    "animal": "Koala",
+    "icon": "🐨",
+    "text": "Koalas haben Fingerabdrücke, die denen von Menschen so ähnlich sind, dass sie an Tatorten verwechselt werden könnten.",
+    "tags": ["Anatomie", "Kurios", "Krimi"],
+    "source": "Australien Natur"
+  },
+  {
+    "animal": "Schmetterling",
+    "icon": "🦋",
+    "text": "Schmetterlinge schmecken mit ihren Füßen, um festzustellen, ob ein Blatt als Nahrung für ihre Raupen geeignet ist.",
+    "tags": ["Sinne", "Insekten", "Anatomie"],
+    "source": "Insekten Welt"
+  },
+  {
+    "animal": "Delfin",
+    "icon": "🐬",
+    "text": "Delfine geben sich gegenseitig Namen (spezifische Pfeiftöne), mit denen sie sich rufen.",
+    "tags": ["Kommunikation", "Intelligenz", "Meer"],
+    "source": "Meeresbiologie Inst."
+  },
+  {
+    "animal": "Eichhörnchen",
+    "icon": "🐿️",
+    "text": "Eichhörnchen vergessen, wo sie etwa 50% ihrer Nüsse vergraben haben, und pflanzen so versehentlich Millionen von Bäumen.",
+    "tags": ["Verhalten", "Wald", "Natur"],
+    "source": "Wald Wissen"
+  },
+  {
+    "animal": "Strauß",
+    "icon": "🐦",
+    "text": "Das Auge eines Straußes ist größer als sein gesamtes Gehirn.",
+    "tags": ["Anatomie", "Vögel", "Größe"],
+    "source": "Vogelkunde"
+  },
+  {
+    "animal": "Kuh",
+    "icon": "🐄",
+    "text": "Kühe haben beste Freunde und werden gestresst, wenn sie voneinander getrennt werden.",
+    "tags": ["Sozial", "Emotionen", "Bauernhof"],
+    "source": "Tierpsychologie"
+  },
+  {
+    "animal": "Elefant",
+    "icon": "🐘",
+    "text": "Elefanten sind die einzigen Säugetiere, die nicht springen können.",
+    "tags": ["Anatomie", "Bewegung", "Säugetier"],
+    "source": "Safari Guide"
+  },
+  {
+    "animal": "Oktopus",
+    "icon": "🐙",
+    "text": "Ein Oktopus hat neun Gehirne: eins im Kopf und acht kleine in jedem der Arme, die unabhängig steuern können.",
+    "tags": ["Intelligenz", "Anatomie", "Meer"],
+    "source": "DeepSea Facts"
+  },
+  {
+    "animal": "Pinguin",
+    "icon": "🐧",
+    "text": "Einige Pinguinarten überreichen ihrem Partner einen perfekt glatten Kieselstein als 'Antrag'.",
+    "tags": ["Liebe", "Verhalten", "Vögel"],
+    "source": "Antarktis Forschung"
+  },
+  {
+    "animal": "Seepferdchen",
+    "icon": "🌊",
+    "text": "Bei Seepferdchen ist es das Männchen, das schwanger wird und die Babys austrägt.",
+    "tags": ["Fortpflanzung", "Meer", "Kurios"],
+    "source": "Ozeanarium"
+  },
+  {
+    "animal": "Tiger",
+    "icon": "🐅",
+    "text": "Nicht nur das Fell des Tigers ist gestreift, sondern auch seine Haut darunter.",
+    "tags": ["Anatomie", "Katzen", "Aussehen"],
+    "source": "Wildkatzen Magazin"
+  },
+  {
+    "animal": "Honigbiene",
+    "icon": "🐝",
+    "text": "Eine Biene müsste etwa drei Mal um die Erde fliegen, um 1 kg Honig zu produzieren.",
+    "tags": ["Arbeit", "Insekten", "Rekord"],
+    "source": "Imker Bund"
+  },
+  {
+    "animal": "Schwein",
+    "icon": "🐖",
+    "text": "Schweine können keine physikalische Möglichkeit nutzen, um in den Himmel zu schauen, da ihr Nacken dies verhindert.",
+    "tags": ["Anatomie", "Bauernhof", "Lustig"],
+    "source": "Tier-Physiologie"
+  },
+  {
+    "animal": "Kolibri",
+    "icon": "🐦",
+    "text": "Kolibris sind die einzigen Vögel, die rückwärts fliegen können.",
+    "tags": ["Flug", "Vögel", "Physik"],
+    "source": "Vogelwelt"
+  },
+  {
+    "animal": "Ameise",
+    "icon": "🐜",
+    "text": "Ameisen schlafen nie wirklich, sondern machen bis zu 250 kurze 'Powernaps' pro Tag.",
+    "tags": ["Schlaf", "Insekten", "Energie"],
+    "source": "Mikrokosmos"
+  },
+  {
+    "animal": "Wombat",
+    "icon": "🐻",
+    "text": "Der Kot von Wombats ist würfelförmig. Das verhindert, dass er wegrollt, da sie ihn zur Markierung nutzen.",
+    "tags": ["Kurios", "Verdauung", "Australien"],
+    "source": "Wild Life"
+  },
+  {
+    "animal": "Eisbär",
+    "icon": "🐻‍❄️",
+    "text": "Unter dem weißen Fell haben Eisbären eine pechschwarze Haut, um die Sonnenwärme besser zu speichern.",
+    "tags": ["Arktis", "Anatomie", "Klima"],
+    "source": "Polar Forschung"
+  },
+  {
+    "animal": "Schnecke",
+    "icon": "🐌",
+    "text": "Eine Weinbergschnecke kann bis zu drei Jahre am Stück schlafen, wenn das Wetter zu trocken ist.",
+    "tags": ["Schlaf", "Rekord", "Garten"],
+    "source": "Biologie Heute"
+  },
+  {
+    "animal": "Fledermaus",
+    "icon": "🦇",
+    "text": "Fledermäuse machen beim Verlassen der Höhle immer eine Linkskurve.",
+    "tags": ["Verhalten", "Nacht", "Orientierung"],
+    "source": "Höhlenforschung"
+  },
+  {
+    "animal": "Känguru",
+    "icon": "🦘",
+    "text": "Kängurus können nicht rückwärts hüpfen, weshalb sie oft auf australischen Wappen als Symbol für 'Fortschritt' sind.",
+    "tags": ["Bewegung", "Australien", "Symbolik"],
+    "source": "Down Under Facts"
+  },
+  {
+    "animal": "Flamingo",
+    "icon": "🦩",
+    "text": "Flamingos werden grau geboren. Ihre pinke Farbe erhalten sie erst durch die Farbstoffe in ihrer Nahrung (Krebse/Algen).",
+    "tags": ["Ernährung", "Farbe", "Vögel"],
+    "source": "Zoo Journal"
+  },
+  {
+    "animal": "Otter",
+    "icon": "🦦",
+    "text": "Seeotter halten im Schlaf Händchen, damit sie in der Strömung nicht voneinander abtreiben.",
+    "tags": ["Liebe", "Verhalten", "Wasser"],
+    "source": "Meeresbiologie"
+  },
+  {
+    "animal": "Kamel",
+    "icon": "🐫",
+    "text": "Ein Kamel kann in weniger als 15 Minuten über 100 Liter Wasser trinken.",
+    "tags": ["Wüste", "Ernährung", "Überleben"],
+    "source": "Wüsten Leben"
+  },
+  {
+    "animal": "Eule",
+    "icon": "🦉",
+    "text": "Eulen können ihre Augen nicht bewegen. Um zur Seite zu schauen, müssen sie den ganzen Kopf drehen (bis zu 270 Grad).",
+    "tags": ["Anatomie", "Sicht", "Vögel"],
+    "source": "Greifvogel Station"
+  },
+  {
+    "animal": "Qualle",
+    "icon": "🪼",
+    "text": "Die 'Turritopsis dohrnii' Qualle ist biologisch unsterblich, da sie ihren Lebenszyklus zurücksetzen und wieder jung werden kann.",
+    "tags": ["Alter", "Meer", "Wissenschaft"],
+    "source": "Meeresforschung"
+  },
+  {
+    "animal": "Hai",
+    "icon": "🦈",
+    "text": "Haie existierten schon, bevor es Bäume auf der Erde gab (seit über 400 Millionen Jahren).",
+    "tags": ["Geschichte", "Evolution", "Fisch"],
+    "source": "Paläontologie"
+  },
+  {
+    "animal": "Zebra",
+    "icon": "🦓",
+    "text": "Jedes Zebra hat ein einzigartiges Streifenmuster, vergleichbar mit dem menschlichen Fingerabdruck.",
+    "tags": ["Aussehen", "Individuum", "Afrika"],
+    "source": "Safari Wissen"
+  },
+  {
+    "animal": "Hund",
+    "icon": "🐕",
+    "text": "Der Nasenabdruck eines Hundes ist so einzigartig wie ein menschlicher Fingerabdruck und kann zur Identifizierung genutzt werden.",
+    "tags": ["Haustier", "Anatomie", "Sinne"],
+    "source": "Veterinär Journal"
+  },
+  {
+    "animal": "Katze",
+    "icon": "🐈",
+    "text": "Katzen können keine süßen Geschmäcker wahrnehmen, da ihnen der entsprechende Rezeptor fehlt.",
+    "tags": ["Sinne", "Ernährung", "Haustier"],
+    "source": "Katzen Welt"
+  },
+  {
+    "animal": "Libelle",
+    "icon": "🚁",
+    "text": "Libellen sind die erfolgreichsten Jäger der Natur mit einer Erfolgsquote von über 95% bei der Jagd.",
+    "tags": ["Jagd", "Insekten", "Rekord"],
+    "source": "Insekten Studie"
+  },
+  {
+    "animal": "Ratte",
+    "icon": "🐀",
+    "text": "Ratten lachen, wenn man sie kitzelt. Das Geräusch ist jedoch im Ultraschallbereich und für Menschen unhörbar.",
+    "tags": ["Verhalten", "Emotionen", "Wissenschaft"],
+    "source": "Verhaltensbiologie"
+  },
+  {
+    "animal": "Axolotl",
+    "icon": "🦎",
+    "text": "Der Axolotl kann verlorene Gliedmaßen, Organe und sogar Teile seines Gehirns vollständig nachwachsen lassen.",
+    "tags": ["Regeneration", "Medizin", "Wasser"],
+    "source": "Wissenschaft Aktuell"
+  },
+  {
+    "animal": "Faultier",
+    "icon": "🦥",
+    "text": "Es dauert bis zu 30 Tage, bis ein Faultier ein einziges Blatt verdaut hat.",
+    "tags": ["Verdauung", "Langsam", "Rekord"],
+    "source": "Regenwald Fakten"
+  },
+  {
+    "animal": "Krähe",
+    "icon": "🐦‍⬛",
+    "text": "Krähen können sich menschliche Gesichter merken und halten Groll gegen Leute, die sie schlecht behandelt haben.",
+    "tags": ["Intelligenz", "Gedächtnis", "Vögel"],
+    "source": "Ornithologie"
+  },
+  {
+    "animal": "Seestern",
+    "icon": "⭐",
+    "text": "Seesterne haben kein Gehirn und kein Blut. Sie pumpen stattdessen gefiltertes Meerwasser durch ihren Körper.",
+    "tags": ["Anatomie", "Meer", "Kurios"],
+    "source": "Ozean Biologie"
+  },
+  {
+    "animal": "Gecko",
+    "icon": "🦎",
+    "text": "Geckos haben keine Augenlider. Sie lecken ihre Augen mit der Zunge ab, um sie sauber und feucht zu halten.",
+    "tags": ["Anatomie", "Reptilien", "Kurios"],
+    "source": "Reptilien Welt"
+  },
+  {
+    "animal": "Panda",
+    "icon": "🐼",
+    "text": "Pandas verbringen bis zu 14 Stunden am Tag nur mit Fressen, da Bambus sehr nährstoffarm ist.",
+    "tags": ["Ernährung", "Verhalten", "Asien"],
+    "source": "WWF"
+  },
+  {
+    "animal": "Frosch",
+    "icon": "🐸",
+    "text": "Einige Frösche können im Winter komplett einfrieren und im Frühling wieder auftauen und weiterleben.",
+    "tags": ["Überleben", "Klima", "Amphibien"],
+    "source": "Natur Wunder"
+  },
+  {
+    "animal": "Wolf",
+    "icon": "🐺",
+    "text": "Das Heulen eines Wolfes ist einzigartig wie eine Stimme und dient dazu, das Rudel über weite Distanzen zu sammeln.",
+    "tags": ["Kommunikation", "Rudel", "Wald"],
+    "source": "Wolf Forschung"
+  },
+  {
+    "animal": "Marienkäfer",
+    "icon": "🐞",
+    "text": "Marienkäfer können bei Gefahr 'Bluten' aus ihren Knien vortäuschen. Die Flüssigkeit schmeckt bitter für Fressfeinde.",
+    "tags": ["Verteidigung", "Insekten", "Garten"],
+    "source": "Insekten Welt"
+  },
+  {
+    "animal": "Pottwal",
+    "icon": "🐳",
+    "text": "Pottwale schlafen senkrecht im Wasser stehend.",
+    "tags": ["Schlaf", "Meer", "Kurios"],
+    "source": "Meeres Institut"
+  },
+  {
+    "animal": "Spinne",
+    "icon": "🕷️",
+    "text": "Spinnenseide ist, bezogen auf das Gewicht, fünfmal stärker als Stahl.",
+    "tags": ["Material", "Stärke", "Insekten"],
+    "source": "Physik Natur"
+  },
+  {
+    "animal": "Chamäleon",
+    "icon": "🦎",
+    "text": "Die Zunge eines Chamäleons ist oft doppelt so lang wie sein ganzer Körper.",
+    "tags": ["Anatomie", "Jagd", "Reptilien"],
+    "source": "Reptilien Zoo"
+  },
+  {
+    "animal": "Gorilla",
+    "icon": "🦍",
+    "text": "Gorillas bauen sich jeden Abend ein neues Nest aus Blättern und Zweigen zum Schlafen.",
+    "tags": ["Verhalten", "Schlaf", "Affen"],
+    "source": "Primaten Forschung"
+  },
+  {
+    "animal": "Pfau",
+    "icon": "🦚",
+    "text": "Nur die männlichen Pfauen haben die bunten Federn; die Weibchen sind meist braun-grau, um beim Brüten gut getarnt zu sein.",
+    "tags": ["Aussehen", "Vögel", "Paarung"],
+    "source": "Vogelpark"
+  },
+  {
+    "animal": "Schildkröte",
+    "icon": "🐢",
+    "text": "Schildkröten können durch ihren Hintern atmen (Kloakenatmung), besonders während des Winterschlafs unter Wasser.",
+    "tags": ["Anatomie", "Kurios", "Überleben"],
+    "source": "Biologie Fakten"
+  },
+  {
+    "animal": "Nashorn",
+    "icon": "🦏",
+    "text": "Das Horn eines Nashorns besteht nicht aus Knochen, sondern aus Keratin – dem gleichen Material wie menschliche Haare und Fingernägel.",
+    "tags": ["Anatomie", "Material", "Afrika"],
+    "source": "Wildschutz"
+  },
+  {
+    "animal": "Löwe",
+    "icon": "🦁",
+    "text": "Löwen brüllen so laut, dass man es noch in 8 Kilometern Entfernung hören kann.",
+    "tags": ["Stärke", "Kommunikation", "Afrika"],
+    "source": "Safari Guide"
+  },
+  {
+    "animal": "Elch",
+    "icon": "🫎",
+    "text": "Elche sind hervorragende Schwimmer und können bis zu 6 Meter tief tauchen, um Wasserpflanzen zu fressen.",
+    "tags": ["Schwimmen", "Ernährung", "Wald"],
+    "source": "Nordische Natur"
+  },
   {
     "animal": "Rotfuchs",
     "icon": "🦊",
