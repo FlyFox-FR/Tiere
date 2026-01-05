@@ -1,5 +1,355 @@
 [
     {
+    "animal": "Quokka",
+    "icon": "🐻",
+    "text": "Quokkas haben keine natürlichen Feinde auf ihrer Insel und haben deshalb verlernt, Angst zu haben. Sie lächeln immer.",
+    "tags": ["Niedlich", "Happy", "Australien"],
+    "source": "Rottnest Island"
+  },
+  {
+    "animal": "Honigdachs",
+    "icon": "🦡",
+    "text": "Der Honigdachs hat eine so dicke, lose Haut, dass er sich darin drehen kann, wenn er gebissen wird, um zurückzubeißen.",
+    "tags": ["Badass", "Kampf", "Afrika"],
+    "source": "Wildtier Doku"
+  },
+  {
+    "animal": "Narwal",
+    "icon": "🦄",
+    "text": "Das 'Horn' des Narwals ist eigentlich ein extrem verlängerter Eckzahn, der bis zu 3 Meter lang werden kann.",
+    "tags": ["Anatomie", "Kurios", "Meer"],
+    "source": "Meeresbiologie"
+  },
+  {
+    "animal": "Specht",
+    "icon": "🐦",
+    "text": "Die Zunge eines Spechts ist so lang, dass sie sich im Schädel einmal um das Gehirn wickelt, um es vor Erschütterungen zu schützen.",
+    "tags": ["Anatomie", "Clever", "Vögel"],
+    "source": "Ornithologie"
+  },
+  {
+    "animal": "Gepard",
+    "icon": "🐆",
+    "text": "Geparden sind die einzigen Großkatzen, die nicht brüllen können. Wenn sie aufgeregt sind, zwitschern sie wie Vögel.",
+    "tags": ["Sound", "Überraschung", "Katzen"],
+    "source": "Safari Guide"
+  },
+  {
+    "animal": "Känguru",
+    "icon": "🦘",
+    "text": "Känguru-Mütter können eine Schwangerschaft pausieren ('Diapause'), wenn die Umweltbedingungen für ein Baby zu schlecht sind.",
+    "tags": ["Superkraft", "Biologie", "Australien"],
+    "source": "Wild Life"
+  },
+  {
+    "animal": "Krähe",
+    "icon": "🚗",
+    "text": "Krähen in Japan nutzen Autos als Nussknacker: Sie legen Nüsse vor Ampeln und warten, bis Autos darüberfahren.",
+    "tags": ["Intelligenz", "City", "Vögel"],
+    "source": "Verhaltensstudie"
+  },
+  {
+    "animal": "Giraffe",
+    "icon": "🦒",
+    "text": "Die Zunge einer Giraffe ist blauschwarz und bis zu 50 cm lang, damit sie beim Fressen in der Sonne keinen Sonnenbrand bekommt.",
+    "tags": ["Schutz", "Anatomie", "Afrika"],
+    "source": "Zoo Wissen"
+  },
+  {
+    "animal": "Spinne",
+    "icon": "🕷️",
+    "text": "Spinnen haben keine Muskeln in den Beinen, um sie zu strecken. Sie nutzen Hydraulik (Blutdruck), um die Beine auszufahren.",
+    "tags": ["Physik", "Anders", "Insekten"],
+    "source": "Biomechanik"
+  },
+  {
+    "animal": "Gans",
+    "icon": "🪿",
+    "text": "Gänse haben Zähne auf der Zunge, um rutschiges Gras und Wasserpflanzen besser festhalten zu können.",
+    "tags": ["Gruselig", "Anatomie", "Bauernhof"],
+    "source": "Vogelkunde"
+  },
+  {
+    "animal": "Pistolenkrebs",
+    "icon": "🔫",
+    "text": "Der Pistolenkrebs schnippt seine Schere so schnell, dass eine Kavitationsblase entsteht, die so heiß wie die Sonnenoberfläche wird.",
+    "tags": ["Physik", "Waffe", "Meer"],
+    "source": "Meeresforschung"
+  },
+  {
+    "animal": "Schmetterling",
+    "icon": "🐢",
+    "text": "Im Amazonas trinken Schmetterlinge die Tränen von Schildkröten, um an wichtiges Salz (Natrium) zu kommen.",
+    "tags": ["Romantisch", "Chemie", "Dschungel"],
+    "source": "Natur Beobachtung"
+  },
+  {
+    "animal": "Eichhörnchen",
+    "icon": "🌡️",
+    "text": "Eichhörnchen nutzen ihren buschigen Schwanz im Winter als Decke und im Sommer als Sonnenschirm.",
+    "tags": ["Praktisch", "Werkzeug", "Wald"],
+    "source": "Wildtier Kunde"
+  },
+  {
+    "animal": "Elefant",
+    "icon": "🐘",
+    "text": "Elefanten können Sonnenbrand bekommen. Deshalb werfen sie sich Sand auf den Rücken oder baden im Schlamm.",
+    "tags": ["Pflege", "Afrika", "Haut"],
+    "source": "Safari Live"
+  },
+  {
+    "animal": "Biber",
+    "icon": "🥽",
+    "text": "Biber haben durchsichtige Augenlider (Nickhaut), die wie eine Taucherbrille funktionieren, damit sie unter Wasser sehen können.",
+    "tags": ["Unterwasser", "Anatomie", "Nager"],
+    "source": "Limnologie"
+  },
+  {
+    "animal": "Fuchs",
+    "icon": "🦊",
+    "text": "Füchse haben Schnurrhaare an den Beinen, um sich im hohen Gras oder in dunklen Bauen besser zu orientieren.",
+    "tags": ["Sinne", "Navigation", "Wald"],
+    "source": "Jäger Wissen"
+  },
+  {
+    "animal": "Papageientaucher",
+    "icon": "🐧",
+    "text": "Papageientaucher nutzen kleine Stöckchen, um sich am Rücken zu kratzen. Eines der wenigen Tiere, das Werkzeuge zur Körperpflege nutzt.",
+    "tags": ["Intelligenz", "Pflege", "Vögel"],
+    "source": "Ornithologie"
+  },
+  {
+    "animal": "Hai",
+    "icon": "🦈",
+    "text": "Haie verlieren im Laufe ihres Lebens bis zu 30.000 Zähne, die ständig wie am Fließband nachwachsen.",
+    "tags": ["Unendlich", "Anatomie", "Meer"],
+    "source": "Hai Forschung"
+  },
+  {
+    "animal": "Ameise",
+    "icon": "🍄",
+    "text": "Blattschneiderameisen bauen keine Nester, sondern riesige unterirdische Pilzfarmen. Sie sind die ersten Bauern der Erde.",
+    "tags": ["Landwirtschaft", "Insekten", "Arbeit"],
+    "source": "Ameisen Welt"
+  },
+  {
+    "animal": "Krokodil",
+    "icon": "🐊",
+    "text": "Krokodile haben das stärkste Immunsystem der Welt. Sie können in dreckigem Wasser mit offenen Wunden überleben, ohne krank zu werden.",
+    "tags": ["Superkraft", "Medizin", "Reptilien"],
+    "source": "Immunologie"
+  },
+  {
+    "animal": "Schnecke",
+    "icon": "🔪",
+    "text": "Schleim von Schnecken ist so effektiv, dass sie über eine Rasierklinge kriechen können, ohne sich zu schneiden.",
+    "tags": ["Schutz", "Chemie", "Garten"],
+    "source": "Physik Experiment"
+  },
+  {
+    "animal": "Tiger",
+    "icon": "🍿",
+    "text": "Der Urin von Tigern riecht extrem stark nach gebuttertem Popcorn.",
+    "tags": ["Geruch", "Kurios", "Zoo"],
+    "source": "Tierpfleger"
+  },
+  {
+    "animal": "Mauersegler",
+    "icon": "💤",
+    "text": "Mauersegler schlafen im Flug. Sie schalten immer nur eine Gehirnhälfte ab, um nicht abzustürzen.",
+    "tags": ["Schlaf", "Skill", "Vögel"],
+    "source": "Vogelwarte"
+  },
+  {
+    "animal": "Oktopus",
+    "icon": "🎨",
+    "text": "Oktopusse können ihre Hautfarbe und -struktur in Millisekunden ändern, um wie ein Stein oder eine Koralle auszusehen.",
+    "tags": ["Tarnung", "Magisch", "Meer"],
+    "source": "Meeresbio"
+  },
+  {
+    "animal": "Waschbär",
+    "icon": "🦝",
+    "text": "Waschbären 'waschen' ihr Essen nicht, um es zu reinigen. Wasser macht ihre Pfoten sensibler, damit sie fühlen können, was sie essen.",
+    "tags": ["Tastsinn", "Verhalten", "Wald"],
+    "source": "Biologie"
+  },
+  {
+    "animal": "Fledermaus",
+    "icon": "⚖️",
+    "text": "Eine kleine Fledermaus kann in einer einzigen Stunde bis zu 1.000 Mücken fressen.",
+    "tags": ["Hunger", "Nützlich", "Nacht"],
+    "source": "Naturschutz"
+  },
+  {
+    "animal": "Panda",
+    "icon": "💩",
+    "text": "Da Bambus kaum Energie liefert, müssen Pandas bis zu 40 Mal am Tag auf die Toilette.",
+    "tags": ["Verdauung", "Viel", "Asien"],
+    "source": "Zoo Fakten"
+  },
+  {
+    "animal": "Blobfisch",
+    "icon": "🐟",
+    "text": "Der Blobfisch sieht nur an Land so hässlich aus. Unter dem extremen Druck der Tiefsee hat er eine ganz normale Form.",
+    "tags": ["Physik", "Hässlich", "Meer"],
+    "source": "Tiefsee Forschung"
+  },
+  {
+    "animal": "Biene",
+    "icon": "🌸",
+    "text": "Wenn Bienen müde werden, schlafen sie manchmal in Blüten und halten sich an den Blütenblättern fest.",
+    "tags": ["Süß", "Schlaf", "Insekten"],
+    "source": "Makrofotografie"
+  },
+  {
+    "animal": "Kuh",
+    "icon": "🧭",
+    "text": "Wenn Kühe grasen, richten sie ihren Körper meistens nach Norden oder Süden aus (Magnetfeld-Orientierung).",
+    "tags": ["Magnet", "Kurios", "Bauernhof"],
+    "source": "Satelliten Bilder"
+  },
+  {
+    "animal": "Zitteraal",
+    "icon": "⚡",
+    "text": "Ein Zitteraal ist eigentlich kein Aal, sondern gehört zur Familie der Messerfische.",
+    "tags": ["Lüge", "Verwandtschaft", "Wasser"],
+    "source": "Taxonomie"
+  },
+  {
+    "animal": "Seestern",
+    "icon": "👀",
+    "text": "Seesterne haben Augen. Sie sitzen jeweils an der Spitze jedes Armes, können aber nur hell und dunkel unterscheiden.",
+    "tags": ["Anatomie", "Sicht", "Meer"],
+    "source": "Meeresbiologie"
+  },
+  {
+    "animal": "Eisbär",
+    "icon": "📸",
+    "text": "Das Fell von Eisbären ist nicht weiß, sondern transparent. Es wirkt nur weiß, weil es das Licht reflektiert.",
+    "tags": ["Optik", "Licht", "Arktis"],
+    "source": "Physik Natur"
+  },
+  {
+    "animal": "Kamel",
+    "icon": "🐪",
+    "text": "Die Höcker eines Kamels speichern kein Wasser, sondern Fett als Energiereserve für schlechte Zeiten.",
+    "tags": ["Mythos", "Energie", "Wüste"],
+    "source": "Biologie"
+  },
+  {
+    "animal": "Alpaka",
+    "icon": "✂️",
+    "text": "Alpakas können alleine vor Einsamkeit sterben. Deshalb muss man sie immer mindestens zu zweit halten.",
+    "tags": ["Sozial", "Gesetz", "Haustier"],
+    "source": "Tierschutz"
+  },
+  {
+    "animal": "Schwein",
+    "icon": "🐖",
+    "text": "Schweine haben keine Schweißdrüsen. Sie suhlen sich im Schlamm, um abzukühlen, nicht weil sie dreckig sind.",
+    "tags": ["Hygiene", "Sommer", "Bauernhof"],
+    "source": "Tiermedizin"
+  },
+  {
+    "animal": "Ratte",
+    "icon": "🦷",
+    "text": "Die Zähne von Ratten wachsen so schnell, dass sie Beton oder Blei annagen müssen, um sie abzunutzen.",
+    "tags": ["Stark", "Nager", "Stadt"],
+    "source": "Schädlingsbekämpfung"
+  },
+  {
+    "animal": "Gecko",
+    "icon": "🦎",
+    "text": "Einige Gecko-Arten können ihre Schwänze abwerfen, um Raubtiere abzulenken. Der Schwanz wächst später nach.",
+    "tags": ["Taktik", "Regeneration", "Reptilien"],
+    "source": "Herpetologie"
+  },
+  {
+    "animal": "Libelle",
+    "icon": "🚁",
+    "text": "Libellen können ihre vier Flügel unabhängig voneinander bewegen, was ihnen erlaubt, wie ein Hubschrauber in der Luft zu stehen.",
+    "tags": ["Flug", "Technik", "Insekten"],
+    "source": "Aerodynamik"
+  },
+  {
+    "animal": "Glühwürmchen",
+    "icon": "💡",
+    "text": "Das Licht von Glühwürmchen ist 'kaltes Licht'. Es erzeugt fast keine Wärme, was extrem effizient ist (fast 100% Energie zu Licht).",
+    "tags": ["Effizienz", "Licht", "Insekten"],
+    "source": "Bionik"
+  },
+  {
+    "animal": "Wolf",
+    "icon": "🐺",
+    "text": "Ein Wolfsrudel wandert oft im Gänsemarsch (hintereinander), um im tiefen Schnee Energie zu sparen.",
+    "tags": ["Taktik", "Winter", "Wald"],
+    "source": "Wolf Forschung"
+  },
+  {
+    "animal": "Schlange",
+    "icon": "🐍",
+    "text": "Schlangen haben keine Augenlider. Sie schlafen mit offenen Augen.",
+    "tags": ["Gruselig", "Schlaf", "Reptilien"],
+    "source": "Zoo Wissen"
+  },
+  {
+    "animal": "Katze",
+    "icon": "📦",
+    "text": "Katzen lieben Kartons, weil der enge Raum ihnen Sicherheit gibt und Körperwärme speichert.",
+    "tags": ["Verhalten", "Logik", "Haustier"],
+    "source": "Verhaltensforschung"
+  },
+  {
+    "animal": "Delfin",
+    "icon": "🐬",
+    "text": "Delfine schlafen immer nur mit einer Gehirnhälfte. Die andere bleibt wach, damit sie nicht vergessen zu atmen.",
+    "tags": ["Schlaf", "Gehirn", "Meer"],
+    "source": "Meeresbiologie"
+  },
+  {
+    "animal": "Schildkröte",
+    "icon": "🐢",
+    "text": "Das Geschlecht von Schildkrötenbabys wird durch die Temperatur im Nest bestimmt. Warm = Weibchen, Kalt = Männchen.",
+    "tags": ["Temperatur", "Geburt", "Reptilien"],
+    "source": "Klimawandel Studie"
+  },
+  {
+    "animal": "Kolibri",
+    "icon": "💓",
+    "text": "Das Herz eines Kolibris schlägt bis zu 1.200 Mal pro Minute, wenn er fliegt.",
+    "tags": ["Speed", "Anatomie", "Vögel"],
+    "source": "Vogelkunde"
+  },
+  {
+    "animal": "Ameisenbär",
+    "icon": "🐜",
+    "text": "Ameisenbären haben keine Zähne. Sie zermahlen Ameisen und Termiten mit ihrem Magen.",
+    "tags": ["Verdauung", "Anatomie", "Südamerika"],
+    "source": "Wild Life"
+  },
+  {
+    "animal": "Löwe",
+    "icon": "🦁",
+    "text": "Löwen jagen meistens nachts, weil ihre Augen im Dunkeln sechs Mal besser sehen als die von Menschen.",
+    "tags": ["Nacht", "Jagd", "Afrika"],
+    "source": "Safari Guide"
+  },
+  {
+    "animal": "Reh",
+    "icon": "🦌",
+    "text": "Rehe können ihre Ohren unabhängig voneinander in verschiedene Richtungen drehen, um Feinde zu orten.",
+    "tags": ["Radar", "Sinne", "Wald"],
+    "source": "Forstwirtschaft"
+  },
+  {
+    "animal": "Eule",
+    "icon": "🤫",
+    "text": "Die Federn von Eulen sind so geformt, dass sie den Luftstrom brechen und völlig geräuschlos fliegen können.",
+    "tags": ["Stealth", "Flug", "Vögel"],
+    "source": "Bionik"
+  },
+    {
     "animal": "Wombat",
     "icon": "🐻",
     "text": "Wombats haben einen extrem harten Hintern, den sie als Schild benutzen, um Raubtieren den Schädel an der Höhlendecke zu zerquetschen.",
