@@ -1,6 +1,241 @@
 [
   {
   "icon": "🐙",
+  "text": "Kraken können Werkzeuge benutzen, zum Beispiel Kokosnussschalen als mobilen Schutz.",
+  "source": "Current Biology"
+},
+{
+  "icon": "🐘",
+  "text": "Elefanten können Wasser über mehrere Kilometer hinweg riechen.",
+  "source": "National Geographic"
+},
+{
+  "icon": "🐬",
+  "text": "Delfine helfen verletzten Artgenossen aktiv beim Atmen an der Wasseroberfläche.",
+  "source": "Marine Mammal Science"
+},
+{
+  "icon": "🦅",
+  "text": "Greifvögel nutzen aufsteigende Warmluft, um mit minimalem Energieaufwand große Höhen zu erreichen.",
+  "source": "Ornithologie"
+},
+{
+  "icon": "🐜",
+  "text": "Ameisen können einfache medizinische Versorgung leisten, indem sie verletzte Nestgenossen pflegen.",
+  "source": "Science Advances"
+},
+{
+  "icon": "🐝",
+  "text": "Bienen erkennen menschliche Gesichter anhand von Mustern.",
+  "source": "Journal of Experimental Biology"
+},
+{
+  "icon": "🦑",
+  "text": "Tintenfische besitzen die größten Augen aller wirbellosen Tiere.",
+  "source": "National Geographic"
+},
+{
+  "icon": "🐦",
+  "text": "Krähen können sich Gesichter von Menschen merken, die ihnen geschadet haben.",
+  "source": "University of Washington"
+},
+{
+  "icon": "🐳",
+  "text": "Pottwale kommunizieren mit komplexen Klickmustern, die als Codas bezeichnet werden.",
+  "source": "Nature"
+},
+{
+  "icon": "🦒",
+  "text": "Giraffenzungen können über 45 Zentimeter lang werden und sind dunkel gefärbt, um Sonnenbrand zu vermeiden.",
+  "source": "Zoo Biology"
+},
+{
+  "icon": "🐌",
+  "text": "Manche Meeresschnecken nutzen gestohlene Chloroplasten von Algen zur Photosynthese.",
+  "source": "Science"
+},
+{
+  "icon": "🦈",
+  "text": "Haie müssen nicht ständig schwimmen, um zu atmen – viele Arten können aktiv Wasser pumpen.",
+  "source": "Smithsonian Ocean"
+},
+{
+  "icon": "🐸",
+  "text": "Der Glasfrosch ist nahezu durchsichtig, sodass seine inneren Organe sichtbar sind.",
+  "source": "Amphibian Research"
+},
+{
+  "icon": "🦧",
+  "text": "Orang-Utans planen Werkzeuge im Voraus für zukünftige Aufgaben.",
+  "source": "Science"
+},
+{
+  "icon": "🐍",
+  "text": "Grubenottern können Wärmestrahlung wahrnehmen und so warmblütige Beute orten.",
+  "source": "Herpetologica"
+},
+{
+  "icon": "🦦",
+  "text": "Seeotter benutzen Steine als Amboss, um Muscheln zu öffnen.",
+  "source": "National Geographic"
+},
+{
+  "icon": "🐧",
+  "text": "Kaiserpinguine können über 20 Minuten am Stück tauchen.",
+  "source": "Antarctic Research"
+},
+{
+  "icon": "🦋",
+  "text": "Schmetterlinge erinnern sich auch nach der Metamorphose an Lernerfahrungen aus dem Raupenstadium.",
+  "source": "PLoS ONE"
+},
+{
+  "icon": "🐒",
+  "text": "Schimpansen führen regelrechte Jagdstrategien im Team durch.",
+  "source": "Jane Goodall Institute"
+},
+{
+  "icon": "🐢",
+  "text": "Schildkröten können ihren Herzschlag stark verlangsamen, um lange Tauchgänge zu überstehen.",
+  "source": "Marine Biology"
+},
+{
+  "icon": "🦀",
+  "text": "Einige Krabbenarten nutzen Seeanemonen als lebende Waffen.",
+  "source": "Marine Ecology"
+},
+{
+  "icon": "🐈",
+  "text": "Katzen können Ultraschalllaute von Nagetieren hören.",
+  "source": "Feline Biology"
+},
+{
+  "icon": "🐕",
+  "text": "Hunde können Krankheiten wie Krebs oder Diabetes am Geruch erkennen.",
+  "source": "British Medical Journal"
+},
+{
+  "icon": "🦓",
+  "text": "Zebras kommunizieren über subtile Ohren- und Schwanzbewegungen.",
+  "source": "Animal Behaviour"
+},
+{
+  "icon": "🦜",
+  "text": "Graupapageien können Konzepte wie Farbe, Form und Anzahl unterscheiden.",
+  "source": "Harvard University"
+},
+{
+  "icon": "🐠",
+  "text": "Putzerfische erkennen sich selbst im Spiegel und bestehen den Spiegeltest.",
+  "source": "PLoS Biology"
+},
+{
+  "icon": "🦞",
+  "text": "Hummer können Stress empfinden, was sich chemisch im Blut nachweisen lässt.",
+  "source": "Marine Biology Letters"
+},
+{
+  "icon": "🐊",
+  "text": "Krokodile nutzen Werkzeuge, indem sie Stöcke auf dem Kopf balancieren, um Vögel anzulocken.",
+  "source": "Ethology"
+},
+{
+  "icon": "🦔",
+  "text": "Igel besitzen ein ausgeprägtes Gehör, obwohl ihre Ohren kaum sichtbar sind.",
+  "source": "Zoology Journal"
+},
+{
+  "icon": "🐐",
+  "text": "Ziegen merken sich komplexe Aufgaben über Monate hinweg.",
+  "source": "Frontiers in Psychology"
+},
+{
+  "icon": "🦝",
+  "text": "Waschbären besitzen extrem empfindliche Tasthaare an ihren Pfoten.",
+  "source": "Smithsonian"
+},
+{
+  "icon": "🐃",
+  "text": "Bisons können trotz ihrer Größe überraschend schnell laufen.",
+  "source": "National Park Service"
+},
+{
+  "icon": "🐟",
+  "text": "Einige Fische erkennen menschliche Taucher individuell wieder.",
+  "source": "Behavioural Ecology"
+},
+{
+  "icon": "🦐",
+  "text": "Der Pistolenkrebs erzeugt mit seiner Schere einen Schallknall von über 200 Dezibel.",
+  "source": "Nature"
+},
+{
+  "icon": "🦩",
+  "text": "Flamingos synchronisieren ihr Brutverhalten innerhalb großer Kolonien.",
+  "source": "Avian Biology"
+},
+{
+  "icon": "🐿️",
+  "text": "Eichhörnchen können Bewegungsabläufe anderer Tiere imitieren.",
+  "source": "Behavioural Processes"
+},
+{
+  "icon": "🦌",
+  "text": "Hirsche können tieffrequente Laute über weite Distanzen wahrnehmen.",
+  "source": "Wildlife Acoustics"
+},
+{
+  "icon": "🐛",
+  "text": "Einige Raupen imitieren das Aussehen von Schlangen, um Feinde abzuschrecken.",
+  "source": "Entomology Journal"
+},
+{
+  "icon": "🦕",
+  "text": "Federn entwickelten sich ursprünglich zur Wärmeisolierung, nicht zum Fliegen.",
+  "source": "Nature"
+},
+{
+  "icon": "🐓",
+  "text": "Hühner können zukünftige Ereignisse antizipieren und entsprechend handeln.",
+  "source": "Cognition"
+},
+{
+  "icon": "🦎",
+  "text": "Chamäleons wechseln ihre Farbe nicht primär zur Tarnung, sondern zur Kommunikation.",
+  "source": "National Geographic"
+},
+{
+  "icon": "🐺",
+  "text": "Wölfe zeigen Fairness und teilen Beute mit verletzten Rudelmitgliedern.",
+  "source": "Animal Behaviour"
+},
+{
+  "icon": "🦘",
+  "text": "Kängurus nutzen ihren Schwanz als zusätzliches Standbein beim Gehen.",
+  "source": "Journal of Experimental Biology"
+},
+{
+  "icon": "🐙",
+  "text": "Kraken können durch Beobachtung lernen, ohne selbst zu experimentieren.",
+  "source": "Behavioural Ecology"
+},
+{
+  "icon": "🐳",
+  "text": "Wale können ihren Schlafzustand aktiv steuern, um wachsam zu bleiben.",
+  "source": "Marine Mammal Science"
+},
+{
+  "icon": "🦏",
+  "text": "Nashörner besitzen trotz schlechter Sehkraft ein ausgezeichnetes Gehör.",
+  "source": "African Wildlife Research"
+},
+{
+  "icon": "🐒",
+  "text": "Bonobos lösen Konflikte häufig durch soziale Interaktion statt durch Gewalt.",
+  "source": "Scientific American"
+},
+  {
+  "icon": "🐙",
   "text": "Etwa zwei Drittel der Nervenzellen eines Kraken befinden sich nicht im Gehirn, sondern in seinen Armen.",
   "source": "Scientific American"
 },
