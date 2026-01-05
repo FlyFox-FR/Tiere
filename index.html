@@ -3591,63 +3591,50 @@ body:not(.dark) .nav-island {
     color: #ff4757; font-size: 16px; cursor: pointer;
 }
 
-/* === DISCOVERY & FLAVOR STYLES === */
-
-/* Tabs im Library Modal */
-.tab-nav {
-    display: flex; gap: 10px; margin-bottom: 20px;
-    background: var(--btn); padding: 5px; border-radius: 16px;
-}
-.tab-btn {
-    flex: 1; padding: 10px; border-radius: 12px;
-    text-align: center; font-weight: bold; font-size: 13px;
-    color: var(--sub); cursor: pointer; transition: all 0.2s;
-}
-.tab-btn.active {
-    background: var(--card-solid); color: var(--accent);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-/* Tier Bubbles in der Suche (Oben) */
-.bubble-scroll {
-    display: flex; gap: 10px; overflow-x: auto; 
-    padding-bottom: 10px; margin-bottom: 15px;
-    scrollbar-width: none;
-}
-.discovery-bubble {
-    background: var(--card); border: 1px solid var(--btn);
-    padding: 6px 12px; border-radius: 20px;
-    display: flex; align-items: center; gap: 6px;
-    font-size: 13px; font-weight: bold; white-space: nowrap;
-    cursor: pointer; transition: transform 0.2s;
-}
-.discovery-bubble:active { transform: scale(0.95); }
-.discovery-bubble span { opacity: 0.6; font-size: 11px; margin-left: 2px; }
-
-/* Flavor Grid (Einstellungen) */
-.flavor-grid {
-    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;
-}
-.flavor-tag {
-    padding: 8px 16px; border-radius: 20px; 
-    background: var(--btn); color: var(--text); border: 2px solid transparent;
-    cursor: pointer; font-size: 13px; font-weight: 600;
-    transition: all 0.2s;
-}
-.flavor-tag.selected {
-    background: rgba(33, 150, 243, 0.15); 
-    border-color: var(--accent); color: var(--accent);
-}
-
-/* Lade Spinner */
-.loader-spinner {
-    border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid var(--accent);
-    border-radius: 50%; width: 24px; height: 24px;
-    animation: spin 1s linear infinite; margin: 20px auto;
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-
+[
+  {
+    "animal": "Rotfuchs",
+    "icon": "🦊",
+    "text": "Füchse nutzen das Magnetfeld der Erde, um bei der Jagd im Schnee die Entfernung zur Beute exakt zu bestimmen.",
+    "tags": ["Jagd", "Sinne", "Physik"],
+    "source": "NatGeo"
+  },
+  {
+    "animal": "Honigbiene",
+    "icon": "🐝",
+    "text": "Bienen kommunizieren die Entfernung und Richtung von Futterquellen durch einen speziellen 'Schwänzeltanz'.",
+    "tags": ["Kommunikation", "Verhalten", "Insekten"],
+    "source": "Biologie heute"
+  },
+  {
+    "animal": "Blauwal",
+    "icon": "🐋",
+    "text": "Das Herz eines Blauwals ist so groß wie ein VW Käfer und man könnte durch die Aorta schwimmen.",
+    "tags": ["Anatomie", "Größe", "Wow"],
+    "source": "Meeresinstitut"
+  },
+  {
+    "animal": "Oktopus",
+    "icon": "🐙",
+    "text": "Kraken haben drei Herzen und blaues Blut. Zwei Herzen pumpen Blut zu den Kiemen, eins zum Rest des Körpers.",
+    "tags": ["Anatomie", "Wasser", "Kurios"],
+    "source": "DeepSea Facts"
+  },
+  {
+    "animal": "Faultier",
+    "icon": "🦥",
+    "text": "Faultiere kommen nur einmal pro Woche vom Baum herunter, um auf die Toilette zu gehen. Ein riskantes Manöver!",
+    "tags": ["Verhalten", "Lustig", "Wald"],
+    "source": "Rainforest Alliance"
+  },
+  {
+    "animal": "Rotfuchs",
+    "icon": "🦊",
+    "text": "Füchse sind Einzelgänger, die ihre Beute oft vergraben, um sie später zu fressen (Caching).",
+    "tags": ["Verhalten", "Ernährung"],
+    "source": "Wald Wissen"
+  }
+]
 </style>
 </head>
 <body>
@@ -3944,41 +3931,41 @@ body:not(.dark) .nav-island {
   </div>
 
 
-<!-- DAILY FACT WIDGET (Docked Version) -->
-  <div class="card-section widget-docked-top" id="factWidget" style="display:none; position:relative;">
-      
-      <!-- Herz Button -->
-      <div id="factHeart" class="fact-heart-btn" onclick="safeRun(toggleFactLike)">♥</div>
+<!-- DAILY FACT WIDGET (V2 Layout) -->
+<div class="card-section widget-docked-top" id="factWidget" style="display:none; position:relative;">
+    
+    <div class="fact-widget-header">
+        <!-- Titel -->
+        <h3 style="margin:0; font-size:14px; text-transform:uppercase; color:var(--accent); letter-spacing:1px;">Wusstest du?</h3>
+        
+        <!-- Controls Oben Rechts -->
+        <div class="fact-controls">
+             <!-- Herz -->
+             <div id="factHeart" onclick="safeRun(toggleFactLike)" style="cursor:pointer; font-size:22px; transition:transform 0.2s;">🤍</div>
+             <!-- Menü (3 Punkte) -->
+             <div onclick="safeRun(openFactMenu, event)" style="cursor:pointer; font-size:22px;">⋮</div>
+        </div>
+    </div>
 
+    <div style="display:flex; gap:15px; align-items:flex-start;">
+        <!-- Großes Icon -->
+        <div id="factIcon" style="font-size:40px; background:var(--bg); width:60px; height:60px; display:flex; align-items:center; justify-content:center; border-radius:16px; border:1px solid var(--btn); flex-shrink:0;">💡</div>
+        
+        <div class="fact-content-col">
+            <div class="fact-scroll-area">
+                <p id="factText" style="margin:0; font-size:15px; line-height:1.5; font-weight:500; font-style:italic; color:var(--text);">
+                    Lade Wissen...
+                </p>
+                <!-- Refresh Button inline im Textfluss -->
+                <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <div id="factSource" style="font-size:10px; opacity:0.6; text-transform:uppercase;"></div>
+                    <div class="fact-refresh-btn" onclick="safeRun(loadRandomFact)">↻ Neu</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-<!-- ... im factWidget ... -->
- 
-      <!-- NEU: Flavor Button (Links daneben) -->
-      <div onclick="safeRun(openFlavorModal)" 
-           style="position:absolute; top:10px; right:45px; opacity:0.6; cursor:pointer; font-size:22px; z-index:5; padding:5px; line-height:1;">
-           🎛️
-      </div>
-<!-- ... -->
-
-      <!-- Refresh Button (Position korrigiert) -->
-      <div onclick="safeRun(loadRandomFact)" 
-           style="position:absolute; top:10px; right:10px; opacity:0.6; cursor:pointer; font-size:26px; z-index:5; padding:5px; line-height:1;">
-           ↻
-      </div>
-
-      <div style="display:flex; gap:15px; align-items:flex-start;">
-          <!-- Großes Icon -->
-          <div id="factIcon" style="font-size:40px; background:var(--bg); width:60px; height:60px; display:flex; align-items:center; justify-content:center; border-radius:16px; border:1px solid var(--btn); flex-shrink:0;">💡</div>
-          
-          <div class="fact-content-col">
-              <h3 style="margin:0; font-size:14px; text-transform:uppercase; color:var(--accent); letter-spacing:1px;">Wusstest du?</h3>
-              <div class="fact-scroll-area">
-                  <p id="factText" style="margin:0; font-size:15px; line-height:1.5; font-weight:500; font-style:italic; color:var(--text);">Lade...</p>
-                  <div id="factSource" style="margin-top:8px; font-size:10px; opacity:0.6; text-transform:uppercase; padding-bottom:5px;"></div>
-              </div>
-          </div>
-      </div>
- </div
   <!-- Der Footer Button (Erscheint nur wenn Widget da ist) -->
   <div id="factLibraryBtn" class="fact-footer-btn" onclick="safeRun(openLibraryModal)" style="display:none;">
       <span>📚</span>
@@ -4428,77 +4415,84 @@ body:not(.dark) .nav-island {
     </div>
 </div>
 
-<!-- LIBRARY / DISCOVERY MODAL -->
+<!-- LIBRARY / DISCOVERY MODAL (V2) -->
 <div id="libraryModal" class="modal">
-  <div class="modal-content" style="height: 80vh; display:flex; flex-direction:column;">
+  <div class="modal-content" style="height: 85vh; display:flex; flex-direction:column; padding-bottom:0;">
     <div class="sheet-handle"></div>
     <div class="close-btn" onclick="closeModal('libraryModal')">✕</div>
     
     <!-- Header Area -->
-    <div style="flex-shrink:0;">
+    <div style="flex-shrink:0; padding-bottom:10px;">
         <h3 style="margin-bottom:15px">📚 Wissens-Zentrale</h3>
         
         <!-- Tabs -->
         <div class="tab-nav">
-            <div id="tabSaved" class="tab-btn active" onclick="switchLibTab('saved')">Meine Sammlung <span id="badgeSaved" style="font-size:10px; opacity:0.6">(0)</span></div>
+            <div id="tabSaved" class="tab-btn active" onclick="switchLibTab('saved')">Meine Sammlung <span id="badgeSaved" style="opacity:0.6">(0)</span></div>
             <div id="tabDiscover" class="tab-btn" onclick="switchLibTab('discover')">🌍 Weltweit</div>
         </div>
 
         <!-- Search Bar -->
-        <div class="search-fusion-wrapper" style="margin-bottom:15px;">
-            <input id="libSearchInput" class="sf-input" placeholder="Fakten oder Tiere suchen..." oninput="safeRun(handleLibSearch)">
-            <div class="sf-controls" id="libLoading" style="display:none; padding-right:10px;">
-                <div class="loader-spinner" style="width:16px; height:16px; margin:0; border-width:2px;"></div>
-            </div>
+        <div class="search-fusion-wrapper" style="margin-bottom:10px;">
+            <input id="libSearchInput" class="sf-input" placeholder="Suchen..." oninput="safeRun(handleLibInput)">
+            <!-- Loading Spinner (versteckt) -->
+            <div id="libLoading" style="display:none; padding-right:10px;">⏳</div>
         </div>
         
-        <!-- Tier Bubbles (Ergebnisse oben) -->
+        <!-- DRILL DOWN: Aktiver Tier-Filter (Chip) -->
+        <div id="libFilterContainer" class="filter-chip-container">
+            <div class="filter-chip" onclick="safeRun(removeAnimalFilter)">
+                <span id="libActiveFilterName">Tiername</span> <span>✕</span>
+            </div>
+        </div>
+
+        <!-- BUBBLES: Tier Vorschläge -->
         <div id="libBubbleContainer" class="bubble-scroll" style="display:none;"></div>
     </div>
 
     <!-- Scrollable Content Area -->
-    <div style="flex:1; overflow-y:auto; min-height:0; padding-right:2px;">
+    <div style="flex:1; overflow-y:auto; min-height:0; padding-bottom:20px;">
         <div id="libraryGrid" class="masonry-grid-lib"></div>
         
+        <!-- Button "Mehr laden" (Nur bei Global) -->
+        <button id="libLoadMoreBtn" onclick="safeRun(loadMoreGlobalFacts)" style="display:none; width:100%; margin-top:10px; opacity:0.7;">Mehr laden 👇</button>
+
         <!-- Empty States -->
         <div id="libEmptySaved" style="text-align:center; padding:40px; display:none;">
             <div style="font-size:40px; margin-bottom:10px; opacity:0.3;">🕸️</div>
-            <div style="opacity:0.5;">Noch keine Fakten gespeichert.<br>Herze Fakten auf dem Dashboard!</div>
+            <div style="opacity:0.5;">Noch keine Fakten gespeichert.</div>
         </div>
-        
         <div id="libEmptySearch" style="text-align:center; padding:40px; display:none;">
-            <div style="opacity:0.5;">Keine Treffer gefunden.</div>
+            <div style="opacity:0.5;">Keine Treffer.</div>
         </div>
     </div>
   </div>
 </div>
 
-<!-- FLAVOR / SETTINGS MODAL -->
+<!-- FLAVOR MODAL (THEMEN MIXER - V2.0) -->
 <div id="flavorModal" class="modal">
   <div class="modal-content">
     <div class="sheet-handle"></div>
     <div class="close-btn" onclick="closeModal('flavorModal')">✕</div>
     
-    <h3>🎛️ Dein Wissens-Mix</h3>
-    <p style="opacity:0.7; font-size:13px; margin-bottom:20px;">
-        Wähle Themen, die dich interessieren. Dein "Wusstest du?" Widget zeigt dann bevorzugt diese Fakten an.
+    <h3>🎛️ Themen-Mixer</h3>
+    <p style="opacity:0.7; font-size:13px; margin-bottom:15px;">
+        Bestimme, welche Fakten auf deinem Dashboard erscheinen.
     </p>
 
-    <!-- Aktive Filter Anzeige -->
-    <div style="background:var(--bg); padding:15px; border-radius:12px; margin-bottom:20px;">
-        <div style="font-size:11px; font-weight:bold; text-transform:uppercase; opacity:0.5; margin-bottom:5px;">Aktive Filter</div>
-        <div id="activeFlavorText" style="font-weight:bold; color:var(--accent);">Alle Themen (Zufall)</div>
+    <!-- Aktive Filter -->
+    <div class="flavor-section-title">DEINE AUSWAHL</div>
+    <div id="flavorActiveList" class="flavor-grid" style="min-height:40px; margin-bottom:10px;">
+        <div style="font-size:13px; opacity:0.5; padding:5px;">Keine Filter aktiv (Zeige alles)</div>
     </div>
 
-    <label style="font-size:12px; font-weight:bold;">Verfügbare Themen:</label>
-    <div id="flavorList" class="flavor-grid">
-        <!-- Wird per JS gefüllt -->
-        <div class="flavor-tag">Lade Tags...</div>
+    <!-- Vorschläge -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
+        <div class="flavor-section-title" style="margin:0;">VORSCHLÄGE</div>
+        <div onclick="renderFlavorSuggestions()" style="font-size:20px; cursor:pointer;" title="Neu würfeln">🎲</div>
     </div>
+    <div id="flavorSuggestList" class="flavor-grid" style="margin-top:10px;"></div>
 
-    <div style="margin-top:20px; padding-top:15px; border-top:1px solid var(--btn);">
-        <button onclick="saveFlavorSettings()" style="width:100%; background:var(--accent); color:#fff; padding:15px;">Speichern & Anwenden</button>
-    </div>
+    <button onclick="saveFlavorSettings()" style="width:100%; background:var(--accent); color:#fff; padding:15px; margin-top:25px; border-radius:16px;">Fertig</button>
   </div>
 </div>
 
@@ -8776,75 +8770,83 @@ function setSolarCoords(lat, lon, name) {
     showErrorToast(`Ort gesetzt: ${name}`, true);
 }
 
-/* === FUSION FACT & LIBRARY ENGINE (V2) === */
 
-// 1. Globale Variablen & Init
-let allGlobalFacts = [];            // Cache für die externe JSON
-let savedFacts = JSON.parse(localStorage.getItem('savedFacts')) || []; // Deine gespeicherten
-let currentFactData = null;         // Der aktuell angezeigte Fakt im Widget
-let activeLibTab = 'saved';         // 'saved' oder 'discover'
-let userFlavorTags = JSON.parse(localStorage.getItem('userFlavorTags')) || []; // User Präferenzen
 
-// Start: Badge initialisieren
+/* === FUSION ENGINE V2.0: DRILL-DOWN & FLAVOR === */
+
+// STATE
+let allGlobalFacts = [];            
+let activeLibTab = 'saved';         
+let userFlavorTags = JSON.parse(localStorage.getItem('userFlavorTags')) || []; 
+
+// SEARCH STATE (Drill-Down)
+let libSearchState = {
+    query: '',
+    animalFilter: null // Wenn gesetzt: "Jaguar"
+};
+
+// Start
 updateLibBadge();
+setTimeout(initFactEngine, 500);
 
-// JSON Laden
+// 1. INIT & ID GENERATOR
 async function initFactEngine() {
     try {
-        // Lade die Datei
         const response = await fetch('./facts.json');
         if (!response.ok) throw new Error("JSON Error");
-        allGlobalFacts = await response.json();
-        console.log(`Datenbank geladen: ${allGlobalFacts.length} Fakten.`);
+        const rawData = await response.json();
         
-        // UI für Einstellungen vorbereiten
-        updateFlavorUI(); 
+        // AUTO-ID GENERIEREN (Hash aus Text)
+        // Damit du keine IDs pflegen musst!
+        allGlobalFacts = rawData.map(f => {
+            if(!f.id) {
+                // Einfacher Hash aus dem Text erzeugen
+                let hash = 0;
+                for (let i = 0; i < f.text.length; i++) {
+                    hash = ((hash << 5) - hash) + f.text.charCodeAt(i);
+                    hash |= 0; 
+                }
+                f.id = 'gen_' + Math.abs(hash);
+            }
+            return f;
+        });
+
+        console.log(`Datenbank: ${allGlobalFacts.length} Fakten geladen.`);
     } catch (e) {
-        console.warn("Konnte facts.json nicht laden (Offline?)", e);
+        console.warn("Fakten nicht geladen:", e);
     }
 }
-// Starten beim Laden der Seite (verzögert)
-setTimeout(initFactEngine, 1000);
 
-// 2. Widget Logik: Zufalls-Fakt laden
+// 2. WIDGET LOGIK (Mit Flavor)
 async function loadRandomFact() {
     const widget = document.getElementById('factWidget');
     const footer = document.getElementById('factLibraryBtn');
     
-    // Sicherstellen, dass Daten da sind
     if (!allGlobalFacts.length) await initFactEngine();
-    if (!allGlobalFacts.length) return; // Abbruch wenn immer noch leer
+    if (!allGlobalFacts.length) return; 
 
-    // A) Filtern nach Präferenzen (falls gesetzt)
+    // A) Filtern nach Präferenzen
     let pool = allGlobalFacts;
     if (userFlavorTags.length > 0) {
-        // Filtere Fakten, die MINDESTENS EINEN der User-Tags haben
         const filtered = allGlobalFacts.filter(f => f.tags && f.tags.some(t => userFlavorTags.includes(t)));
-        
-        // Fallback: Wenn Filter zu strikt (0 Ergebnisse), nimm alles
         if (filtered.length > 0) pool = filtered;
     }
 
-    // B) Zufalls-Fakt wählen
+    // B) Zufall
     const randomFact = pool[Math.floor(Math.random() * pool.length)];
-    currentFactData = randomFact; // Global speichern für das Herz
+    currentFactData = randomFact; 
 
-    // C) UI Update
+    // C) Render
     const txtEl = document.getElementById('factText');
     const iconEl = document.getElementById('factIcon');
     const srcEl = document.getElementById('factSource');
     
-    // Fade Out Effekt (manuell)
     txtEl.style.opacity = 0;
-    
     setTimeout(() => {
         txtEl.innerText = `"${randomFact.text}"`;
         iconEl.innerText = randomFact.icon || '💡';
         srcEl.innerText = randomFact.source ? `Quelle: ${randomFact.source}` : '';
-        
-        // Herz Status prüfen (Ist dieser Fakt schon gespeichert?)
         checkHeartStatus();
-        
         txtEl.style.opacity = 1;
     }, 200);
 
@@ -8852,51 +8854,47 @@ async function loadRandomFact() {
     if(footer) footer.style.display = 'flex';
 }
 
-// 3. Herz / Speichern Logik
+function openFactMenu(e) {
+    if(e) e.stopPropagation();
+    const items = [
+        { label: '🔍 Weltweit suchen', icon: '🌍', action: 'openLibraryModal()' },
+        { label: '🎛️ Themen-Mixer', icon: '🎨', action: 'openFlavorModal()' }
+    ];
+    // Position des Menüs relativ zum Klick
+    let x = e.clientX - 180; 
+    let y = e.clientY + 10;
+    openContextMenu(x, y, items);
+}
+
+// 3. HERZ & SPEICHERN
 function checkHeartStatus() {
     const heart = document.getElementById('factHeart');
     if(!currentFactData || !heart) return;
+    const isSaved = savedFacts.some(f => f.text === currentFactData.text); // Check by Text (ID-los)
     
-    // Prüfen ob Text schon in Sammlung ist
-    const isSaved = savedFacts.some(f => f.text === currentFactData.text);
-    
-    heart.innerText = '❤'; 
-    if(isSaved) {
-        heart.classList.add('active');
-    } else {
-        heart.classList.remove('active');
-    }
+    heart.innerText = isSaved ? '❤️' : '🤍';
+    heart.style.opacity = isSaved ? '1' : '0.6';
 }
 
 function toggleFactLike() {
     if(!currentFactData) return;
-    
     const isSaved = savedFacts.some(f => f.text === currentFactData.text);
     
     if(isSaved) {
-        // Entfernen
         savedFacts = savedFacts.filter(f => f.text !== currentFactData.text);
-        showErrorToast("Aus Sammlung entfernt");
+        showErrorToast("Entfernt");
     } else {
-        // Speichern
         savedFacts.push(currentFactData);
-        showErrorToast("In Sammlung gespeichert! 📚", true);
-        if(navigator.vibrate) navigator.vibrate([50, 50]); 
-        
-        // Konfetti (falls vorhanden)
-        if(typeof spawnParticle === 'function') {
-            const rect = document.getElementById('factHeart').getBoundingClientRect();
-            spawnParticle(rect.left, rect.top, "❤️");
-        }
+        showErrorToast("Gespeichert! 📚", true);
+        if(navigator.vibrate) navigator.vibrate([50]); 
     }
-    
     localStorage.setItem('savedFacts', JSON.stringify(savedFacts));
     checkHeartStatus();
     updateLibBadge();
     
-    // Falls Library offen ist, refresh
+    // Refresh Library if open
     if(document.getElementById('libraryModal').style.display === 'block') {
-        handleLibSearch();
+        renderLibrary();
     }
 }
 
@@ -8905,120 +8903,151 @@ function updateLibBadge() {
     if(el) el.innerText = savedFacts.length;
 }
 
-// 4. Library Modal Logik (Tabs & Suche)
+// 4. LIBRARY MODAL (DRILL DOWN ENGINE)
 function openLibraryModal() {
-    // Standard: Auf "Saved" Tab öffnen
+    // Reset Search State beim Öffnen
+    libSearchState = { query: '', animalFilter: null };
+    document.getElementById('libSearchInput').value = '';
+    
     switchLibTab('saved');
     document.getElementById('libraryModal').style.display = 'block';
 }
 
 function switchLibTab(tab) {
     activeLibTab = tab;
-    
-    // UI Update Tabs
     document.getElementById('tabSaved').className = `tab-btn ${tab==='saved'?'active':''}`;
     document.getElementById('tabDiscover').className = `tab-btn ${tab==='discover'?'active':''}`;
-    
-    // Suche resetten oder ausführen
-    handleLibSearch(); 
+    renderLibrary();
 }
 
-// Die Haupt-Render-Funktion für die Bibliothek
-function handleLibSearch() {
-    const queryEl = document.getElementById('libSearchInput');
-    const query = queryEl ? queryEl.value.trim().toLowerCase() : "";
+function handleLibInput() {
+    const val = document.getElementById('libSearchInput').value;
+    libSearchState.query = val.trim().toLowerCase();
     
+    // Kleines Debounce
+    clearTimeout(window.libDebounce);
+    window.libDebounce = setTimeout(renderLibrary, 300);
+}
+
+// AKTION: Tier-Filter setzen (Drill Down)
+function setAnimalFilter(animalName) {
+    libSearchState.animalFilter = animalName;
+    renderLibrary();
+}
+
+// AKTION: Tier-Filter entfernen
+function removeAnimalFilter() {
+    libSearchState.animalFilter = null;
+    renderLibrary();
+}
+
+// CORE RENDER FUNCTION
+function renderLibrary() {
     const grid = document.getElementById('libraryGrid');
     const bubbleCont = document.getElementById('libBubbleContainer');
+    const filterCont = document.getElementById('libFilterContainer');
+    const loadBtn = document.getElementById('libLoadMoreBtn');
     
-    // A) Datenquelle wählen
-    let sourceData = [];
-    if (activeLibTab === 'saved') {
-        sourceData = savedFacts; 
-        document.getElementById('badgeSaved').innerText = `(${savedFacts.length})`;
-    } else {
-        sourceData = allGlobalFacts; 
-    }
+    // 1. Datenquelle wählen
+    let sourceData = (activeLibTab === 'saved') ? savedFacts : allGlobalFacts;
+    if(activeLibTab === 'saved') document.getElementById('badgeSaved').innerText = `(${savedFacts.length})`;
 
-    // B) Suchen & Filtern
-    let matches = [];
-    let animalsFound = new Set(); 
-
-    if (query.length === 0) {
-        // Keine Suche
-        if (activeLibTab === 'discover') {
-            // Bei Discover zeigen wir 20 zufällige Fakten an, damit es nicht leer ist
-            matches = sourceData.sort(() => 0.5 - Math.random()).slice(0, 20);
-        } else {
-            // Bei Saved zeigen wir alle (neueste zuerst)
-            matches = [...sourceData].reverse();
-        }
-    } else {
-        // Suche läuft
-        matches = sourceData.filter(f => {
-            const inText = f.text.toLowerCase().includes(query);
-            const inAnimal = f.animal && f.animal.toLowerCase().includes(query);
-            const inTags = f.tags && f.tags.some(t => t.toLowerCase().includes(query));
-            
-            // Tier für Bubbles sammeln
-            if (inAnimal || (inText && f.animal)) {
-                animalsFound.add(f.animal);
-            }
-            return inText || inAnimal || inTags;
-        });
-
-        // Limitieren bei Global Search für Performance
-        if(activeLibTab === 'discover') matches = matches.slice(0, 30);
-    }
-
-    // C) Bubbles Rendern (Nur wenn gesucht wird)
-    if (query.length > 0 && animalsFound.size > 0 && bubbleCont) {
-        bubbleCont.innerHTML = '';
-        bubbleCont.style.display = 'flex';
+    // 2. Filtern (Stufe 1: Tier Chip)
+    let filtered = sourceData;
+    if(libSearchState.animalFilter) {
+        // Filtere ALLES raus, was nicht dieses Tier ist
+        filtered = filtered.filter(f => f.animal === libSearchState.animalFilter);
         
-        animalsFound.forEach(animalName => {
-            const count = matches.filter(m => m.animal === animalName).length;
-            const b = document.createElement('div');
-            b.className = 'discovery-bubble';
-            
-            // Icon finden
-            const refFact = matches.find(m => m.animal === animalName);
-            const icon = refFact ? refFact.icon : '🐾';
-            
-            b.innerHTML = `${icon} ${animalName} <span>(${count})</span>`;
-            b.onclick = () => {
-                document.getElementById('libSearchInput').value = animalName;
-                handleLibSearch(); 
-            };
-            bubbleCont.appendChild(b);
-        });
-    } else if(bubbleCont) {
-        bubbleCont.style.display = 'none';
+        // Chip anzeigen
+        filterCont.style.display = 'block';
+        document.getElementById('libActiveFilterName').innerText = libSearchState.animalFilter;
+        bubbleCont.style.display = 'none'; // Bubbles ausblenden wenn Filter aktiv
+    } else {
+        filterCont.style.display = 'none';
+        // Bubbles werden später bearbeitet
     }
 
-    // D) Grid Rendern
+    // 3. Filtern (Stufe 2: Text Query)
+    let finalMatches = filtered;
+    if(libSearchState.query.length > 0) {
+        const q = libSearchState.query;
+        finalMatches = filtered.filter(f => {
+            const inText = f.text.toLowerCase().includes(q);
+            const inTags = f.tags && f.tags.some(t => t.toLowerCase().includes(q));
+            // Wenn kein Tier-Filter aktiv ist, suchen wir auch im Tiernamen
+            const inAnimal = !libSearchState.animalFilter && f.animal && f.animal.toLowerCase().includes(q);
+            return inText || inTags || inAnimal;
+        });
+    }
+
+    // 4. Bubbles berechnen (Nur wenn kein Tier-Filter aktiv ist)
+    if(!libSearchState.animalFilter) {
+        if(libSearchState.query.length > 0) {
+            // Zeige Tiere, die zur Suche passen
+            const animalsFound = new Set();
+            finalMatches.forEach(f => { if(f.animal) animalsFound.add(f.animal); });
+            
+            if(animalsFound.size > 0) {
+                bubbleCont.innerHTML = '';
+                bubbleCont.style.display = 'flex';
+                animalsFound.forEach(anim => {
+                    const count = finalMatches.filter(m => m.animal === anim).length;
+                    const icon = finalMatches.find(m => m.animal === anim).icon || '🐾';
+                    
+                    const b = document.createElement('div');
+                    b.className = 'discovery-bubble';
+                    b.innerHTML = `${icon} ${anim} <span>(${count})</span>`;
+                    b.onclick = () => setAnimalFilter(anim); // Trigger Drill Down
+                    bubbleCont.appendChild(b);
+                });
+            } else {
+                bubbleCont.style.display = 'none';
+            }
+        } else {
+            bubbleCont.style.display = 'none'; // Keine Suche -> Keine Bubbles
+        }
+    }
+
+    // 5. Grid Rendern
     grid.innerHTML = '';
     const emptySaved = document.getElementById('libEmptySaved');
     const emptySearch = document.getElementById('libEmptySearch');
     if(emptySaved) emptySaved.style.display = 'none';
     if(emptySearch) emptySearch.style.display = 'none';
+    if(loadBtn) loadBtn.style.display = 'none';
 
-    if (matches.length === 0) {
-        if(query.length > 0 && emptySearch) emptySearch.style.display = 'block';
-        else if(activeLibTab === 'saved' && emptySaved) emptySaved.style.display = 'block';
+    // Spezialfall: Global Discovery ohne Suche -> Random 20
+    if(activeLibTab === 'discover' && libSearchState.query.length === 0 && !libSearchState.animalFilter) {
+        // Wir zeigen einen Random Mix
+        finalMatches = [...sourceData].sort(() => 0.5 - Math.random()).slice(0, 20);
+        // Button "Mehr laden" ist hier eigentlich "Neu würfeln"
+        if(loadBtn) {
+            loadBtn.innerText = "🎲 Neu würfeln";
+            loadBtn.style.display = 'block';
+            loadBtn.onclick = () => renderLibrary(); // Einfach neu rendern für neuen Random Mix
+        }
+    } else {
+        // Normale Liste (neueste zuerst bei Saved)
+        if(activeLibTab === 'saved') finalMatches = [...finalMatches].reverse();
+    }
+
+    if (finalMatches.length === 0) {
+        if(activeLibTab === 'saved' && sourceData.length === 0) emptySaved.style.display = 'block';
+        else emptySearch.style.display = 'block';
         return;
     }
 
-    matches.forEach((fact, i) => {
+    // Kacheln bauen
+    finalMatches.forEach((fact, i) => {
         const isSaved = savedFacts.some(sf => sf.text === fact.text);
         
         const tile = document.createElement('div');
         tile.className = 'lib-tile fade-in';
-        tile.style.animationDelay = (i * 0.03) + 's';
+        tile.style.animationDelay = (i * 0.02) + 's'; // Schnelleres Fade
         const tagStr = fact.tags ? fact.tags.join(', ') : '';
 
         tile.innerHTML = `
-            <div class="lib-unlike" onclick="toggleFromLib('${fact.id}', this)">
+            <div class="lib-unlike" onclick="toggleFromLib('${fact.text.replace(/'/g, "\\'")}', this)">
                 ${isSaved ? '❤️' : '🤍'}
             </div>
             <div class="lib-header">
@@ -9035,31 +9064,26 @@ function handleLibSearch() {
     });
 }
 
-// Herz Klick im Grid
-function toggleFromLib(factId, btnEl) {
-    // Finde Fakt (Global oder Lokal)
-    let fact = allGlobalFacts.find(f => f.id === factId);
-    if (!fact) fact = savedFacts.find(f => f.id === factId);
+function loadMoreGlobalFacts() {
+    // Placeholder für Pagination (im aktuellen Random-Modus nicht nötig, aber vorbereitet)
+    renderLibrary();
+}
+
+// Herz im Grid (nutzt Text als ID, da wir IDs abgeschafft haben)
+function toggleFromLib(factText, btnEl) {
+    // Text zurück-escapen
+    // Suche Fakt in Global oder Saved
+    let fact = allGlobalFacts.find(f => f.text === factText) || savedFacts.find(f => f.text === factText);
     
-    // Fallback: Manchmal haben alte Fakten keine ID, wir suchen nach Text
-    if (!fact && btnEl.parentElement) {
-        // Kleiner Hack um den Text aus dem DOM zu holen, falls ID fehlschlägt
-        const textDiv = btnEl.parentElement.querySelector('.lib-text');
-        if(textDiv) {
-            const txt = textDiv.innerText.replace(/"/g, ''); // Anführungszeichen weg
-            fact = allGlobalFacts.find(f => f.text === txt) || savedFacts.find(f => f.text === txt);
-        }
-    }
+    if(!fact) return; // Sollte nicht passieren
 
-    if(!fact) return;
-
-    const isSaved = savedFacts.some(f => f.text === fact.text);
+    const isSaved = savedFacts.some(f => f.text === factText);
 
     if (isSaved) {
-        savedFacts = savedFacts.filter(f => f.text !== fact.text);
+        savedFacts = savedFacts.filter(f => f.text !== factText);
         btnEl.innerText = '🤍';
         showErrorToast("Entfernt");
-        if (activeLibTab === 'saved') handleLibSearch(); // Sofort aus Liste entfernen
+        if (activeLibTab === 'saved') renderLibrary(); // Refresh wenn in Saved Liste
     } else {
         savedFacts.push(fact);
         btnEl.innerText = '❤️';
@@ -9068,57 +9092,64 @@ function toggleFromLib(factId, btnEl) {
     
     localStorage.setItem('savedFacts', JSON.stringify(savedFacts));
     updateLibBadge();
-    checkHeartStatus(); // Dashboard Herz updaten
+    checkHeartStatus(); // Dashboard Widget auch updaten
 }
 
-// 5. Flavor / Einstellungen Logic
+
+// 5. FLAVOR / THEMEN MIXER
 function openFlavorModal() {
-    updateFlavorUI(); 
+    renderFlavorSuggestions();
+    renderActiveFlavor();
     document.getElementById('flavorModal').style.display = 'block';
 }
 
-function updateFlavorUI() {
-    const list = document.getElementById('flavorList');
-    const activeText = document.getElementById('activeFlavorText');
-    if(!list) return;
-
-    // Tags sammeln
-    const tags = new Set();
-    allGlobalFacts.forEach(f => {
-        if(f.tags) f.tags.forEach(t => tags.add(t));
-    });
+function renderActiveFlavor() {
+    const list = document.getElementById('flavorActiveList');
+    list.innerHTML = '';
     
-    // Status Text
     if (userFlavorTags.length === 0) {
-        if(activeText) activeText.innerText = "Alle Themen (Zufall)";
-    } else {
-        if(activeText) activeText.innerText = userFlavorTags.join(', ');
+        list.innerHTML = '<div style="font-size:13px; opacity:0.5; padding:5px;">Keine Filter aktiv (Zeige alles)</div>';
+        return;
     }
 
-    list.innerHTML = '';
-    Array.from(tags).sort().forEach(tag => {
-        const isSelected = userFlavorTags.includes(tag);
+    userFlavorTags.forEach(tag => {
         const el = document.createElement('div');
-        el.className = `flavor-tag ${isSelected ? 'selected' : ''}`;
-        el.innerText = tag;
-        
-        const count = allGlobalFacts.filter(f => f.tags && f.tags.includes(tag)).length;
-        el.innerHTML += ` <span style="opacity:0.5; font-size:10px;">${count}</span>`;
-
+        el.className = 'flavor-tag active';
+        el.innerHTML = `${tag} <span>✕</span>`;
         el.onclick = () => {
-            toggleFlavorTag(tag);
-            updateFlavorUI(); 
+            userFlavorTags = userFlavorTags.filter(t => t !== tag);
+            renderActiveFlavor();
+            // Suggestions nicht neu rendern, damit man nicht den Flow verliert
         };
         list.appendChild(el);
     });
 }
 
-function toggleFlavorTag(tag) {
-    if (userFlavorTags.includes(tag)) {
-        userFlavorTags = userFlavorTags.filter(t => t !== tag);
-    } else {
-        userFlavorTags.push(tag);
-    }
+function renderFlavorSuggestions() {
+    const list = document.getElementById('flavorSuggestList');
+    list.innerHTML = '';
+
+    // Alle verfügbaren Tags sammeln
+    const allTags = new Set();
+    allGlobalFacts.forEach(f => { if(f.tags) f.tags.forEach(t => allTags.add(t)); });
+    
+    // Filtern: Nur die, die noch nicht aktiv sind
+    let candidates = Array.from(allTags).filter(t => !userFlavorTags.includes(t));
+    
+    // 6 Zufällige auswählen
+    candidates = candidates.sort(() => 0.5 - Math.random()).slice(0, 6);
+
+    candidates.forEach(tag => {
+        const el = document.createElement('div');
+        el.className = 'flavor-tag';
+        el.innerText = tag;
+        el.onclick = () => {
+            if(!userFlavorTags.includes(tag)) userFlavorTags.push(tag);
+            renderActiveFlavor();
+            renderFlavorSuggestions(); // Neue Vorschläge nachladen
+        };
+        list.appendChild(el);
+    });
 }
 
 function saveFlavorSettings() {
@@ -9128,8 +9159,7 @@ function saveFlavorSettings() {
     loadRandomFact(); // Sofort anwenden
 }
 
-/* === END FUSION ENGINE === */
-
+/* === END ENGINE V2 === */
 
 function openInfoModal() {
     getEl('infoModal').style.display = 'block';
