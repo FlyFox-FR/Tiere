@@ -8776,32 +8776,37 @@ function setSolarCoords(lat, lon, name) {
     showErrorToast(`Ort gesetzt: ${name}`, true);
 }
 
+/* === FUSION FACT & LIBRARY ENGINE (V2) === */
 
+// 1. Globale Variablen & Init
+let allGlobalFacts = [];            // Cache für die externe JSON
+let savedFacts = JSON.parse(localStorage.getItem('savedFacts')) || []; // Deine gespeicherten
+let currentFactData = null;         // Der aktuell angezeigte Fakt im Widget
+let activeLibTab = 'saved';         // 'saved' oder 'discover'
+let userFlavorTags = JSON.parse(localStorage.getItem('userFlavorTags')) || []; // User Präferenzen
 
-/* === FUSION UPDATE: DISCOVERY & FLAVOR ENGINE === */
+// Start: Badge initialisieren
+updateLibBadge();
 
-let allGlobalFacts = []; // Cache für die externe JSON
-let activeLibTab = 'saved'; // 'saved' oder 'discover'
-let userFlavorTags = JSON.parse(localStorage.getItem('userFlavorTags')) || []; // Gespeicherte Präferenzen
-
-// 1. Initialisierung und Laden
+// JSON Laden
 async function initFactEngine() {
     try {
+        // Lade die Datei
         const response = await fetch('./facts.json');
         if (!response.ok) throw new Error("JSON Error");
         allGlobalFacts = await response.json();
         console.log(`Datenbank geladen: ${allGlobalFacts.length} Fakten.`);
         
-        // Tags extrahieren für Flavor Menü
-        updateFlavorUI();
+        // UI für Einstellungen vorbereiten
+        updateFlavorUI(); 
     } catch (e) {
         console.warn("Konnte facts.json nicht laden (Offline?)", e);
     }
 }
-// Starten beim Laden
+// Starten beim Laden der Seite (verzögert)
 setTimeout(initFactEngine, 1000);
 
-// 2. Das neue "Load Random Fact" (Berücksichtigt Flavor)
+// 2. Widget Logik: Zufalls-Fakt laden
 async function loadRandomFact() {
     const widget = document.getElementById('factWidget');
     const footer = document.getElementById('factLibraryBtn');
@@ -8822,26 +8827,24 @@ async function loadRandomFact() {
 
     // B) Zufalls-Fakt wählen
     const randomFact = pool[Math.floor(Math.random() * pool.length)];
-    currentFactData = randomFact; // Global speichern
+    currentFactData = randomFact; // Global speichern für das Herz
 
     // C) UI Update
     const txtEl = document.getElementById('factText');
     const iconEl = document.getElementById('factIcon');
+    const srcEl = document.getElementById('factSource');
     
-    // Fade Out Effekt
+    // Fade Out Effekt (manuell)
     txtEl.style.opacity = 0;
     
     setTimeout(() => {
         txtEl.innerText = `"${randomFact.text}"`;
         iconEl.innerText = randomFact.icon || '💡';
-        document.getElementById('factSource').innerText = randomFact.source ? `Quelle: ${randomFact.source}` : '';
+        srcEl.innerText = randomFact.source ? `Quelle: ${randomFact.source}` : '';
         
-        // Tag-Badge anzeigen (Optional, damit man sieht warum der Fakt kam)
-        // Zeigt den ersten passenden Tag an oder den ersten verfügbaren
-        const matchingTag = randomFact.tags.find(t => userFlavorTags.includes(t)) || randomFact.tags[0];
-        // Hier könnte man noch ein UI Element updaten, z.B. "Thema: #Physik"
-        
+        // Herz Status prüfen (Ist dieser Fakt schon gespeichert?)
         checkHeartStatus();
+        
         txtEl.style.opacity = 1;
     }, 200);
 
@@ -8849,7 +8852,60 @@ async function loadRandomFact() {
     if(footer) footer.style.display = 'flex';
 }
 
-// 3. Library / Discovery Modal Logic
+// 3. Herz / Speichern Logik
+function checkHeartStatus() {
+    const heart = document.getElementById('factHeart');
+    if(!currentFactData || !heart) return;
+    
+    // Prüfen ob Text schon in Sammlung ist
+    const isSaved = savedFacts.some(f => f.text === currentFactData.text);
+    
+    heart.innerText = '❤'; 
+    if(isSaved) {
+        heart.classList.add('active');
+    } else {
+        heart.classList.remove('active');
+    }
+}
+
+function toggleFactLike() {
+    if(!currentFactData) return;
+    
+    const isSaved = savedFacts.some(f => f.text === currentFactData.text);
+    
+    if(isSaved) {
+        // Entfernen
+        savedFacts = savedFacts.filter(f => f.text !== currentFactData.text);
+        showErrorToast("Aus Sammlung entfernt");
+    } else {
+        // Speichern
+        savedFacts.push(currentFactData);
+        showErrorToast("In Sammlung gespeichert! 📚", true);
+        if(navigator.vibrate) navigator.vibrate([50, 50]); 
+        
+        // Konfetti (falls vorhanden)
+        if(typeof spawnParticle === 'function') {
+            const rect = document.getElementById('factHeart').getBoundingClientRect();
+            spawnParticle(rect.left, rect.top, "❤️");
+        }
+    }
+    
+    localStorage.setItem('savedFacts', JSON.stringify(savedFacts));
+    checkHeartStatus();
+    updateLibBadge();
+    
+    // Falls Library offen ist, refresh
+    if(document.getElementById('libraryModal').style.display === 'block') {
+        handleLibSearch();
+    }
+}
+
+function updateLibBadge() {
+    const el = document.getElementById('libCountBadge');
+    if(el) el.innerText = savedFacts.length;
+}
+
+// 4. Library Modal Logik (Tabs & Suche)
 function openLibraryModal() {
     // Standard: Auf "Saved" Tab öffnen
     switchLibTab('saved');
@@ -8864,40 +8920,37 @@ function switchLibTab(tab) {
     document.getElementById('tabDiscover').className = `tab-btn ${tab==='discover'?'active':''}`;
     
     // Suche resetten oder ausführen
-    const searchVal = document.getElementById('libSearchInput').value;
-    handleLibSearch(searchVal); // Rendert den Inhalt basierend auf Tab & Suche
+    handleLibSearch(); 
 }
 
-// Zentrale Such- und Render-Funktion
+// Die Haupt-Render-Funktion für die Bibliothek
 function handleLibSearch() {
-    const query = document.getElementById('libSearchInput').value.trim().toLowerCase();
+    const queryEl = document.getElementById('libSearchInput');
+    const query = queryEl ? queryEl.value.trim().toLowerCase() : "";
+    
     const grid = document.getElementById('libraryGrid');
     const bubbleCont = document.getElementById('libBubbleContainer');
-    const loading = document.getElementById('libLoading');
     
-    // Loading Spinner bei Global Search (Fake Delay für Feeling)
-    if(activeLibTab === 'discover' && query.length > 0) {
-        // Hier könnte man echten Server-Request simulieren
-    }
-
     // A) Datenquelle wählen
     let sourceData = [];
     if (activeLibTab === 'saved') {
-        sourceData = savedFacts; // Deine lokalen Favoriten
+        sourceData = savedFacts; 
         document.getElementById('badgeSaved').innerText = `(${savedFacts.length})`;
     } else {
-        sourceData = allGlobalFacts; // Die große JSON
+        sourceData = allGlobalFacts; 
     }
 
     // B) Suchen & Filtern
     let matches = [];
-    let animalsFound = new Set(); // Für die Bubbles
+    let animalsFound = new Set(); 
 
     if (query.length === 0) {
-        // Keine Suche -> Zeige alles (bei Global limitieren wir auf 20 Randoms, sonst laggt es)
+        // Keine Suche
         if (activeLibTab === 'discover') {
+            // Bei Discover zeigen wir 20 zufällige Fakten an, damit es nicht leer ist
             matches = sourceData.sort(() => 0.5 - Math.random()).slice(0, 20);
         } else {
+            // Bei Saved zeigen wir alle (neueste zuerst)
             matches = [...sourceData].reverse();
         }
     } else {
@@ -8911,62 +8964,57 @@ function handleLibSearch() {
             if (inAnimal || (inText && f.animal)) {
                 animalsFound.add(f.animal);
             }
-            
             return inText || inAnimal || inTags;
         });
 
-        // Bei Global Discovery: Wenn Suche leer, zeige "Gatcha" (Zufall), 
-        // aber wenn Suche läuft, begrenzen wir Ergebnisse auf 20 für Performance
-        if(activeLibTab === 'discover') matches = matches.slice(0, 20);
+        // Limitieren bei Global Search für Performance
+        if(activeLibTab === 'discover') matches = matches.slice(0, 30);
     }
 
     // C) Bubbles Rendern (Nur wenn gesucht wird)
-    if (query.length > 0 && animalsFound.size > 0) {
+    if (query.length > 0 && animalsFound.size > 0 && bubbleCont) {
         bubbleCont.innerHTML = '';
         bubbleCont.style.display = 'flex';
         
         animalsFound.forEach(animalName => {
-            // Count wie viele Fakten zu diesem Tier in den Matches sind
             const count = matches.filter(m => m.animal === animalName).length;
-            
             const b = document.createElement('div');
             b.className = 'discovery-bubble';
-            // Versuchen Icon zu finden
+            
+            // Icon finden
             const refFact = matches.find(m => m.animal === animalName);
             const icon = refFact ? refFact.icon : '🐾';
             
             b.innerHTML = `${icon} ${animalName} <span>(${count})</span>`;
             b.onclick = () => {
-                // Klick auf Bubble -> Harter Filter auf dieses Tier
                 document.getElementById('libSearchInput').value = animalName;
-                handleLibSearch(); // Rekursiver Aufruf mit neuem Input
+                handleLibSearch(); 
             };
             bubbleCont.appendChild(b);
         });
-    } else {
+    } else if(bubbleCont) {
         bubbleCont.style.display = 'none';
     }
 
     // D) Grid Rendern
     grid.innerHTML = '';
-    document.getElementById('libEmptySaved').style.display = 'none';
-    document.getElementById('libEmptySearch').style.display = 'none';
+    const emptySaved = document.getElementById('libEmptySaved');
+    const emptySearch = document.getElementById('libEmptySearch');
+    if(emptySaved) emptySaved.style.display = 'none';
+    if(emptySearch) emptySearch.style.display = 'none';
 
     if (matches.length === 0) {
-        if(query.length > 0) document.getElementById('libEmptySearch').style.display = 'block';
-        else if(activeLibTab === 'saved') document.getElementById('libEmptySaved').style.display = 'block';
+        if(query.length > 0 && emptySearch) emptySearch.style.display = 'block';
+        else if(activeLibTab === 'saved' && emptySaved) emptySaved.style.display = 'block';
         return;
     }
 
     matches.forEach((fact, i) => {
-        // Prüfen ob in Favoriten (für Herz-Status im Grid)
-        const isSaved = savedFacts.some(sf => sf.id === fact.id || sf.text === fact.text);
+        const isSaved = savedFacts.some(sf => sf.text === fact.text);
         
         const tile = document.createElement('div');
         tile.className = 'lib-tile fade-in';
         tile.style.animationDelay = (i * 0.03) + 's';
-        
-        // Tags als kleiner String
         const tagStr = fact.tags ? fact.tags.join(', ') : '';
 
         tile.innerHTML = `
@@ -8987,25 +9035,32 @@ function handleLibSearch() {
     });
 }
 
-// Helper: Herz im Grid klicken
+// Herz Klick im Grid
 function toggleFromLib(factId, btnEl) {
-    // Finde Fakt in Global oder Saved
+    // Finde Fakt (Global oder Lokal)
     let fact = allGlobalFacts.find(f => f.id === factId);
     if (!fact) fact = savedFacts.find(f => f.id === factId);
     
+    // Fallback: Manchmal haben alte Fakten keine ID, wir suchen nach Text
+    if (!fact && btnEl.parentElement) {
+        // Kleiner Hack um den Text aus dem DOM zu holen, falls ID fehlschlägt
+        const textDiv = btnEl.parentElement.querySelector('.lib-text');
+        if(textDiv) {
+            const txt = textDiv.innerText.replace(/"/g, ''); // Anführungszeichen weg
+            fact = allGlobalFacts.find(f => f.text === txt) || savedFacts.find(f => f.text === txt);
+        }
+    }
+
     if(!fact) return;
 
-    const isSaved = savedFacts.some(f => f.text === fact.text); // Text-Check ist sicherer bei Duplikaten
+    const isSaved = savedFacts.some(f => f.text === fact.text);
 
     if (isSaved) {
-        // Löschen
         savedFacts = savedFacts.filter(f => f.text !== fact.text);
         btnEl.innerText = '🤍';
         showErrorToast("Entfernt");
-        // Wenn wir im Saved Tab sind, müssen wir neu rendern
-        if (activeLibTab === 'saved') handleLibSearch();
+        if (activeLibTab === 'saved') handleLibSearch(); // Sofort aus Liste entfernen
     } else {
-        // Speichern
         savedFacts.push(fact);
         btnEl.innerText = '❤️';
         showErrorToast("Gespeichert!", true);
@@ -9016,18 +9071,18 @@ function toggleFromLib(factId, btnEl) {
     checkHeartStatus(); // Dashboard Herz updaten
 }
 
-
-// 4. Flavor / Preferences Logic
+// 5. Flavor / Einstellungen Logic
 function openFlavorModal() {
-    updateFlavorUI(); // UI auffrischen
+    updateFlavorUI(); 
     document.getElementById('flavorModal').style.display = 'block';
 }
 
 function updateFlavorUI() {
     const list = document.getElementById('flavorList');
     const activeText = document.getElementById('activeFlavorText');
-    
-    // Alle Tags sammeln (einmalig berechnen)
+    if(!list) return;
+
+    // Tags sammeln
     const tags = new Set();
     allGlobalFacts.forEach(f => {
         if(f.tags) f.tags.forEach(t => tags.add(t));
@@ -9035,12 +9090,11 @@ function updateFlavorUI() {
     
     // Status Text
     if (userFlavorTags.length === 0) {
-        activeText.innerText = "Alle Themen (Zufall)";
+        if(activeText) activeText.innerText = "Alle Themen (Zufall)";
     } else {
-        activeText.innerText = userFlavorTags.join(', ');
+        if(activeText) activeText.innerText = userFlavorTags.join(', ');
     }
 
-    // Grid bauen
     list.innerHTML = '';
     Array.from(tags).sort().forEach(tag => {
         const isSelected = userFlavorTags.includes(tag);
@@ -9048,13 +9102,12 @@ function updateFlavorUI() {
         el.className = `flavor-tag ${isSelected ? 'selected' : ''}`;
         el.innerText = tag;
         
-        // Count berechnen (optional)
         const count = allGlobalFacts.filter(f => f.tags && f.tags.includes(tag)).length;
         el.innerHTML += ` <span style="opacity:0.5; font-size:10px;">${count}</span>`;
 
         el.onclick = () => {
             toggleFlavorTag(tag);
-            updateFlavorUI(); // Neu rendern
+            updateFlavorUI(); 
         };
         list.appendChild(el);
     });
@@ -9072,10 +9125,11 @@ function saveFlavorSettings() {
     localStorage.setItem('userFlavorTags', JSON.stringify(userFlavorTags));
     closeModal('flavorModal');
     showErrorToast("Präferenzen gespeichert!", true);
-    
-    // Sofort neuen Fakt laden, der dazu passt
-    loadRandomFact();
+    loadRandomFact(); // Sofort anwenden
 }
+
+/* === END FUSION ENGINE === */
+
 
 function openInfoModal() {
     getEl('infoModal').style.display = 'block';
