@@ -4468,6 +4468,7 @@ body.no-scroll {
   </div>
 </div>
 
+<!-- SETTINGS MODAL (FIXED STRUCTURE) -->
 <div id="notifyModal" class="modal">
   <div class="modal-content">
     <div class="sheet-handle"></div>
@@ -4478,7 +4479,7 @@ body.no-scroll {
     <!-- GRUPPE 1: ERSCHEINUNGSBILD -->
     <h4 style="margin-top:20px; margin-bottom:10px; opacity:0.7; font-size:12px; text-transform:uppercase;">Design & Ansicht</h4>
     
-    <!-- Dark Mode (Verschoben aus Admin) -->
+    <!-- Dark Mode -->
     <div style="background:var(--bg); padding:15px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
         <span>🌙 Dark Mode</span>
         <label class="switch">
@@ -4495,19 +4496,21 @@ body.no-scroll {
             <span class="slider"></span>
         </label>
     </div>
-        
-        <!-- Das Suchfeld -->
+
+    <!-- Solar Standort -->
+    <h4 style="margin-top:20px; margin-bottom:10px; opacity:0.7; font-size:12px; text-transform:uppercase;">🌞 Astro-Standort</h4>
+    <div style="background:var(--bg); padding:15px; border-radius:12px; margin-bottom:10px;">
         <div class="autocomplete-container" style="position:relative;">
-            <input id="solarLocInput" placeholder="Stadt suchen (z.B. Hamburg)..." style="width:100%; border:1px solid var(--btn);">
+            <input id="solarLocInput" placeholder="Stadt für Sonnenzeiten..." style="width:100%; border:1px solid var(--btn); padding:10px; border-radius:8px;">
             <div id="solarLocResults" class="autocomplete-results"></div>
         </div>
-        <p style="font-size:10px; opacity:0.4; margin:5px 0 0 0;">Bestimmt Auf/Untergangszeiten im Widget.</p>
+        <p style="font-size:10px; opacity:0.5; margin:8px 0 0 0;">Für Sonnenaufgang/-untergang im Widget.</p>
     </div>
 
     <!-- GRUPPE 2: TON & BENACHRICHTIGUNG -->
     <h4 style="margin-top:20px; margin-bottom:10px; opacity:0.7; font-size:12px; text-transform:uppercase;">Ton & Alarm</h4>
 
-    <!-- Stummschalten (Verschoben aus Header) -->
+    <!-- Stummschalten -->
     <div style="background:var(--bg); padding:15px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
         <span>🔇 Stummschalten</span>
         <label class="switch">
@@ -4524,11 +4527,13 @@ body.no-scroll {
     
     <!-- Alarm Details -->
     <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px; padding:0 10px;">
-        <span>Erinnern nach Tagen:</span> <input type="number" id="notifyDays" value="7" style="width:80px; padding:8px;">
+        <span style="font-size:14px;">Erinnern nach Tagen:</span> 
+        <input type="number" id="notifyDays" value="7" style="width:80px; padding:8px; border-radius:8px; border:1px solid var(--btn);">
     </div>
+    
     <div style="display:flex; gap:10px; margin-bottom:20px">
-        <button onclick="safeRun(saveNotifySettings)" style="flex:1; background:var(--accent); color:#fff">Speichern</button>
-        <button onclick="safeRun(testNotification)" style="flex:1;">Testen</button>
+        <button onclick="safeRun(saveNotifySettings)" style="flex:1; background:var(--accent); color:#fff; padding:12px; border-radius:12px;">Speichern</button>
+        <button onclick="safeRun(testNotification)" style="flex:1; padding:12px; border-radius:12px;">Testen</button>
     </div>
 
     <hr style="opacity:0.2; margin: 20px 0;">
@@ -4536,11 +4541,11 @@ body.no-scroll {
     <!-- KALENDER -->
     <h4 style="margin-bottom:10px; opacity:0.7; font-size:12px; text-transform:uppercase;">📅 Kalender-Export</h4>
     <div style="display:flex; gap:5px; margin-bottom:10px">
-        <select id="icsFreq"><option value="WEEKLY">Wöchentlich</option><option value="DAILY">Täglich</option></select>
-        <input type="time" id="icsTime" value="19:00">
+        <select id="icsFreq" style="flex:1;"><option value="WEEKLY">Wöchentlich</option><option value="DAILY">Täglich</option></select>
+        <input type="time" id="icsTime" value="19:00" style="flex:1;">
     </div>
-    <select id="icsDay" style="margin-bottom:10px"><option value="SA">Samstag</option><option value="SU">Sonntag</option></select>
-    <button onclick="safeRun(downloadICS)" style="width:100%">📅 ICS Datei laden</button>
+    <select id="icsDay" style="margin-bottom:10px; width:100%;"><option value="SA">Samstag</option><option value="SU">Sonntag</option></select>
+    <button onclick="safeRun(downloadICS)" style="width:100%; padding:12px; border-radius:12px;">📅 ICS Datei laden</button>
   </div>
 </div>
 
