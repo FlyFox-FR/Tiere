@@ -1,5 +1,245 @@
 [
   {
+  "icon": "🐘",
+  "text": "Elefanten können sich selbst im Spiegel erkennen und gelten als eines der wenigen Tiere mit Selbstbewusstsein.",
+  "source": "Verhaltensforschung"
+},
+{
+  "icon": "🐬",
+  "text": "Delfine geben sich gegenseitig individuelle Pfeifnamen, mit denen sie sich gezielt ansprechen.",
+  "source": "Meeresbiologie"
+},
+{
+  "icon": "🐙",
+  "text": "Kraken können mit ihren Armen schmecken, da sich dort tausende Geschmackssensoren befinden.",
+  "source": "Ozeanforschung"
+},
+{
+  "icon": "🦇",
+  "text": "Fledermäuse stoßen Ultraschallrufe aus, die so präzise sind, dass sie damit einzelne Insekten im Flug orten können.",
+  "source": "Zoologie"
+},
+{
+  "icon": "🐢",
+  "text": "Schildkröten können über 100 Jahre alt werden und manche Arten altern extrem langsam.",
+  "source": "Tierkunde"
+},
+{
+  "icon": "🦈",
+  "text": "Haie besitzen Elektrorezeptoren, mit denen sie elektrische Felder anderer Lebewesen wahrnehmen können.",
+  "source": "Meeresbiologie"
+},
+{
+  "icon": "🐧",
+  "text": "Pinguine können unter Wasser deutlich schneller schwimmen als an Land laufen.",
+  "source": "Antarktis Forschung"
+},
+{
+  "icon": "🦒",
+  "text": "Giraffen haben genauso viele Halswirbel wie Menschen – nämlich sieben.",
+  "source": "Anatomie"
+},
+{
+  "icon": "🐌",
+  "text": "Schnecken können bis zu drei Jahre schlafen, wenn die Umweltbedingungen zu trocken sind.",
+  "source": "Biologie Wissen"
+},
+{
+  "icon": "🦋",
+  "text": "Schmetterlinge schmecken mit ihren Füßen und entscheiden so, auf welchen Pflanzen sie landen.",
+  "source": "Insektenkunde"
+},
+{
+  "icon": "🐺",
+  "text": "Wölfe leben in Familienverbänden und kümmern sich gemeinsam um die Aufzucht der Jungen.",
+  "source": "Wildtierforschung"
+},
+{
+  "icon": "🐳",
+  "text": "Blauwale sind die größten Tiere, die jemals auf der Erde gelebt haben – größer als jeder Dinosaurier.",
+  "source": "Meeresbiologie"
+},
+{
+  "icon": "🦎",
+  "text": "Manche Echsen können ihren Schwanz abwerfen, um Feinden zu entkommen, und ihn später nachwachsen lassen.",
+  "source": "Reptilienkunde"
+},
+{
+  "icon": "🐒",
+  "text": "Affen nutzen Werkzeuge, zum Beispiel Steine, um Nüsse zu knacken.",
+  "source": "Primatenforschung"
+},
+{
+  "icon": "🦜",
+  "text": "Papageien können nicht nur Geräusche nachahmen, sondern auch Bedeutungen mit Wörtern verknüpfen.",
+  "source": "Vogelkunde"
+},
+{
+  "icon": "🐠",
+  "text": "Clownfische können ihr Geschlecht wechseln, wenn es für die Gruppe notwendig ist.",
+  "source": "Meeresbiologie"
+},
+{
+  "icon": "🦀",
+  "text": "Krebse können verlorene Scheren nach einer Häutung neu bilden.",
+  "source": "Meereskunde"
+},
+{
+  "icon": "🐞",
+  "text": "Marienkäfer können in einer Stunde mehrere Dutzend Blattläuse fressen.",
+  "source": "Insektenforschung"
+},
+{
+  "icon": "🦔",
+  "text": "Igel halten Winterschlaf und senken dabei ihre Herzfrequenz drastisch ab.",
+  "source": "Säugetierkunde"
+},
+{
+  "icon": "🐍",
+  "text": "Schlangen riechen mit ihrer gespaltenen Zunge, indem sie Geruchspartikel zur Jacobson-Drüse transportieren.",
+  "source": "Reptilienbiologie"
+},
+{
+  "icon": "🐝",
+  "text": "Eine Honigbiene produziert in ihrem ganzen Leben nur etwa einen Teelöffel Honig.",
+  "source": "Imkerei"
+},
+{
+  "icon": "🦅",
+  "text": "Adler besitzen eine bis zu fünfmal schärfere Sehkraft als Menschen.",
+  "source": "Ornithologie"
+},
+{
+  "icon": "🐴",
+  "text": "Pferde können im Stehen schlafen, da ihre Beine durch Sehnen arretiert werden.",
+  "source": "Tierphysiologie"
+},
+{
+  "icon": "🦉",
+  "text": "Eulen können ihren Kopf um bis zu 270 Grad drehen, ohne die Blutzufuhr zu unterbrechen.",
+  "source": "Vogelkunde"
+},
+{
+  "icon": "🐸",
+  "text": "Frösche trinken kein Wasser, sondern nehmen es direkt über ihre Haut auf.",
+  "source": "Amphibienkunde"
+},
+{
+  "icon": "🦓",
+  "text": "Die Streifen von Zebras sind einzigartig – kein Muster gleicht dem eines anderen Zebras.",
+  "source": "Wildbiologie"
+},
+{
+  "icon": "🐿️",
+  "text": "Eichhörnchen können sich hunderte Verstecke für ihre Nüsse merken – auch Monate später.",
+  "source": "Verhaltensbiologie"
+},
+{
+  "icon": "🦌",
+  "text": "Hirsche werfen ihr Geweih jedes Jahr ab und bilden es komplett neu.",
+  "source": "Wildkunde"
+},
+{
+  "icon": "🐕",
+  "text": "Hunde können menschliche Emotionen anhand von Gesichtsausdruck und Stimme erkennen.",
+  "source": "Verhaltensforschung"
+},
+{
+  "icon": "🐈",
+  "text": "Katzen besitzen ein zusätzliches Organ, das Jacobson-Organ, um Gerüche genauer zu analysieren.",
+  "source": "Tierbiologie"
+},
+{
+  "icon": "🦦",
+  "text": "Seeotter halten sich beim Schlafen an den Händen, damit sie nicht voneinander wegtreiben.",
+  "source": "Meeresforschung"
+},
+{
+  "icon": "🐓",
+  "text": "Hühner können sich über 100 Artgenossen individuell merken und unterscheiden.",
+  "source": "Tierverhalten"
+},
+{
+  "icon": "🦧",
+  "text": "Orang-Utans bauen sich jeden Abend ein neues Nest aus Ästen zum Schlafen.",
+  "source": "Primatenkunde"
+},
+{
+  "icon": "🐜",
+  "text": "Ameisen können das Vielfache ihres eigenen Körpergewichts tragen.",
+  "source": "Insektenkunde"
+},
+{
+  "icon": "🦞",
+  "text": "Hummer altern biologisch extrem langsam und können theoretisch sehr alt werden.",
+  "source": "Meeresbiologie"
+},
+{
+  "icon": "🐊",
+  "text": "Krokodile können mehrere Wochen ohne Nahrung auskommen.",
+  "source": "Reptilienforschung"
+},
+{
+  "icon": "🦩",
+  "text": "Flamingos sind nur durch ihre Nahrung rosa – ohne sie wären sie grau oder weiß.",
+  "source": "Vogelkunde"
+},
+{
+  "icon": "🐐",
+  "text": "Ziegen haben rechteckige Pupillen, die ihnen ein besonders breites Sichtfeld geben.",
+  "source": "Tierphysiologie"
+},
+{
+  "icon": "🦝",
+  "text": "Waschbären können komplexe Schlösser und Verschlüsse mit ihren Pfoten öffnen.",
+  "source": "Verhaltensforschung"
+},
+{
+  "icon": "🐟",
+  "text": "Fische können ertrinken, wenn kein Sauerstoff im Wasser gelöst ist.",
+  "source": "Aquatische Biologie"
+},
+{
+  "icon": "🦐",
+  "text": "Der Pistolenkrebs erzeugt mit seiner Schere eine Druckwelle, die kurzzeitig heißer als die Sonne sein kann.",
+  "source": "Meeresforschung"
+},
+{
+  "icon": "🐃",
+  "text": "Büffel treffen demokratische Entscheidungen, indem sie gemeinsam die Bewegungsrichtung bestimmen.",
+  "source": "Tierverhalten"
+},
+{
+  "icon": "🦘",
+  "text": "Kängurus können ihre Hinterbeine nicht unabhängig voneinander bewegen.",
+  "source": "Zoologie"
+},
+{
+  "icon": "🐙",
+  "text": "Kraken können durch winzige Öffnungen schlüpfen, solange ihr Schnabel hindurchpasst.",
+  "source": "Ozeanografie"
+},
+{
+  "icon": "🦕",
+  "text": "Vögel gelten als direkte Nachfahren der Dinosaurier.",
+  "source": "Evolutionsbiologie"
+},
+{
+  "icon": "🐛",
+  "text": "Raupen können ihr Körpergewicht innerhalb weniger Tage vervielfachen.",
+  "source": "Insektenbiologie"
+},
+{
+  "icon": "🦏",
+  "text": "Nashörner kommunizieren auch über tieffrequente Töne, die Menschen nicht hören können.",
+  "source": "Wildtierforschung"
+},
+{
+  "icon": "🐬",
+  "text": "Delfine schlafen mit nur einer Gehirnhälfte, während die andere wach bleibt.",
+  "source": "Meeresbiologie"
+},
+  {
     "icon": "🦊",
     "text": "Füchse nutzen das Magnetfeld der Erde wie einen Zielsucher, um Beute unter tiefem Schnee exakt zu orten.",
     "source": "NatGeo"
