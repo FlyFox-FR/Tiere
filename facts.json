@@ -1,4 +1,354 @@
 [
+    {
+    "animal": "Delfin",
+    "icon": "🐬",
+    "text": "Junge Delfine ärgern manchmal Kugelfische, damit diese Gift abgeben. Davon werden die Delfine 'high'.",
+    "tags": ["Witzig", "Party", "Meer"],
+    "source": "BBC Doku"
+  },
+  {
+    "animal": "Katze",
+    "icon": "🐈",
+    "text": "Wenn eine Katze dir ihren Hintern ins Gesicht streckt, ist das eigentlich ein sehr höfliches Kompliment.",
+    "tags": ["Lustig", "Liebe", "Haustier"],
+    "source": "Katzen Logik"
+  },
+  {
+    "animal": "Hund",
+    "icon": "🐕",
+    "text": "Hunde drehen sich vor dem Kacken oft im Kreis, weil sie versuchen, sich am Magnetfeld der Erde auszurichten.",
+    "tags": ["Witzig", "Ekelig", "Wissenschaft"],
+    "source": "Bio Studie"
+  },
+  {
+    "animal": "Känguru",
+    "icon": "🦘",
+    "text": "Männliche Kängurus lassen ihre Muskeln spielen und posieren wie Bodybuilder, um Weibchen zu beeindrucken.",
+    "tags": ["Lustig", "Flirt", "Australien"],
+    "source": "Wildlife Park"
+  },
+  {
+    "animal": "Elch",
+    "icon": "🫎",
+    "text": "In Schweden betrinken sich Elche manchmal an vergorenen Äpfeln und bleiben dann in Bäumen stecken.",
+    "tags": ["Witzig", "Party", "Fail"],
+    "source": "News Schweden"
+  },
+  {
+    "animal": "Pinguin",
+    "icon": "🐧",
+    "text": "Pinguine haben Knie! Man sieht sie nur nicht, weil sie sich permanent in der Hocke befinden.",
+    "tags": ["Lustig", "Anatomie", "Überraschung"],
+    "source": "Vogelkunde"
+  },
+  {
+    "animal": "Möwe",
+    "icon": "🍟",
+    "text": "Möwen klauen Essen lieber direkt aus der Hand von Menschen als vom Boden, weil sie uns für gute Futterfinder halten.",
+    "tags": ["Frech", "Lustig", "Küste"],
+    "source": "Verhaltensstudie"
+  },
+  {
+    "animal": "Kuh",
+    "icon": "🐄",
+    "text": "Kühe haben beste Freundinnen. Wenn man sie trennt, werden sie dramatisch und muhen traurig.",
+    "tags": ["Drama", "Süß", "Bauernhof"],
+    "source": "Tier Emotionen"
+  },
+  {
+    "animal": "Hamster",
+    "icon": "🐹",
+    "text": "Hamster laufen im Rad so viel, dass sie in einer einzigen Nacht bis zu 10 Kilometer zurücklegen könnten.",
+    "tags": ["Verrückt", "Sport", "Haustier"],
+    "source": "Nager Wissen"
+  },
+  {
+    "animal": "Schnecke",
+    "icon": "🐌",
+    "text": "Schnecken haben bis zu 14.000 Zähne auf ihrer Zunge. Stell dir das mal beim Zahnarzt vor!",
+    "tags": ["Gruselig", "Witzig", "Garten"],
+    "source": "Mikrokosmos"
+  },
+  {
+    "animal": "Giraffe",
+    "icon": "🦒",
+    "text": "Giraffen können sich mit ihrer extrem langen Zunge selbst in den Ohren bohren. Praktisch, oder?",
+    "tags": ["Lustig", "Ekelig", "Praktisch"],
+    "source": "Zoo Fakten"
+  },
+  {
+    "animal": "Schaf",
+    "icon": "🐑",
+    "text": "Schafe können sich Gesichter merken. Wenn du einem Schaf dumm kommst, wird es dich auch in zwei Jahren noch hassen.",
+    "tags": ["Nachtragend", "Lustig", "Bauernhof"],
+    "source": "Schaf Studie"
+  },
+  {
+    "animal": "Strauß",
+    "icon": "🐦",
+    "text": "Strauße stecken ihren Kopf gar nicht in den Sand. Das ist ein Mythos. Sie legen sich nur flach hin, was aus der Ferne so aussieht.",
+    "tags": ["Aha-Moment", "Witzig", "Afrika"],
+    "source": "Mythen Check"
+  },
+  {
+    "animal": "Krake",
+    "icon": "🐙",
+    "text": "Kraken ist oft langweilig. In Aquarien brechen sie nachts aus, fressen Fische im Nachbarbecken und gehen zurück, als wäre nichts gewesen.",
+    "tags": ["Frech", "Krimi", "Meer"],
+    "source": "Aquarium Stories"
+  },
+  {
+    "animal": "Otter",
+    "icon": "🦦",
+    "text": "Otter zeigen bei Gefahr manchmal ihre Babys vor, quasi als Schutzschild oder um Mitleid zu erregen.",
+    "tags": ["Drama", "Gemein", "Wasser"],
+    "source": "Wildtier Beobachtung"
+  },
+  {
+    "animal": "Truthahn",
+    "icon": "🦃",
+    "text": "Männliche Truthähne erröten, wenn sie ein hübsches Weibchen sehen. Ihr Kopf wird dann knallrot.",
+    "tags": ["Liebe", "Lustig", "Vögel"],
+    "source": "Farm Life"
+  },
+  {
+    "animal": "Fledermaus",
+    "icon": "🦇",
+    "text": "Fledermäuse singen Liebeslieder. Im Ultraschallbereich klingen sie wie Heavy Metal Sänger.",
+    "tags": ["Romantik", "Witzig", "Musik"],
+    "source": "Fledermaus Forschung"
+  },
+  {
+    "animal": "Waschbär",
+    "icon": "🦝",
+    "text": "Waschbären haben so sensible Hände, dass sie Schlösser knacken können. Wir haben keine Chance.",
+    "tags": ["Krimi", "Witzig", "Stadt"],
+    "source": "Urban Wildlife"
+  },
+  {
+    "animal": "Alpaka",
+    "icon": "🦙",
+    "text": "Alpakas summen, wenn sie besorgt sind. Eine Herde klingt dann wie ein wütender Bienenstock.",
+    "tags": ["Geräusch", "Lustig", "Haustier"],
+    "source": "Alpaka Zucht"
+  },
+  {
+    "animal": "Hai",
+    "icon": "🦈",
+    "text": "Haie haben keinen einzigen Knochen im Körper. Sie bestehen nur aus Knorpel und schlechter Laune.",
+    "tags": ["Witzig", "Anatomie", "Meer"],
+    "source": "Ozeanarium"
+  },
+  {
+    "animal": "Koala",
+    "icon": "🐨",
+    "text": "Koalas haben ein sehr glattes Gehirn. Man könnte ihnen einen Teller Blätter hinstellen und sie wüssten nicht, was sie tun sollen.",
+    "tags": ["Dumm", "Lustig", "Australien"],
+    "source": "Biologie Buch"
+  },
+  {
+    "animal": "Ente",
+    "icon": "🦆",
+    "text": "Enten haben immer ein Auge offen, wenn sie in einer Gruppe schlafen. Die äußeren Enten halten Wache, die inneren pennen.",
+    "tags": ["Clever", "Schlaf", "Vögel"],
+    "source": "Vogelwelt"
+  },
+  {
+    "animal": "Ziege",
+    "icon": "🐐",
+    "text": "Ziegen haben Akzente. Eine Ziege aus Bayern klingt anders als eine aus London.",
+    "tags": ["Witzig", "Sprache", "Bauernhof"],
+    "source": "Akustik Studie"
+  },
+  {
+    "animal": "Krähe",
+    "icon": "🛹",
+    "text": "Krähen benutzen manchmal Dächer oder Autohauben als Rutsche, einfach nur weil es ihnen Spaß macht.",
+    "tags": ["Spiel", "Lustig", "Vögel"],
+    "source": "Youtube Videos"
+  },
+  {
+    "animal": "Blauwal",
+    "icon": "💩",
+    "text": "Wenn ein Blauwal pupst, ist die Blase so groß, dass ein Pferd darin stehen könnte.",
+    "tags": ["Ekelig", "Witzig", "Rekord"],
+    "source": "Meeres Fakten"
+  },
+  {
+    "animal": "Eichhörnchen",
+    "icon": "🐿️",
+    "text": "Eichhörnchen tun manchmal nur so, als würden sie eine Nuss vergraben, um Diebe zu täuschen. Meister der Illusion!",
+    "tags": ["Frech", "Drama", "Wald"],
+    "source": "Verhaltensforschung"
+  },
+  {
+    "animal": "Schildkröte",
+    "icon": "🐢",
+    "text": "Charles Darwin hat eine Schildkröte namens Harriet mitgebracht, die ihn 124 Jahre überlebt hat.",
+    "tags": ["Ironie", "Geschichte", "Reptilien"],
+    "source": "Zoo Australien"
+  },
+  {
+    "animal": "Ameise",
+    "icon": "🐜",
+    "text": "Wenn Ameisen betrunken sind, werden sie von ihren nüchternen Kollegen nach Hause getragen, damit sie keinen Ärger machen.",
+    "tags": ["Witzig", "Sozial", "Insekten"],
+    "source": "Insekten Studie"
+  },
+  {
+    "animal": "Flamingo",
+    "icon": "🦩",
+    "text": "Flamingos können nur kopfüber essen. Stell dir vor, du müsstest bei jedem Abendessen einen Handstand machen.",
+    "tags": ["Lustig", "Anatomie", "Vögel"],
+    "source": "Zoo Wissen"
+  },
+  {
+    "animal": "Schwein",
+    "icon": "🐖",
+    "text": "Schweine können Videospiele spielen und sind darin oft besser als Hunde.",
+    "tags": ["Gamer", "Witzig", "Bauernhof"],
+    "source": "Wissenschaft"
+  },
+  {
+    "animal": "Gorilla",
+    "icon": "🦍",
+    "text": "Gorillas singen und summen fröhlich vor sich hin, wenn sie ihr Lieblingsessen mampfen.",
+    "tags": ["Niedlich", "Lustig", "Affen"],
+    "source": "Primaten Forscher"
+  },
+  {
+    "animal": "Wombat",
+    "icon": "💩",
+    "text": "Wombats machen Würfel-Kaka. Sie bauen damit kleine Türme, um ihr Revier zu markieren. Wahre Bauarbeiter.",
+    "tags": ["Lustig", "Ekelig", "Australien"],
+    "source": "Natur Wunder"
+  },
+  {
+    "animal": "Spinne",
+    "icon": "🕷️",
+    "text": "Es gibt vegetarische Spinnen. Sie haben einfach keine Lust auf das ganze Fliegen-Fangen-Drama.",
+    "tags": ["Anders", "Lustig", "Insekten"],
+    "source": "Spinnen Welt"
+  },
+  {
+    "animal": "Panda",
+    "icon": "🐼",
+    "text": "Pandas sind so faul, dass sie manchmal vergessen, dass sie schwanger sind.",
+    "tags": ["Faul", "Witzig", "Asien"],
+    "source": "Zoo Journal"
+  },
+  {
+    "animal": "Papagei",
+    "icon": "🦜",
+    "text": "Ein Papagei hat mal einen Einbrecher verraten, indem er dessen Namen der Polizei nannte.",
+    "tags": ["Krimi", "Lustig", "Vögel"],
+    "source": "Polizei Bericht"
+  },
+  {
+    "animal": "Nilpferd",
+    "icon": "🦛",
+    "text": "Nilpferde verteilen ihren Kot, indem sie ihren Schwanz wie einen Propeller drehen. Man nennt das 'Dung Shower'.",
+    "tags": ["Ekelig", "Witzig", "Afrika"],
+    "source": "Safari Live"
+  },
+  {
+    "animal": "Faultier",
+    "icon": "🦥",
+    "text": "Faultiere sind so langsam, dass auf ihrem Fell Algen wachsen. Sie sind quasi wandelnde Gärten.",
+    "tags": ["Lustig", "Natur", "Langsam"],
+    "source": "Regenwald Doku"
+  },
+  {
+    "animal": "Zebra",
+    "icon": "🦓",
+    "text": "Zebras sind eigentlich schwarz mit weißen Streifen, nicht andersherum. Ihr Bauch verrät sie.",
+    "tags": ["Aha-Moment", "Witzig", "Afrika"],
+    "source": "Bio Fakten"
+  },
+  {
+    "animal": "Hahn",
+    "icon": "🐓",
+    "text": "Hähne haben eingebaute Ohrstöpsel, damit sie nicht taub werden, wenn sie morgens so laut krähen.",
+    "tags": ["Praktisch", "Lustig", "Bauernhof"],
+    "source": "Vogel Anatomie"
+  },
+  {
+    "animal": "Eule",
+    "icon": "🦉",
+    "text": "Eulen haben extrem lange Beine, die sie unter den Federn verstecken. Wenn man das Kleid hebt, sehen sie aus wie Models.",
+    "tags": ["Lustig", "Mode", "Vögel"],
+    "source": "Internet Meme"
+  },
+  {
+    "animal": "Kaninchen",
+    "icon": "🐰",
+    "text": "Kaninchen können nicht kotzen. Was drin ist, bleibt drin.",
+    "tags": ["Lustig", "Fakt", "Haustier"],
+    "source": "Tierarzt Wissen"
+  },
+  {
+    "animal": "Ratte",
+    "icon": "🐀",
+    "text": "Ratten sind extrem kitzelig. Wenn man sie kitzelt, machen sie Geräusche, die wie Lachen klingen.",
+    "tags": ["Niedlich", "Lustig", "Wissenschaft"],
+    "source": "Labor Spaß"
+  },
+  {
+    "animal": "Frosch",
+    "icon": "🐸",
+    "text": "Ein Frosch muss die Augen schließen, um zu schlucken. Seine Augäpfel drücken das Essen runter.",
+    "tags": ["Witzig", "Ekelig", "Amphibien"],
+    "source": "Bio Unterricht"
+  },
+  {
+    "animal": "Hummel",
+    "icon": "🐝",
+    "text": "Hummeln können Fußball spielen lernen. Zumindest in Experimenten mit kleinen Bällen und Belohnungen.",
+    "tags": ["Sport", "Witzig", "Insekten"],
+    "source": "Uni Studie"
+  },
+  {
+    "animal": "Bär",
+    "icon": "🐻",
+    "text": "Bären kratzen sich den Rücken an Bäumen und sehen dabei aus, als würden sie tanzen.",
+    "tags": ["Tanz", "Lustig", "Wald"],
+    "source": "Wildkamera"
+  },
+  {
+    "animal": "Elefant",
+    "icon": "🐘",
+    "text": "Elefanten finden Menschen 'niedlich', genau wie wir Welpen niedlich finden. Wir sind für sie kleine Haustiere.",
+    "tags": ["Liebe", "Süß", "Afrika"],
+    "source": "Psychologie"
+  },
+  {
+    "animal": "Stinktier",
+    "icon": "🦨",
+    "text": "Stinktiere warnen dich, bevor sie sprühen, indem sie einen Handstand machen. Ein akrobatischer Warnschuss.",
+    "tags": ["Zirkus", "Witzig", "Wald"],
+    "source": "Ranger Wissen"
+  },
+  {
+    "animal": "Igel",
+    "icon": "🦔",
+    "text": "Wenn Igel etwas Neues riechen, spucken sie sich selbst voll Schaum. Niemand weiß genau warum, aber es sieht bescheuert aus.",
+    "tags": ["Verrückt", "Lustig", "Garten"],
+    "source": "Igel Station"
+  },
+  {
+    "animal": "Mücke",
+    "icon": "🦟",
+    "text": "Mücken mögen Käsefüße. Der Geruch erinnert sie an Limburger Käse, den sie lieben.",
+    "tags": ["Ekelig", "Witzig", "Sommer"],
+    "source": "Geruchs Studie"
+  },
+  {
+    "animal": "Seepferdchen",
+    "icon": "🌊",
+    "text": "Seepferdchen sind miserable Schwimmer und sterben manchmal vor Erschöpfung, wenn die Strömung zu stark ist.",
+    "tags": ["Drama", "Traurig-Lustig", "Meer"],
+    "source": "Meeresbiologie"
+  },
 {
     "animal": "Hering",
     "icon": "🐟",
