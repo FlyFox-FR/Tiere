@@ -1,5 +1,145 @@
 [
     {
+    "animal": "Wombat",
+    "icon": "🐻",
+    "text": "Wombats haben einen extrem harten Hintern, den sie als Schild benutzen, um Raubtieren den Schädel an der Höhlendecke zu zerquetschen.",
+    "tags": ["Badass", "Verteidigung", "Australien"],
+    "source": "Wild Life"
+  },
+  {
+    "animal": "Tiger",
+    "icon": "🐅",
+    "text": "Tiger haben weiße Flecken auf der Rückseite ihrer Ohren, die wie Augen aussehen, um Angreifer von hinten abzuschrecken.",
+    "tags": ["Tarnung", "Clever", "Katzen"],
+    "source": "Großkatzen Schutz"
+  },
+  {
+    "animal": "Mistkäfer",
+    "icon": "🪲",
+    "text": "Mistkäfer orientieren sich nachts an der Milchstraße, um ihre Dungbälle in einer geraden Linie zu rollen.",
+    "tags": ["Astro", "Navigation", "Insekten"],
+    "source": "Lund Universität"
+  },
+  {
+    "animal": "Grönlandhai",
+    "icon": "🦈",
+    "text": "Grönlandhaie können über 400 Jahre alt werden und erreichen die Geschlechtsreife erst mit ca. 150 Jahren.",
+    "tags": ["Uralt", "Meer", "Geduld"],
+    "source": "Meeresforschung"
+  },
+  {
+    "animal": "Fangschreckenkrebs",
+    "icon": "🌈",
+    "text": "Fangschreckenkrebse haben 16 Farbrezeptoren (Menschen haben 3). Sie sehen Farben, die wir uns nicht einmal vorstellen können.",
+    "tags": ["Psychedelisch", "Sicht", "Meer"],
+    "source": "Biologie"
+  },
+  {
+    "animal": "Elefant",
+    "icon": "🐘",
+    "text": "Elefanten können mit ihren Füßen 'hören'. Sie spüren Infraschall-Vibrationen von anderen Herden über Kilometer hinweg im Boden.",
+    "tags": ["Vibration", "Sinne", "Afrika"],
+    "source": "Zoologie"
+  },
+  {
+    "animal": "Nacktmull",
+    "icon": "🐀",
+    "text": "Nacktmulle fühlen keinen Schmerz auf der Haut (z.B. durch Säure) und sind fast immun gegen Krebs.",
+    "tags": ["Superkraft", "Hässlich-Süß", "Medizin"],
+    "source": "Genetik Studie"
+  },
+  {
+    "animal": "Krähe",
+    "icon": "🎁",
+    "text": "Krähen bringen Menschen, die sie füttern, manchmal Geschenke wie Knöpfe, glänzende Steine oder Metallstücke.",
+    "tags": ["Freundschaft", "Schlau", "Vögel"],
+    "source": "Verhaltensbio"
+  },
+  {
+    "animal": "Faultier",
+    "icon": "🏊",
+    "text": "Obwohl sie an Land extrem langsam sind, können Faultiere dreimal schneller schwimmen als klettern.",
+    "tags": ["Sport", "Überraschung", "Wasser"],
+    "source": "Regenwald Doku"
+  },
+  {
+    "animal": "Kugelfisch",
+    "icon": "🐡",
+    "text": "Männliche Kugelfische bauen wunderschöne, symmetrische Kornkreise im Sand, nur um Weibchen zu beeindrucken.",
+    "tags": ["Kunst", "Romantik", "Meer"],
+    "source": "BBC Earth"
+  },
+  {
+    "animal": "Katze",
+    "icon": "🐈",
+    "text": "Das Schnurren einer Katze hat eine Frequenz (25-150 Hz), die nachweislich die Heilung von Knochen und Muskeln beschleunigt.",
+    "tags": ["Heilung", "Magisch", "Haustier"],
+    "source": "Veterinärmedizin"
+  },
+  {
+    "animal": "Albatros",
+    "icon": "🕊️",
+    "text": "Ein Albatros kann während des Fliegens schlafen. Er schaltet einfach eine Gehirnhälfte ab, während die andere navigiert.",
+    "tags": ["Skill", "Schlaf", "Vögel"],
+    "source": "Ornithologie"
+  },
+  {
+    "animal": "Schnabeltier",
+    "icon": "✨",
+    "text": "Das Fell von Schnabeltieren leuchtet unter UV-Licht (Schwarzlicht) grün-blau.",
+    "tags": ["Party", "Kurios", "Australien"],
+    "source": "Bio-Fluoreszenz"
+  },
+  {
+    "animal": "Termite",
+    "icon": "🐜",
+    "text": "Termitenköniginnen können bis zu 50 Jahre alt werden – ein absoluter Rekord in der Insektenwelt.",
+    "tags": ["Royal", "Alter", "Insekten"],
+    "source": "Insekten Welt"
+  },
+  {
+    "animal": "Capybara",
+    "icon": "🚕",
+    "text": "Capybaras sind so entspannt ('Nature's Sofa'), dass oft Vögel, Affen oder Schildkröten auf ihnen sitzen und reiten.",
+    "tags": ["Chill", "Taxi", "Südamerika"],
+    "source": "Tier Beobachtung"
+  },
+  {
+    "animal": "Krokodil",
+    "icon": "🐊",
+    "text": "Krokodile schlucken absichtlich Steine ('Gastrolithen'), um schwerer zu werden und besser tauchen zu können.",
+    "tags": ["Tauchen", "Physik", "Reptilien"],
+    "source": "Herpetologie"
+  },
+  {
+    "animal": "Blutegel",
+    "icon": "🧠",
+    "text": "Ein Blutegel hat 32 Gehirne. Technisch gesehen ein Gehirn, das auf 32 Körpersegmente verteilt ist.",
+    "tags": ["Mathe", "Ekelig", "Anatomie"],
+    "source": "Biologie"
+  },
+  {
+    "animal": "Ziege",
+    "icon": "👀",
+    "text": "Ziegen haben rechteckige Pupillen. Das gibt ihnen ein Sichtfeld von bis zu 320 Grad, um Raubtiere früh zu sehen.",
+    "tags": ["Panorama", "Anatomie", "Bauernhof"],
+    "source": "Evolution"
+  },
+  {
+    "animal": "Küstenseeschwalbe",
+    "icon": "🌍",
+    "text": "Dieser kleine Vogel fliegt in seinem Leben eine Strecke, die 3x der Entfernung zum Mond und zurück entspricht.",
+    "tags": ["Reise", "Rekord", "Vögel"],
+    "source": "Vogelzug"
+  },
+  {
+    "animal": "Oktopus",
+    "icon": "👅",
+    "text": "Die Saugnäpfe eines Oktopus können schmecken. Wenn er etwas berührt, weiß er sofort, ob es essbar ist.",
+    "tags": ["Sinne", "Jagen", "Meer"],
+    "source": "Meeresbiologie"
+  },
+    {
     "animal": "Oktopus",
     "icon": "🐙",
     "text": "Ein Oktopus hat drei Herzen. Zwei pumpen Blut durch die Kiemen, das dritte versorgt den Rest des Körpers.",
