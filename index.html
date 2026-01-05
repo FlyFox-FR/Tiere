@@ -3796,6 +3796,58 @@ body.no-scroll {
     overscroll-behavior: contain; 
 }
 
+/* === QUIZ MASTER STYLES === */
+.quiz-container {
+    text-align: center;
+    padding: 10px 0;
+}
+
+.quiz-question-box {
+    background: var(--bg);
+    padding: 20px;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 25px;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+    border: 1px solid var(--btn);
+}
+
+.quiz-options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.quiz-btn {
+    background: var(--card);
+    border: 2px solid var(--btn);
+    padding: 15px;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.1s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.quiz-btn:active { transform: scale(0.96); }
+
+/* Zustände */
+.quiz-btn.correct {
+    background: #4cd137 !important; color: #fff; border-color: #4cd137;
+    animation: pulseBadge 0.3s;
+}
+.quiz-btn.wrong {
+    background: #ff4757 !important; color: #fff; border-color: #ff4757;
+    opacity: 0.6;
+}
+
+.quiz-score-display {
+    font-size: 12px; font-weight: 900; 
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: 10px; letter-spacing: 1px;
+}
 </style>
 </head>
 <body>
@@ -4666,11 +4718,157 @@ body.no-scroll {
   </div>
 </div>
 
+<!-- QUIZ MODAL -->
+<div id="quizModal" class="modal">
+  <div class="modal-content">
+    <div class="close-btn" onclick="closeModal('quizModal')">✕</div>
+    
+    <div style="text-align:center; margin-bottom:15px;">
+        <div style="font-size:40px; margin-bottom:5px;">🧠</div>
+        <h3 style="margin:0;">Quiz-Master</h3>
+        <div id="quizScoreHeader" class="quiz-score-display">Gesamt-XP: 0</div>
+    </div>
+
+    <div class="quiz-container">
+        <!-- Hier landet die Frage -->
+        <div id="quizQuestionBox" class="quiz-question-box">
+            Lade Frage...
+        </div>
+
+        <!-- Hier landen die 3 Buttons -->
+        <div id="quizOptionsBox" class="quiz-options-grid"></div>
+        
+        <!-- Next Button (erst unsichtbar) -->
+        <button id="quizNextBtn" onclick="nextQuizQuestion()" style="display:none; width:100%; margin-top:20px; background:var(--accent); color:white; padding:15px; box-shadow:0 5px 15px var(--accent-glow);">
+            Nächste Frage ➔
+        </button>
+    </div>
+  </div>
+</div>
+
 <script>
 /** 
  * === TIER TICKER CORE ===
  * Fixes: Disabled Swipe for Details View
  */
+
+
+/* === QUIZ ENGINE (AUTO-GENERATED) === */
+
+let currentQuizAnswer = null; // Speichert die Lösung
+let isQuizLocked = false;     // Verhindert Mehrfach-Klicks
+
+function startQuiz() {
+    closeContextMenu(); // Menü zu, falls offen
+    document.getElementById('quizModal').style.display = 'block';
+    updateQuizHeader();
+    nextQuizQuestion();
+}
+
+function updateQuizHeader() {
+    document.getElementById('quizScoreHeader').innerText = `Quiz XP: ${quizXP}`;
+}
+
+function nextQuizQuestion() {
+    // UI Reset
+    isQuizLocked = false;
+    document.getElementById('quizNextBtn').style.display = 'none';
+    const qBox = document.getElementById('quizQuestionBox');
+    const oBox = document.getElementById('quizOptionsBox');
+    oBox.innerHTML = '';
+    qBox.innerHTML = '<div class="loader-spinner" style="width:20px; height:20px; border-width:2px;"></div>';
+
+    // 1. Geeigneten Fakt finden (Muss Tiernamen enthalten)
+    // Wir versuchen es max 50x, sonst Abbruch (Schutz vor Endlosschleife)
+    let candidate = null;
+    let attempts = 0;
+    
+    while (!candidate && attempts < 50) {
+        const rand = allGlobalFacts[Math.floor(Math.random() * allGlobalFacts.length)];
+        // Check: Enthält der Text den Tiernamen? (Case Insensitive)
+        if (rand.text.toLowerCase().includes(rand.animal.toLowerCase())) {
+            candidate = rand;
+        }
+        attempts++;
+    }
+
+    if (!candidate) {
+        qBox.innerText = "Keine geeignete Frage gefunden. Versuch's nochmal!";
+        return;
+    }
+
+    currentQuizAnswer = candidate.animal;
+
+    // 2. Text zensieren (Case Insensitive Replace)
+    // Wir nutzen Regex, um das Wort überall zu finden und Formatierung zu erhalten
+    const regex = new RegExp(candidate.animal, "gi");
+    const questionText = candidate.text.replace(regex, "___________");
+    qBox.innerText = `"${questionText}"`;
+
+    // 3. Falsche Antworten generieren
+    const wrongs = new Set();
+    while (wrongs.size < 2) {
+        const w = allGlobalFacts[Math.floor(Math.random() * allGlobalFacts.length)].animal;
+        if (w !== candidate.animal) wrongs.add(w);
+    }
+
+    // 4. Mischen
+    const options = [candidate.animal, ...Array.from(wrongs)];
+    options.sort(() => 0.5 - Math.random());
+
+    // 5. Buttons rendern
+    options.forEach(opt => {
+        const btn = document.createElement('div');
+        btn.className = 'quiz-btn';
+        btn.innerText = opt;
+        btn.onclick = () => solveQuiz(btn, opt);
+        oBox.appendChild(btn);
+    });
+}
+
+function solveQuiz(btnElement, selectedAnswer) {
+    if (isQuizLocked) return;
+    isQuizLocked = true;
+
+    const isCorrect = (selectedAnswer === currentQuizAnswer);
+    
+    if (isCorrect) {
+        // RICHTIG
+        btnElement.classList.add('correct');
+        btnElement.innerHTML = `✅ ${selectedAnswer}`;
+        playSound('pop');
+        
+        // XP Belohnung
+        const reward = 40;
+        quizXP += reward;
+        localStorage.setItem('quizXP', quizXP);
+        updateQuizHeader();
+        showErrorToast(`Richtig! +${reward} XP`, true);
+        
+        // Konfetti
+        if(typeof spawnParticle === 'function') {
+            const rect = btnElement.getBoundingClientRect();
+            spawnParticle(rect.left + rect.width/2, rect.top, "🎉");
+        }
+    } else {
+        // FALSCH
+        btnElement.classList.add('wrong');
+        btnElement.innerHTML = `❌ ${selectedAnswer}`;
+        if(navigator.vibrate) navigator.vibrate(200);
+        
+        // Richtige Antwort zeigen
+        const buttons = document.querySelectorAll('.quiz-btn');
+        buttons.forEach(b => {
+            if (b.innerText === currentQuizAnswer) {
+                b.classList.add('correct'); // Grün markieren
+                b.style.opacity = '1';
+            }
+        });
+    }
+
+    // Weiter-Button zeigen
+    document.getElementById('quizNextBtn').style.display = 'block';
+}
 
 // === 1. SWIPE GESTURE HANDLER (FIXED VERSION) ===
 function initSwipeGestures() {
@@ -4775,6 +4973,7 @@ const currentSystemYear = new Date().getFullYear();
 let animals = []; 
 let locations = [];
 let locCoords = {};
+let quizXP = parseInt(localStorage.getItem('quizXP')) || 0;
 let savedFacts = JSON.parse(localStorage.getItem('savedFacts')) || []; 
 let currentNoteImg = null; // Speichert das Bild temporär für Notizen
 let dark = false;
@@ -6906,7 +7105,7 @@ function renderStats(){
         }
     }
 
-    const xp = (gTot*40) + (gNote*75) + (animals.length*50) + (photo?100:0) + (gLoc.size*25) + (streak*100);
+    const xp = (gTot*40) + (gNote*75) + (animals.length*50) + (photo?100:0) + (gLoc.size*25) + (streak*100) + quizXP;
     
     // Level Logik
     let lvl = levels[0], nxt = null; 
@@ -9033,6 +9232,7 @@ function openFactMenu(e) {
     const items = [
         { label: 'Fakten durchsuchen', icon: '🔍', action: 'openLibraryModal()' },
         { label: 'Themen filtern', icon: '🎨', action: 'openFlavorModal()' }
+        { label: 'Quiz spielen', icon: '🎮', action: 'startQuiz()' }
     ];
     let x = e.clientX - 180; 
     let y = e.clientY + 10;
