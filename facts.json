@@ -1,5 +1,354 @@
 [
-
+{
+    "animal": "Hering",
+    "icon": "🐟",
+    "text": "Heringe kommunizieren miteinander, indem sie pupsen. Wissenschaftler nennen das 'Fast Repetitive Tick' (FRT).",
+    "tags": ["Lustig", "Kommunikation", "Meer"],
+    "source": "Meeresforschung"
+  },
+  {
+    "animal": "Panda",
+    "icon": "🐼",
+    "text": "Männliche Pandas machen einen Handstand beim Pinkeln, um ihren Baum so weit oben wie möglich zu markieren.",
+    "tags": ["Lustig", "Verhalten", "Kurios"],
+    "source": "WWF Studie"
+  },
+  {
+    "animal": "Pinguin",
+    "icon": "🐧",
+    "text": "Adélie-Pinguine schubsen manchmal ein Gruppenmitglied ins Wasser, um zu prüfen, ob Raubtiere in der Nähe sind.",
+    "tags": ["Lustig", "Gemein", "Antarktis"],
+    "source": "Polar Beobachtung"
+  },
+  {
+    "animal": "Seekuh",
+    "icon": "🦭",
+    "text": "Seekühe steuern ihren Auftrieb im Wasser durch ständiges Pupsen. Wenn sie Verstopfung haben, können sie nicht tauchen.",
+    "tags": ["Lustig", "Physik", "Wasser"],
+    "source": "Zoo Miami"
+  },
+  {
+    "animal": "Hummer",
+    "icon": "🦞",
+    "text": "Hummer haben ihre Blase im Kopf und pinkeln sich gegenseitig ins Gesicht, um zu kommunizieren oder Kämpfe zu beginnen.",
+    "tags": ["Lustig", "Anatomie", "Meer"],
+    "source": "Meeresbiologie"
+  },
+  {
+    "animal": "Geier",
+    "icon": "🦅",
+    "text": "Um sich an heißen Tagen abzukühlen, pinkeln sich Geier absichtlich auf die eigenen Beine.",
+    "tags": ["Lustig", "Ekelig", "Überleben"],
+    "source": "Vogelwarte"
+  },
+  {
+    "animal": "Ziege",
+    "icon": "🐐",
+    "text": "Es gibt eine Ziegenart, die bei Erschrecken sofort steif wird und wie ein Brett umkippt (Myotonische Ziege).",
+    "tags": ["Lustig", "Verhalten", "Bauernhof"],
+    "source": "Farm Wissen"
+  },
+  {
+    "animal": "Krähe",
+    "icon": "🐦‍⬛",
+    "text": "Krähen ziehen anderen Tieren (wie Wölfen) gerne am Schwanz, nur um sie zu ärgern und ihre Reaktion zu testen.",
+    "tags": ["Lustig", "Intelligenz", "Vögel"],
+    "source": "Verhaltensforschung"
+  },
+  {
+    "animal": "Faultier",
+    "icon": "🦥",
+    "text": "Manchmal verwechseln Faultiere ihren eigenen Arm mit einem Ast, greifen daneben und fallen vom Baum.",
+    "tags": ["Lustig", "Tollpatsch", "Wald"],
+    "source": "Regenwald Fakten"
+  },
+  {
+    "animal": "Alpaka",
+    "icon": "🦙",
+    "text": "Wenn ein Alpaka sauer auf dich ist, spuckt es dich nicht mit Spucke an, sondern mit grünem Mageninhalt.",
+    "tags": ["Lustig", "Verhalten", "Haustier"],
+    "source": "Alpaka Farm"
+  },
+  {
+    "animal": "Ente",
+    "icon": "🦆",
+    "text": "Das Quaken einer Ente erzeugt kein Echo. Niemand weiß genau, warum das so ist.",
+    "tags": ["Mysterium", "Physik", "Vögel"],
+    "source": "Akustik Forschung"
+  },
+  {
+    "animal": "Eichhörnchen",
+    "icon": "🐿️",
+    "text": "Eichhörnchen adoptieren manchmal verwaiste Baby-Eichhörnchen, wenn sie merken, dass die Eltern fehlen.",
+    "tags": ["Liebe", "Sozial", "Wald"],
+    "source": "Tierpsychologie"
+  },
+  {
+    "animal": "Schaf",
+    "icon": "🐑",
+    "text": "Schafe können Gesichter erkennen und sich erinnern. Sie wissen genau, welcher Mensch Futter bringt und wer der Tierarzt ist.",
+    "tags": ["Intelligenz", "Gedächtnis", "Bauernhof"],
+    "source": "Agrar Wissenschaft"
+  },
+  {
+    "animal": "Otter",
+    "icon": "🦦",
+    "text": "Seeotter haben eine kleine Hauttasche unter dem Arm, in der sie ihren Lieblingsstein aufbewahren.",
+    "tags": ["Niedlich", "Werkzeug", "Wasser"],
+    "source": "Ozeanarium"
+  },
+  {
+    "animal": "Katze",
+    "icon": "🐈",
+    "text": "Katzen miauen fast ausschließlich, um mit Menschen zu kommunizieren. Untereinander nutzen sie Körpersprache und Düfte.",
+    "tags": ["Kommunikation", "Haustier", "Verhalten"],
+    "source": "Katzen Verhalten"
+  },
+  {
+    "animal": "Hund",
+    "icon": "🐕",
+    "text": "Wenn Hunde im Schlaf zucken oder bellen, träumen sie oft von ihren Besitzern oder vom Spielen.",
+    "tags": ["Schlaf", "Liebe", "Haustier"],
+    "source": "Hunde Psychologie"
+  },
+  {
+    "animal": "Schwein",
+    "icon": "🐖",
+    "text": "Schweine spielen Videospiele. In Experimenten konnten sie lernen, einen Joystick mit der Schnauze zu bedienen.",
+    "tags": ["Intelligenz", "Technik", "Bauernhof"],
+    "source": "Kognitionsforschung"
+  },
+  {
+    "animal": "Gürteltier",
+    "icon": "🛡️",
+    "text": "Der Panzer eines Gürteltiers ist so hart, dass schon Kugeln daran abgeprallt sind.",
+    "tags": ["Verteidigung", "Anatomie", "Kurios"],
+    "source": "Wildnis Fakten"
+  },
+  {
+    "animal": "Koala",
+    "icon": "🐨",
+    "text": "Koala-Babys fressen den Kot ihrer Mutter (Pap), um die Bakterien zu bekommen, die sie für die Eukalyptus-Verdauung brauchen.",
+    "tags": ["Ekelig", "Ernährung", "Australien"],
+    "source": "Zoo Australien"
+  },
+  {
+    "animal": "Seestern",
+    "icon": "⭐",
+    "text": "Seesterne können ihren Magen aus dem Mund herausstülpen, um Beute zu verdauen, die größer ist als sie selbst.",
+    "tags": ["Anatomie", "Essen", "Meer"],
+    "source": "Meeresbiologie"
+  },
+  {
+    "animal": "Fledermaus",
+    "icon": "🦇",
+    "text": "Vampirfledermäuse teilen ihr Blut mit hungrigen Artgenossen, indem sie es wieder hochwürgen. Wahre Freundschaft!",
+    "tags": ["Sozial", "Ernährung", "Nacht"],
+    "source": "Fledermaus Schutz"
+  },
+  {
+    "animal": "Nilpferd",
+    "icon": "🦛",
+    "text": "Die Milch von Nilpferden ist leuchtend rosa.",
+    "tags": ["Kurios", "Ernährung", "Afrika"],
+    "source": "Safari Guide"
+  },
+  {
+    "animal": "Krake",
+    "icon": "🐙",
+    "text": "Kraken boxen manchmal Fische, einfach nur aus Frust oder Bosheit, ohne sie fressen zu wollen.",
+    "tags": ["Lustig", "Verhalten", "Meer"],
+    "source": "Tauch Magazin"
+  },
+  {
+    "animal": "Ratte",
+    "icon": "🐀",
+    "text": "Ratten können das Auto fahren lernen. Forscher bauten winzige Autos, und die Ratten fanden es entspannend.",
+    "tags": ["Intelligenz", "Kurios", "Wissenschaft"],
+    "source": "Labor Studie"
+  },
+  {
+    "animal": "Elster",
+    "icon": "🐦",
+    "text": "Die Elster ist eines der wenigen Tiere, das sich selbst im Spiegel erkennen kann (Selbstbewusstsein).",
+    "tags": ["Intelligenz", "Vögel", "Wissenschaft"],
+    "source": "Ornithologie"
+  },
+  {
+    "animal": "Biber",
+    "icon": "🦫",
+    "text": "Die Zähne von Bibern hören niemals auf zu wachsen. Sie müssen Holz nagen, damit die Zähne nicht zu lang werden.",
+    "tags": ["Anatomie", "Wald", "Nager"],
+    "source": "Wald Wissen"
+  },
+  {
+    "animal": "Zitteraal",
+    "icon": "⚡",
+    "text": "Ein Zitteraal kann Stromstöße von bis zu 600 Volt erzeugen – genug, um ein Pferd umzuhauen.",
+    "tags": ["Gefahr", "Physik", "Wasser"],
+    "source": "Amazonas Fakten"
+  },
+  {
+    "animal": "Schneeleopard",
+    "icon": "🐆",
+    "text": "Schneeleoparden können nicht brüllen. Stattdessen schnurren, miauen und jaulen sie.",
+    "tags": ["Geräusch", "Katzen", "Gebirge"],
+    "source": "Großkatzen Schutz"
+  },
+  {
+    "animal": "Möwe",
+    "icon": "🐦",
+    "text": "Möwen stampfen mit den Füßen auf den Boden, um Regen zu imitieren und Regenwürmer an die Oberfläche zu locken.",
+    "tags": ["Trick", "Ernährung", "Küste"],
+    "source": "Vogel Beobachtung"
+  },
+  {
+    "animal": "Kaninchen",
+    "icon": "🐇",
+    "text": "Wenn Kaninchen extrem glücklich sind, machen sie Luftsprünge und drehen sich dabei. Das nennt man 'Binkying'.",
+    "tags": ["Niedlich", "Verhalten", "Haustier"],
+    "source": "Kaninchen Zucht"
+  },
+  {
+    "animal": "Rentier",
+    "icon": "🦌",
+    "text": "Die Augen von Rentieren wechseln die Farbe: Im Sommer sind sie goldgelb, im Winter dunkelblau, um mehr Licht zu fangen.",
+    "tags": ["Anatomie", "Winter", "Arktis"],
+    "source": "Nordische Natur"
+  },
+  {
+    "animal": "Kuh",
+    "icon": "🐄",
+    "text": "Kühe produzieren mehr Milch, wenn sie beruhigende Musik hören. R.E.M.'s 'Everybody Hurts' funktioniert besonders gut.",
+    "tags": ["Musik", "Bauernhof", "Kurios"],
+    "source": "Agrar Studie"
+  },
+  {
+    "animal": "Walross",
+    "icon": "🦭",
+    "text": "Walrosse können pfeifen. Sie tun dies oft, um Weibchen zu beeindrucken oder Rivalen zu warnen.",
+    "tags": ["Geräusch", "Meer", "Arktis"],
+    "source": "Polar Forschung"
+  },
+  {
+    "animal": "Tiger",
+    "icon": "🐅",
+    "text": "Der Speichel von Tigern ist antiseptisch. Wenn sie ihre Wunden lecken, desinfizieren sie diese gleichzeitig.",
+    "tags": ["Medizin", "Katzen", "Überleben"],
+    "source": "Wildtier Biologie"
+  },
+  {
+    "animal": "Schlange",
+    "icon": "🐍",
+    "text": "Schlangen können riechen, indem sie ihre Zunge herausstrecken. Sie sammeln Partikel aus der Luft und analysieren sie im Mund.",
+    "tags": ["Sinne", "Reptilien", "Anatomie"],
+    "source": "Reptilien Haus"
+  },
+  {
+    "animal": "Papagei",
+    "icon": "🦜",
+    "text": "Papageien geben ihren Kindern Namen. Jedes Küken bekommt einen einzigartigen 'Ruf', den es ein Leben lang behält.",
+    "tags": ["Sozial", "Intelligenz", "Vögel"],
+    "source": "Vogelkunde"
+  },
+  {
+    "animal": "Eisbär",
+    "icon": "🐻‍❄️",
+    "text": "Eisbären reinigen ihr Fell, indem sie sich im Schnee wälzen. Sauberes Fell isoliert besser gegen Kälte.",
+    "tags": ["Hygiene", "Arktis", "Winter"],
+    "source": "Polar Expedition"
+  },
+  {
+    "animal": "Biene",
+    "icon": "🐝",
+    "text": "Bienen können Gesichter erkennen. Man kann ihnen beibringen, menschliche Portraits zu unterscheiden.",
+    "tags": ["Intelligenz", "Insekten", "Wissenschaft"],
+    "source": "Bienen Institut"
+  },
+  {
+    "animal": "Kamel",
+    "icon": "🐫",
+    "text": "Kamele haben drei Augenlider, um ihre Augen vor Sandstürmen zu schützen. Das dritte Lid funktioniert wie ein Scheibenwischer.",
+    "tags": ["Anatomie", "Wüste", "Schutz"],
+    "source": "Wüsten Leben"
+  },
+  {
+    "animal": "Stachelschwein",
+    "icon": "🦔",
+    "text": "Stachelschweine können ihre Stacheln nicht schießen. Aber sie lösen sich bei Berührung extrem leicht ab.",
+    "tags": ["Verteidigung", "Wald", "Mythos"],
+    "source": "Wildtier Schutz"
+  },
+  {
+    "animal": "Hai",
+    "icon": "🦈",
+    "text": "Wenn man einen Hai auf den Rücken dreht, fällt er in eine Starre (tonische Immobilität). Orcas nutzen das zur Jagd.",
+    "tags": ["Gefahr", "Verhalten", "Meer"],
+    "source": "Hai Forschung"
+  },
+  {
+    "animal": "Eule",
+    "icon": "🦉",
+    "text": "Eulen haben extrem lange Beine, die meistens unter den Federn versteckt sind. Wenn sie rennen, sieht es sehr witzig aus.",
+    "tags": ["Lustig", "Anatomie", "Vögel"],
+    "source": "Vogelwarte"
+  },
+  {
+    "animal": "Frettchen",
+    "icon": "🦦",
+    "text": "Wenn Frettchen aufgeregt sind, führen sie einen verrückten Tanz auf, den man 'Weasel War Dance' nennt. Dabei rennen sie gegen Wände.",
+    "tags": ["Lustig", "Verhalten", "Haustier"],
+    "source": "Frettchen Club"
+  },
+  {
+    "animal": "Schildkröte",
+    "icon": "🐢",
+    "text": "Der Panzer einer Schildkröte ist extrem empfindlich. Sie können spüren, wenn man sie dort streichelt.",
+    "tags": ["Anatomie", "Sinne", "Reptilien"],
+    "source": "Zoo Biologie"
+  },
+  {
+    "animal": "Wurm",
+    "icon": "🪱",
+    "text": "Regenwürmer haben fünf Paar 'Herzen' (eigentlich Aortenbögen), die das Blut durch den Körper pumpen.",
+    "tags": ["Anatomie", "Garten", "Insekten"],
+    "source": "Bodenkunde"
+  },
+  {
+    "animal": "Affe",
+    "icon": "🐒",
+    "text": "Kapuzineraffen waschen sich Hände und Füße mit ihrem eigenen Urin, um Weibchen anzulocken.",
+    "tags": ["Lustig", "Ekelig", "Dschungel"],
+    "source": "Primaten Forschung"
+  },
+  {
+    "animal": "Frosch",
+    "icon": "🐸",
+    "text": "Frösche müssen blinzeln, um zu schlucken. Ihre Augäpfel drücken das Essen den Hals hinunter.",
+    "tags": ["Anatomie", "Essen", "Amphibien"],
+    "source": "Natur Museum"
+  },
+  {
+    "animal": "Pferd",
+    "icon": "🐎",
+    "text": "Pferde können nicht durch den Mund atmen. Sie sind auf ihre Nase angewiesen.",
+    "tags": ["Anatomie", "Bauernhof", "Sport"],
+    "source": "Veterinär Medizin"
+  },
+  {
+    "animal": "Maus",
+    "icon": "🐁",
+    "text": "Mäuse können Empathie empfinden. Sie werden traurig, wenn sie sehen, dass andere Mäuse leiden.",
+    "tags": ["Emotionen", "Sozial", "Wissenschaft"],
+    "source": "Verhaltensstudie"
+  },
+  {
+    "animal": "Zebra",
+    "icon": "🦓",
+    "text": "Zebras können nicht alleine schlafen. Sie brauchen immer jemanden, der Wache hält.",
+    "tags": ["Schlaf", "Sozial", "Afrika"],
+    "source": "Safari Guide"
+  },
   {
     "animal": "Giraffe",
     "icon": "🦒",
