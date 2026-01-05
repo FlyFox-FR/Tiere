@@ -3833,36 +3833,6 @@ body:not(.dark) .nav-island {
               <div class="sol-label">🌙 <span id="solSunset">--:--</span></div>
           </div>
       </div>
-      
-<!-- DAILY FACT WIDGET (Docked Version) -->
-  <div class="card-section widget-docked-top" id="factWidget" style="display:none; position:relative;">
-      
-      <!-- Herz Button -->
-      <div id="factHeart" class="fact-heart-btn" onclick="safeRun(toggleFactLike)">♥</div>
-
-      <!-- Refresh Button -->
-      <div onclick="safeRun(loadRandomFact)" style="position:absolute; top:15px; right:15px; opacity:0.5; cursor:pointer; font-size:18px; z-index:5;">↻</div>
-      
-      <div style="display:flex; gap:15px; align-items:flex-start;">
-          <!-- Großes Icon -->
-          <div id="factIcon" style="font-size:40px; background:var(--bg); width:60px; height:60px; display:flex; align-items:center; justify-content:center; border-radius:16px; border:1px solid var(--btn); flex-shrink:0;">💡</div>
-          
-          <div class="fact-content-col">
-              <h3 style="margin:0; font-size:14px; text-transform:uppercase; color:var(--accent); letter-spacing:1px;">Wusstest du?</h3>
-              <div class="fact-scroll-area">
-                  <p id="factText" style="margin:0; font-size:15px; line-height:1.5; font-weight:500; font-style:italic; color:var(--text);">Lade...</p>
-                  <div id="factSource" style="margin-top:8px; font-size:10px; opacity:0.6; text-transform:uppercase; padding-bottom:5px;"></div>
-              </div>
-          </div>
-      </div>
-  </div>
-
-  <!-- Der Footer Button (Erscheint nur wenn Widget da ist) -->
-  <div id="factLibraryBtn" class="fact-footer-btn" onclick="safeRun(openLibraryModal)" style="display:none;">
-      <span>📚</span>
-      <span>MEINE SAMMLUNG</span>
-      <span id="libCountBadge" style="background:var(--accent); color:#fff; padding:1px 6px; border-radius:10px; font-size:10px;">0</span>
-  </div>
 
       <!-- Bogen & Sonne -->
       <div class="solar-animation-box"> <!-- Neuer Wrapper für Clipping -->
@@ -3897,6 +3867,35 @@ body:not(.dark) .nav-island {
       </div>
   </div>
 
+
+<!-- DAILY FACT WIDGET (Docked Version) -->
+  <div class="card-section widget-docked-top" id="factWidget" style="display:none; position:relative;">
+      
+      <!-- Herz Button -->
+      <div id="factHeart" class="fact-heart-btn" onclick="safeRun(toggleFactLike)">♥</div>
+
+      <!-- Refresh Button -->
+      <div onclick="safeRun(loadRandomFact)" style="position:absolute; top:15px; right:15px; opacity:0.5; cursor:pointer; font-size:18px; z-index:5;">↻</div>
+      
+      <div style="display:flex; gap:15px; align-items:flex-start;">
+          <!-- Großes Icon -->
+          <div id="factIcon" style="font-size:40px; background:var(--bg); width:60px; height:60px; display:flex; align-items:center; justify-content:center; border-radius:16px; border:1px solid var(--btn); flex-shrink:0;">💡</div>
+          
+          <div class="fact-content-col">
+              <h3 style="margin:0; font-size:14px; text-transform:uppercase; color:var(--accent); letter-spacing:1px;">Wusstest du?</h3>
+              <div class="fact-scroll-area">
+                  <p id="factText" style="margin:0; font-size:15px; line-height:1.5; font-weight:500; font-style:italic; color:var(--text);">Lade...</p>
+                  <div id="factSource" style="margin-top:8px; font-size:10px; opacity:0.6; text-transform:uppercase; padding-bottom:5px;"></div>
+              </div>
+          </div>
+      </div>
+ </div
+  <!-- Der Footer Button (Erscheint nur wenn Widget da ist) -->
+  <div id="factLibraryBtn" class="fact-footer-btn" onclick="safeRun(openLibraryModal)" style="display:none;">
+      <span>📚</span>
+      <span>MEINE SAMMLUNG</span>
+      <span id="libCountBadge" style="background:var(--accent); color:#fff; padding:1px 6px; border-radius:10px; font-size:10px;">0</span>
+  </div>
   <!-- Header: Nur der Button (Rechtsbündig) -->
   <div style="display:flex; justify-content:flex-end; margin-bottom:20px; padding-top:5px;">
       <select id="statsYearSelect" onchange="safeRun(renderStats)" title="Zeitraum wählen"></select>
