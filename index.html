@@ -4666,7 +4666,7 @@ Klicke auf ein Tier in der Liste oder auf eine Kachel um das Tier zu bearbeiten 
 <!-- 2. Die Sprechblase (Separat, damit sie immer oben ist) -->
 <div id="onboardingBubble" class="onboarding-box" style="display:none;">
     <h3 id="tourTitle">Willkommen!</h3>
-    <p id="tourText">Text hier...</p>
+    <p id="tourText">Schön, dass Du da bist.</p>
     <div class="onboarding-btn-row">
         <button onclick="endTutorial()" style="background:transparent; border:1px solid var(--sub); font-size:12px; padding:8px;">Beenden</button>
         <button id="tourNextBtn" onclick="nextStep()" style="background:var(--accent); color:#fff; flex:1">Weiter ➔</button>
@@ -8190,193 +8190,120 @@ function openQuickSighting() {
     modal.style.display = 'block';
 }
 
-/* === TUTORIAL LOGIC V3.2 (ULTIMATE JOURNEY) === */
+
+
+
+/* === TUTORIAL LOGIC V3.3 (FIXED NAV & BUBBLE) === */
 let currentStep = 0;
 
-// Definition der Tour
+// Definition der Tour (Bleibt gleich, nur zur Vollständigkeit)
 const tourSteps = [
-    // 1. START (Liste)
-    { 
-        view: 'view-list', 
-        target: null, 
-        title: "Willkommen bei Tier Ticker! 🚀", 
-        text: "Die App ist riesig geworden! <br>Lass uns eine Runde drehen. Ich zeige dir den Workflow." 
-    },
-    // 2. SUCHE
-    { 
-        view: 'view-list',
-        target: '#sfWrapper', 
-        title: "1. Deep Search 🔍", 
-        text: "Tippe einen Tiernamen (z.B. 'Fuchs'), um sofort in den <b>Filter-Modus</b> zu wechseln." 
-    },
-    // 3. ACTION
-    { 
-        view: 'view-list',
-        target: '.nav-main-fab', 
-        title: "2. Schnell-Erfassung ⚡", 
-        text: "Der wichtigste Knopf. Drücke ihn, um eine Sichtung in Sekunden festzuhalten." 
-    },
-    // 4. NAV-BAR (NEU: Übergang)
-    { 
-        view: 'view-list',
-        target: '.nav-island', 
-        title: "3. Die Steuerzentrale 🧭", 
-        text: "Hier unten wechselst du die Ansichten. <br>Wir gehen jetzt mal rüber zu den <b>Statistiken</b>..." 
-    },
-    // 5. STATS -> WIDGET (Mit Force-Load Fix)
-    { 
-        view: 'view-stats', 
-        target: '#factWidget', 
-        title: "4. Dein Wissens-Feed 🧠", 
-        text: "Jeden Tag ein neuer Fakt! <br>Nutze das Herz ❤️ zum Speichern oder die <b>drei Punkte (⋮)</b> für das <b>Quiz</b>." 
-    },
-    // 6. STATS -> SOLAR
-    { 
-        view: 'view-stats',
-        target: '#solarWidget', 
-        title: "5. Astro-Daten ☀️", 
-        text: "Passend zu deinem Standort: Sonnenaufgang, Dämmerung und Tageslicht." 
-    },
-    // 7. MAP -> SLIDER
-    { 
-        view: 'view-map', 
-        target: '.map-slider-container', 
-        title: "6. Zeitreise ⏳", 
-        text: "Schau dir auf der Karte an, wo du im Sommer oder Winter unterwegs warst." 
-    },
-    // 8. ADMIN -> SETTINGS (Oben)
-    { 
-        view: 'view-admin', 
-        target: '.admin-tools-grid', 
-        title: "7. System ⚙️", 
-        text: "Hier oben findest du die Grundeinstellungen und die Hilfe." 
-    },
-    // 9. ADMIN -> BACKUP (NEU: Highlight)
-    // Wir nutzen nth-of-type(3), da es die 3. Karte ist (1. Neu, 2. Orte, 3. Daten)
-    { 
-        view: 'view-admin', 
-        target: '.card-section:nth-of-type(3)', 
-        title: "8. Daten & Sicherheit 💾", 
-        text: "Sehr wichtig! Hier erstellst du <b>Backups</b>. <br>Mach das regelmäßig, damit deine Sammlung sicher ist." 
-    },
-    // 10. ADMIN -> TRASH (NEU: Highlight)
-    { 
-        view: 'view-admin', 
-        target: '#trashSection', 
-        title: "9. Der Papierkorb 🗑️", 
-        text: "Aus Versehen gelöscht? Kein Problem. <br>Hier kannst du Tiere 30 Tage lang wiederherstellen." 
-    }
+    { view: 'view-list', target: null, title: "Willkommen bei Tier Ticker! 🚀", text: "Die App ist riesig geworden! <br>Lass uns eine Runde drehen. Ich zeige dir den Workflow." },
+    { view: 'view-list', target: '#sfWrapper', title: "1. Deep Search 🔍", text: "Tippe einen Tiernamen (z.B. 'Fuchs'), um sofort in den <b>Filter-Modus</b> zu wechseln." },
+    { view: 'view-list', target: '.nav-main-fab', title: "2. Schnell-Erfassung ⚡", text: "Der wichtigste Knopf. Drücke ihn, um eine Tier-Sichtung in Sekunden festzuhalten." },
+    { view: 'view-list', target: '.nav-island', title: "3. Die Steuerzentrale 🧭", text: "Hier unten wechselst du die Ansichten. <br>Wir gehen jetzt mal rüber zu den <b>Statistiken</b>..." },
+    { view: 'view-stats', target: '#factWidget', title: "4. Dein Wissens-Feed 🧠", text: "Jeden Tag ein neuer Tier-Fakt! <br> Nutze das Herz ❤️ zum Speichern. Oder die <b>drei Punkte (⋮)</b> um: <b>Fakten zu durchsuchen </b> oder für das 🎮 <b>Quiz</b> ⬅️ Sehr empfehlenswert!." },
+    { view: 'view-stats', target: '#solarWidget', title: "5. Astro-Daten ☀️", text: "Passend zu deinem Standort: Sonnenaufgang, Dämmerung und Tageslicht." },
+    { view: 'view-map', target: '.map-slider-container', title: "6. Zeitreise ⏳", text: "Schau dir auf der Karte an, wo du im Sommer oder Winter unterwegs warst." },
+    { view: 'view-admin', target: '.admin-tools-grid', title: "7. Verwaltung ⚙️", text: "Hier oben findest du die Grundeinstellungen und die Hilfe." },
+    { view: 'view-admin', target: '.card-section:nth-of-type(4)', title: "8. Daten & Sicherheit 💾", text: "Sehr wichtig! Hier erstellst du <b>Backups</b>. <br>Mach das regelmäßig, damit deine Sammlung sicher ist." },
+    { view: 'view-admin', target: '#trashSection', title: "9. Der Papierkorb 🗑️", text: "Aus Versehen gelöscht? Kein Problem. <br>Hier kannst du Tiere 30 Tage lang wiederherstellen." }
 ];
 
 function startTutorial(force = false) {
     if (!force && localStorage.getItem('tutorial_v3_done') === 'true') return;
-
-    // Alles resetten
     document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
     window.scrollTo({top: 0, behavior: 'smooth'});
-    
     currentStep = 0;
-    
-    // Overlay sofort zeigen
     document.getElementById('onboardingOverlay').style.display = 'block';
     document.getElementById('onboardingBubble').style.display = 'block';
-    
-    // Starten
     processStep(0);
 }
 
-// Die intelligente Steuerungs-Funktion
+// FIX 1: Korrekte Indices für die Navigation
 function processStep(index) {
     if (index >= tourSteps.length) { endTutorial(true); return; }
-    
     const step = tourSteps[index];
     
-    // 1. View Wechsel Logik (Automatisch)
     if (step.view) {
-        // Nav-Button Mapping: Liste=0, Stats=1, Map=3, Admin=4
+        // Nav-Items sind: [0]Liste, [1]Stats, (FAB), [2]Map, [3]Admin
         let btnIndex = 0;
         if(step.view === 'view-stats') btnIndex = 1;
-        if(step.view === 'view-map') btnIndex = 3;
-        if(step.view === 'view-admin') btnIndex = 4;
+        if(step.view === 'view-map') btnIndex = 2;   // KORRIGIERT (war 3)
+        if(step.view === 'view-admin') btnIndex = 3; // KORRIGIERT (war 4)
 
         const navBtns = document.querySelectorAll('.nav-item');
         if(navBtns[btnIndex]) {
-            // Echten Klick simulieren oder View wechseln
             switchView(step.view, navBtns[btnIndex]);
         }
         
-        // SPEZIAL-FIX für Step 5 (Fact Widget):
-        // Das Widget ist oft ausgeblendet (display:none), bis ein Fakt geladen ist.
-        // Wir erzwingen das Laden, damit das Highlight funktioniert.
-        if (step.target === '#factWidget') {
-            loadRandomFact(); 
-        }
+        // Widget laden erzwingen
+        if (step.target === '#factWidget') loadRandomFact(); 
         
-        // SPEZIAL-FIX für Step 9 & 10 (Admin):
-        // Falls wir zu Admin wechseln, kurz warten und nach unten scrollen für Backup/Trash
+        // Scrollen bei Admin (Verzögert)
         if (step.view === 'view-admin' && (index === 8 || index === 9)) {
              setTimeout(() => {
                  const el = document.querySelector(step.target);
                  if(el) el.scrollIntoView({behavior: 'smooth', block: 'center'});
-             }, 650); // Etwas mehr Zeit geben
+             }, 650);
         }
     }
 
-    // 2. Zeit zum Rendern geben (Delay erhöht für flüssigere Animation)
-    setTimeout(() => {
-        showStepVisuals(step, index);
-    }, 600);
+    setTimeout(() => { showStepVisuals(step, index); }, 600);
 }
 
+// FIX 2: Bubble Positionierung (Sicherheitsabstand unten)
 function showStepVisuals(step, index) {
     const bubble = document.getElementById('onboardingBubble');
     const overlay = document.getElementById('onboardingOverlay');
     
-    // Texte setzen
     document.getElementById('tourTitle').innerText = step.title;
     document.getElementById('tourText').innerHTML = step.text;
-    
-    // Button Text Logik
     const btn = document.getElementById('tourNextBtn');
+    
     if (index === tourSteps.length - 1) btn.innerText = "Fertig 🚀";
     else if (index === 0) btn.innerText = "Starten ➔";
     else btn.innerText = "Weiter";
 
-    // Altes Highlight entfernen
     document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
 
     if (step.target) {
         const el = document.querySelector(step.target);
-        
-        // Sicherheits-Check: Ist das Element da und sichtbar?
         if (el && el.offsetParent !== null) {
             el.scrollIntoView({behavior: 'smooth', block: 'center'});
             el.classList.add('tour-highlight');
-            
-            overlay.style.background = 'transparent'; // Fokus durch Schatten
+            overlay.style.background = 'transparent';
 
-            // Bubble Position berechnen
             const rect = el.getBoundingClientRect();
-            bubble.style.top = "auto"; bubble.style.bottom = "auto"; 
             bubble.style.left = "50%"; bubble.style.transform = "translateX(-50%)";
 
-            // Oben oder unten platzieren?
-            if (rect.top < window.innerHeight / 2) {
-                // Element ist oben -> Bubble darunter
-                let topPos = rect.bottom + 20;
-                if(topPos > window.innerHeight - 200) topPos = window.innerHeight - 220; 
+            // Höhen-Check
+            const windowH = window.innerHeight;
+            
+            // Wenn Element oben ist (z.B. Widget) -> Bubble drunter
+            if (rect.top < windowH / 2) {
+                let topPos = rect.bottom + 15;
+                
+                // NOTBREMSE: Wenn Bubble zu weit unten landen würde (z.B. >80% der Höhe)
+                // Schieben wir sie hart nach oben (z.B. auf 60% der Höhe oder fester Wert)
+                // Damit der "Weiter" Button nicht verdeckt wird.
+                if (topPos > windowH - 220) { 
+                    topPos = windowH - 230; // Erzwinge Platz unten
+                }
+                
                 bubble.style.top = topPos + "px";
-            } else {
-                // Element ist unten -> Bubble darüber
-                let botPos = (window.innerHeight - rect.top) + 20;
+                bubble.style.bottom = "auto";
+            } 
+            // Wenn Element unten ist -> Bubble drüber
+            else {
+                let botPos = (windowH - rect.top) + 20;
                 bubble.style.bottom = botPos + "px";
+                bubble.style.top = "auto";
             }
         } else {
-            // Fallback (Element nicht gefunden) -> Mittig zeigen
             fallbackBubblePosition(overlay, bubble);
         }
     } else {
-        // Intro (kein Target) -> Mittig zeigen
         fallbackBubblePosition(overlay, bubble);
     }
 }
@@ -8388,17 +8315,13 @@ function fallbackBubblePosition(overlay, bubble) {
     bubble.style.transform = "translate(-50%, -50%)";
 }
 
-function nextStep() { 
-    currentStep++; 
-    processStep(currentStep); 
-}
+function nextStep() { currentStep++; processStep(currentStep); }
 
 function endTutorial(completed = false) {
     document.getElementById('onboardingOverlay').style.display = 'none';
     document.getElementById('onboardingBubble').style.display = 'none';
     document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
     
-    // Am Ende zurück zur Startseite
     const listBtn = document.querySelectorAll('.nav-item')[0]; 
     switchView('view-list', listBtn);
     window.scrollTo({top: 0, behavior: 'smooth'});
@@ -8409,6 +8332,7 @@ function endTutorial(completed = false) {
         if(typeof playSound === 'function') playSound('fanfare');
     }
 }
+
 
 /* === CONTEXT MENU LOGIC (DAS HAT GEFEHLT) === */
 
