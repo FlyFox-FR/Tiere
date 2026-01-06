@@ -2,89 +2,107 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Tierfakten Demo</title>
+<title>Tierfakten Scraper Demo</title>
+<style>
+body { font-family: sans-serif; padding: 20px; }
+button { font-size: 16px; padding: 10px; }
+pre { background: #111; color: #0f0; padding: 15px; max-height: 400px; overflow:auto; }
+</style>
 </head>
 <body>
-<h1>Tierfakten Demo</h1>
-<button id="loadFacts">Random Facts Laden</button>
-<pre id="output"></pre>
+<h1>🐾 Tierfakten Scraper Demo</h1>
+<button id="load">Facts Laden</button>
+<pre id="output">Noch nichts geladen.</pre>
 
 <script>
-// Dummy-Tierseiten (CORS über Proxy)
-const urls = [
-  {url:"https://a-z-animals.com/animals/lion/", source:"A-Z Animals"},
-  {url:"https://animaldiversity.org/accounts/Lion/", source:"Animal Diversity Web"},
-  {url:"https://www.animalfact.com/lion", source:"AnimalFact.com"}
-];
-
 // IndexedDB Setup
 const dbName = "AnimalFactsDB";
 const storeName = "facts";
 let db;
 
-const request = indexedDB.open(dbName, 1);
+const request = indexedDB.open(dbName,1);
 request.onupgradeneeded = e => {
-  db = e.target.result;
-  if(!db.objectStoreNames.contains(storeName)){
-    db.createObjectStore(storeName, { keyPath: "id", autoIncrement: true });
-  }
+    db = e.target.result;
+    db.createObjectStore(storeName, { autoIncrement:true });
 };
 request.onsuccess = e => db = e.target.result;
 request.onerror = e => console.error(e);
 
-// Save Fact to IndexedDB
+// Helper: speichern
 function saveFact(fact){
-  const tx = db.transaction(storeName, "readwrite");
-  const store = tx.objectStore(storeName);
-  store.put(fact);
+    const tx = db.transaction(storeName,"readwrite");
+    tx.objectStore(storeName).add(fact);
 }
 
-// Fetch HTML via AllOrigins Proxy
+// --- Fetch HTML via Proxy ---
 async function fetchHTML(url){
-  const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-  const res = await fetch(proxy);
-  const data = await res.json();
-  return data.contents;
+    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+    const res = await fetch(proxy);
+    const data = await res.json();
+    return data.contents;
 }
 
-// Extract paragraphs and generate simple random facts
-function extractFactsFromHTML(html, source){
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, "text/html");
-  const paragraphs = Array.from(doc.querySelectorAll("p"));
-  let facts = [];
-  
-  // Zufällige 5 Fakten pro Seite
-  const sample = paragraphs.sort(() => 0.5 - Math.random()).slice(0,5);
-  sample.forEach(p => {
-    let text = p.textContent.trim();
-    if(text.length > 20 && text.length < 200){
-      facts.push({
-        animal: text.split(" ")[0],
-        icon: "🐾",
-        text: text.substring(0,100),
-        tags: ["FunFact","Wildlife"],
-        source: source
-      });
-    }
-  });
-  return facts;
+// --- Fakten extrahieren ---
+function extractFacts(html, source){
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html,"text/html");
+    let facts = [];
+
+    // 1️⃣ Facts aus <ul>
+    const lists = doc.querySelectorAll("ul li");
+    lists.forEach(li => {
+        let text = li.textContent.trim();
+        if(text.length < 20) return; // zu kurz
+        if(/©|Subscribe|Welcome|All Rights Reserved/i.test(text)) return;
+        facts.push({
+            animal: text.split(" ")[0],
+            icon: "🐾",
+            text: text,
+            tags: ["FunFact","Wildlife"],
+            source: source
+        });
+    });
+
+    // 2️⃣ Facts aus <p> (optional)
+    const paragraphs = doc.querySelectorAll("p");
+    paragraphs.forEach(p => {
+        let text = p.textContent.trim();
+        if(text.length < 20) return;
+        if(/©|Subscribe|Welcome|All Rights Reserved/i.test(text)) return;
+        facts.push({
+            animal: text.split(" ")[0],
+            icon: "🐾",
+            text: text,
+            tags: ["FunFact","Wildlife"],
+            source: source
+        });
+    });
+
+    return facts;
 }
 
-// Button click: load + display
-document.getElementById("loadFacts").onclick = async () => {
-  let allFacts = [];
-  for(let u of urls){
-    try{
-      const html = await fetchHTML(u.url);
-      const facts = extractFactsFromHTML(html, u.source);
-      facts.forEach(saveFact);
-      allFacts = allFacts.concat(facts);
-    }catch(e){
-      console.error("Fehler bei URL", u.url, e);
+// --- Button ---
+document.getElementById("load").onclick = async () => {
+    const urls = [
+        {url:"https://a-z-animals.com/animals/lion/", source:"A-Z Animals"},
+        {url:"https://a-z-animals.com/animals/tiger/", source:"A-Z Animals"},
+        {url:"https://a-z-animals.com/animals/elephant/", source:"A-Z Animals"}
+    ];
+
+    let allFacts = [];
+
+    for(let u of urls){
+        try{
+            const html = await fetchHTML(u.url);
+            const facts = extractFacts(html, u.source);
+            facts.forEach(saveFact);
+            allFacts = allFacts.concat(facts);
+        }catch(e){
+            console.error("Fehler bei URL", u.url, e);
+        }
     }
-  }
-  document.getElementById("output").textContent = JSON.stringify(allFacts, null, 2);
+
+    document.getElementById("output").textContent = JSON.stringify(allFacts, null, 2);
 };
 </script>
 </body>
