@@ -3225,15 +3225,34 @@ body:not(.dark) .nav-island {
     width: 60px; height: 60px;
     background: linear-gradient(135deg, var(--accent), #1976d2);
     border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 32px; color: #fff; font-weight: 300;
+    
+    /* ZENTRIERUNG */
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    
+    /* OPTIK */
+    font-size: 34px; 
+    color: #fff; 
+    font-weight: 900;    /* Extra Fett */
+    line-height: 1;      /* Verhindert Verschiebungen durch Zeilenhöhe */
+    padding-bottom: 4px; /* Schiebt das + optisch genau in die Mitte */
+    
     box-shadow: 0 8px 20px var(--accent-glow);
-    border: 4px solid var(--bg); /* Fake "Cutout" Effekt */
-    transform: translateY(-20px); /* Schwebt höher */
-    cursor: pointer; transition: transform 0.2s;
-    margin: 0 5px; /* Abstand zu den Icons */
+    border: 4px solid var(--bg); 
+    transform: translateY(-20px); 
+    cursor: pointer; 
+    transition: transform 0.2s;
+    margin: 0 5px; 
+    
+    /* Verhindert Auswahl des Textes beim Drücken */
+    user-select: none;
+    -webkit-user-select: none;
 }
-.nav-main-fab:active { transform: translateY(-15px) scale(0.95); }
+
+.nav-main-fab:active { 
+    transform: translateY(-15px) scale(0.95); 
+}
 
 /* === ADMIN TOOLS GRID (Neue Buttons) === */
 .admin-tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
@@ -5427,9 +5446,9 @@ Klicke auf ein Tier in der Liste oder auf eine Kachel um das Tier zu bearbeiten 
         <h3 style="margin:0;">Wähle deinen Modus</h3>
     </div>
 
-    <div class="quiz-mode-grid">
-        <!-- Modus 1 -->
-        <div class="quiz-mode-card" onclick="selectQuizMode('cloze')">
+   <div class="quiz-mode-grid">
+        <!-- 1. Lückentext -->
+        <div class="quiz-mode-card" onclick="selectQuizMode('cloze')" style="border-color: #bd93f9;">
             <div class="qmc-icon">🧩</div>
             <div class="qmc-info">
                 <span class="qmc-title">Lückentext</span>
@@ -5437,8 +5456,8 @@ Klicke auf ein Tier in der Liste oder auf eine Kachel um das Tier zu bearbeiten 
             </div>
         </div>
 
-        <!-- Modus 2 -->
-        <div class="quiz-mode-card" onclick="selectQuizMode('lie')">
+        <!-- 2. Lügendetektor -->
+        <div class="quiz-mode-card" onclick="selectQuizMode('lie')" style="border-color: #bd93f9;">
             <div class="qmc-icon">🤥</div>
             <div class="qmc-info">
                 <span class="qmc-title">Wahr oder Quatsch?</span>
@@ -5446,27 +5465,24 @@ Klicke auf ein Tier in der Liste oder auf eine Kachel um das Tier zu bearbeiten 
             </div>
         </div>
 
-<!-- FOTO RÄTSEL KACHEL (Text Farbe Fix) -->
-<div class="quiz-mode-card" onclick="window.openPixelQuiz()" style="border-color: #bd93f9;">
-    <div class="qmc-icon">📸</div>
-    <div class="qmc-info">
-        <!-- HIER GEÄNDERT: Kein style="color:..." mehr -->
-        <span class="qmc-title">Foto-Rätsel</span>
-        <span class="qmc-desc">Erkennst du deine eigenen Fotos?</span>
-    </div>
-</div>
-
-        <!-- Modus 3 -->
-        <div class="quiz-mode-card" onclick="selectQuizMode('mixed')">
+        <!-- 3. Mix Mode -->
+        <div class="quiz-mode-card" onclick="selectQuizMode('mixed')" style="border-color: #bd93f9;">
             <div class="qmc-icon">🔀</div>
             <div class="qmc-info">
                 <span class="qmc-title">Alles Gemischt</span>
                 <span class="qmc-desc">Überraschung bei jeder Frage!</span>
             </div>
         </div>
+
+        <!-- 4. Foto Rätsel -->
+        <div class="quiz-mode-card" onclick="window.openPixelQuiz()" style="border-color: #bd93f9;">
+            <div class="qmc-icon">📸</div>
+            <div class="qmc-info">
+                <span class="qmc-title">Foto-Rätsel</span>
+                <span class="qmc-desc">Erkennst du deine eigenen Fotos?</span>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
 <!-- DECK MANAGER MODAL -->
 <div id="deckModal" class="modal">
@@ -11131,6 +11147,7 @@ window.startPixelGame = async function(mode) {
     window.pxState.timer = setInterval(window.pxRenderFrame, 800); 
 };
 
+// 3. Render Loop (Angepasste Geschwindigkeit)
 window.pxRenderFrame = function() {
     const s = window.pxState;
     const canvas = document.getElementById('pxCanvas');
@@ -11139,19 +11156,39 @@ window.pxRenderFrame = function() {
 
     s.step++;
     
-    if (s.step > s.maxSteps) { clearInterval(s.timer); window.pxDrawContain(ctx, s.imgObj, w, h); return; }
+    // Game Over / Fertig Check
+    if (s.step > s.maxSteps) { 
+        clearInterval(s.timer); 
+        window.pxDrawContain(ctx, s.imgObj, w, h); 
+        return; 
+    }
 
+    // --- MODUS: NEBEL (BLUR) ---
     if (s.mode === 'blur') {
-        const blurAmount = Math.max(0, 40 - (s.step * 2));
+        // EINSTELLUNG: Geschwindigkeit
+        // "60" ist die Start-Unschärfe (höher = unschärfer)
+        // "* 5" ist die Geschwindigkeit (höher = schneller klar)
+        // Vorher war es "* 2". Jetzt geht es mehr als doppelt so schnell weg.
+        const blurAmount = Math.max(0, 60 - (s.step * 5));
+        
         ctx.clearRect(0,0,w,h);
         ctx.filter = `blur(${blurAmount}px)`;
         window.pxDrawContain(ctx, s.imgObj, w, h);
         ctx.filter = 'none';
     } 
+    
+    // --- MODUS: 8-BIT (PIXEL) ---
     else if (s.mode === 'pixel') {
         const percent = s.step / s.maxSteps; 
-        const scale = 0.02 + (percent * 0.98); 
-        ctx.imageSmoothingEnabled = false; ctx.clearRect(0,0,w,h);
+        
+        // EINSTELLUNG: Geschwindigkeit
+        // Wir nutzen "Math.pow(percent, 2)" statt nur "percent".
+        // Das sorgt dafür, dass die Pixel am Anfang langsamer kleiner werden 
+        // und erst zum Schluss schnell scharf werden.
+        const scale = 0.02 + (Math.pow(percent, 2) * 0.98); 
+        
+        ctx.imageSmoothingEnabled = false; 
+        ctx.clearRect(0,0,w,h);
         
         const tmpCanvas = document.createElement('canvas');
         tmpCanvas.width = Math.max(4, Math.floor(w * scale)); 
@@ -11161,6 +11198,8 @@ window.pxRenderFrame = function() {
         
         ctx.drawImage(tmpCanvas, 0, 0, tmpCanvas.width, tmpCanvas.height, 0, 0, w, h);
     }
+    
+    // --- MODUS: KACHELN ---
     else if (s.mode === 'tiles') {
         const remaining = Array.from(document.querySelectorAll('.px-tile:not(.hidden)'));
         if (remaining.length > 0) {
