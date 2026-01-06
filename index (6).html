@@ -4011,6 +4011,254 @@ input:checked + .deck-slider:before { transform: translateX(16px); }
 }
 .search-tab.active .search-tab-count { background: rgba(255,255,255,0.2); }
 
+/* === LOGBUCH STYLE (Timeline Notes) === */
+.log-entry {
+    display: flex;
+    align-items: stretch; /* Damit die Linie durchgeht */
+    margin-bottom: 0;     /* Linie verbindet Elemente */
+    position: relative;
+    padding-bottom: 15px; /* Abstand zum nächsten */
+}
+
+/* LINKE SPALTE (Zeitlinie & Icon) */
+.log-left {
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    width: 50px; 
+    flex-shrink: 0;
+    margin-right: 10px;
+}
+
+/* Der Knotenpunkt (Bild oder Emoji) */
+.log-node {
+    width: 42px; height: 42px; 
+    border-radius: 50%; 
+    background: var(--card);
+    border: 2px solid var(--bg);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    z-index: 2;
+    overflow: hidden;
+    position: relative;
+}
+.log-node img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Die gestrichelte Linie */
+.log-line {
+    width: 2px; 
+    background: repeating-linear-gradient(to bottom, var(--btn) 0, var(--btn) 6px, transparent 6px, transparent 12px);
+    flex: 1; 
+    margin-top: -2px; /* Dockt an Kreis an */
+    min-height: 20px;
+    z-index: 1;
+}
+/* Beim letzten Element Linie ausblenden (optional, hier lassen wir sie für "Fortsetzung"-Look) */
+.log-entry:last-child .log-line { 
+    background: linear-gradient(to bottom, var(--btn), transparent); /* Fade out */
+}
+
+/* MITTE (Die Papier-Karte) */
+.log-card {
+    flex: 1;
+    background: #fffbf0; /* Papier Creme */
+    color: #2c2c2e;
+    border-radius: 4px 12px 12px 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    padding: 12px;
+    position: relative;
+    border: 1px solid rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: transform 0.1s;
+    min-width: 0; /* Text-Overflow Fix */
+}
+.log-card:active { transform: scale(0.98); background: #fdf5d3; }
+
+/* Das Dreieck links */
+.log-card::before {
+    content: ''; position: absolute; left: -8px; top: 14px;
+    width: 0; height: 0;
+    border-top: 8px solid transparent; 
+    border-bottom: 8px solid transparent;
+    border-right: 8px solid #fffbf0;
+}
+
+/* Dark Mode Papier */
+body.dark .log-card { background: #2c2c2e; color: #e0e0e0; border: 1px solid #444; }
+body.dark .log-card::before { border-right-color: #2c2c2e; }
+
+/* Inhalt */
+.log-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1px dashed rgba(0,0,0,0.15);
+    padding-bottom: 6px; margin-bottom: 6px;
+}
+body.dark .log-header { border-bottom-color: rgba(255,255,255,0.2); }
+
+.log-title { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 14px; }
+.log-meta { font-size: 10px; font-weight: bold; opacity: 0.6; text-transform: uppercase; }
+
+.log-text {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px; line-height: 1.4;
+    opacity: 0.9;
+    font-weight: 600;
+    word-wrap: break-word;
+}
+
+.log-loc {
+    display: inline-block; margin-top: 6px;
+    font-size: 10px; font-weight: bold; color: var(--accent);
+    background: rgba(33, 150, 243, 0.1); padding: 2px 6px; border-radius: 4px;
+}
+
+/* RECHTS (Deadzone & Menu) */
+.log-right {
+    display: flex; align-items: flex-start; /* Oben bündig */
+    padding-top: 10px; /* Bündig mit Karte */
+}
+
+.log-deadzone {
+    width: 15px; /* Sicherheitsabstand */
+    height: 100%;
+    cursor: default; /* Zeigt "Hier nicht klicken" */
+}
+
+.log-menu-btn {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: var(--sub);
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+.log-menu-btn:active { background: var(--btn); color: var(--text); }
+/* === DEAD ZONE FIX FÜR NOTE MODAL === */
+
+/* Wir nutzen das Pseudo-Element ::after, um die Klickfläche zu vergrößern */
+.paper-close::after {
+    content: '';
+    position: absolute;
+    
+    /* Erweitere den Klickbereich um 15px in jede Richtung */
+    top: -15px; 
+    bottom: -15px; 
+    left: -15px; 
+    right: -15px;
+    
+    /* Debugging: Mach das hier 'red', um es zu sehen */
+    background: transparent; 
+    
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10; /* Muss über dem Bild liegen */
+}
+
+/* Optional: Optisches Feedback, wenn man die Deadzone berührt */
+.paper-close:hover {
+    background: rgba(0,0,0,0.2) !important;
+}
+
+/* === LIBRARY SEARCH UI (V3) === */
+
+/* 1. Die Tabs unter der Suche */
+.lib-search-tabs {
+    display: flex; gap: 10px; margin-bottom: 15px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.lib-tab {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 10px;
+    font-size: 13px; font-weight: 700;
+    color: var(--sub);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+
+.lib-tab.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.lib-tab-count {
+    background: rgba(0,0,0,0.2);
+    padding: 2px 8px; border-radius: 8px;
+    font-size: 11px;
+}
+
+/* 2. Die Tier-Ergebnis-Zeile (Klickbar) */
+.lib-animal-row {
+    display: flex; align-items: center; gap: 15px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 12px 15px;
+    border-radius: 16px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.1s;
+}
+.lib-animal-row:active { transform: scale(0.98); background: rgba(255,255,255,0.08); }
+
+.lib-row-icon {
+    width: 40px; height: 40px;
+    background: var(--card);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.lib-row-arrow {
+    margin-left: auto; font-size: 18px; opacity: 0.5; color: var(--accent);
+}
+
+/* 3. Der Filter Chip (Drill Down Status) */
+.filter-chip-container {
+    margin-bottom: 15px; display: none; /* JS schaltet das an */
+    animation: fadeIn 0.3s;
+}
+
+.filter-chip {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--accent);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold; font-size: 13px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px var(--accent-glow);
+}
+/* === OLED FIX: FOOTER BUTTON SICHTBARKEIT === */
+body.dark .fact-footer-btn {
+    /* 1. Hintergrund: Bleibt tiefschwarz für OLED */
+    background: #000000; 
+    
+    /* 2. Der Rahmen: Deutlich heller (20% Weiß), damit man die Form sieht */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    
+    /* 3. Die Lichtkante oben: Noch etwas heller (30%), wirkt wie Lichteinfall */
+    border-top: 1px solid rgba(255, 255, 255, 0.35);
+    
+    /* 4. Subtiler Glow: Hebt den Button optisch vom Hintergrund ab */
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+}
+
+/* Klick-Effekt im Dark Mode: Kurz aufleuchten */
+body.dark .fact-footer-btn:active {
+    background: #111; /* Ganz leicht grau beim Drücken */
+    border-color: var(--accent); /* Rand wird blau */
+}
+
 </style>
 </head>
 <body>
@@ -4799,65 +5047,60 @@ Klicke auf ein Tier in der Liste oder auf eine Kachel um das Tier zu bearbeiten 
         <button id="tourNextBtn" onclick="nextStep()" style="background:var(--accent); color:#fff; flex:1">Weiter ➔</button>
     </div>
 </div>
-
-<!-- LIBRARY / DISCOVERY MODAL (V2) -->
+<!-- LIBRARY / DISCOVERY MODAL (V3 - TABS & DRILL DOWN) -->
 <div id="libraryModal" class="modal">
   <div class="modal-content" style="height: 85vh; display:flex; flex-direction:column; padding-bottom:0;">
     <div class="sheet-handle"></div>
     <div class="close-btn" onclick="closeModal('libraryModal')">✕</div>
     
     <!-- Header Area -->
-    <div style="flex-shrink:0; padding-bottom:10px;">
+    <div style="flex-shrink:0; padding-bottom:5px;">
         <h3 style="margin-bottom:15px">📚 Wissens-Zentrale</h3>
         
-        
-        <!-- Tabs (Text angepasst) -->
+        <!-- Haupt-Navigation (Oben) -->
         <div class="tab-nav">
             <div id="tabSaved" class="tab-btn active" onclick="switchLibTab('saved')">
                 Meine Sammlung <span id="badgeSaved" style="opacity:0.6">(0)</span>
             </div>
-            <!-- Hier der neue Text: -->
             <div id="tabDiscover" class="tab-btn" onclick="switchLibTab('discover')">
-                🌍 Alle Fakten durchsuchen
+                🌍 Alle Fakten
             </div>
         </div>
 
-        <!-- Search Bar -->
-        <div class="search-fusion-wrapper" style="margin-bottom:10px;">
-            <input id="libSearchInput" class="sf-input" placeholder="Suchen..." oninput="safeRun(handleLibInput)">
-            <!-- Loading Spinner (versteckt) -->
-            <div id="libLoading" style="display:none; padding-right:10px;">⏳</div>
-        </div>
-        
-        <!-- DRILL DOWN: Aktiver Tier-Filter (Chip) -->
+        <!-- Filter Chip (Erscheint nur beim Drill-Down) -->
         <div id="libFilterContainer" class="filter-chip-container">
             <div class="filter-chip" onclick="safeRun(removeAnimalFilter)">
                 <span id="libActiveFilterName">Tiername</span> <span>✕</span>
             </div>
         </div>
 
-        <!-- BUBBLES: Tier Vorschläge -->
-        <div id="libBubbleContainer" class="bubble-scroll" style="display:none;"></div>
+        <!-- Search Bar -->
+        <div class="search-fusion-wrapper" style="margin-bottom:10px;">
+            <input id="libSearchInput" class="sf-input" placeholder="Suchen..." oninput="safeRun(handleLibInput)">
+        </div>
+        
+        <!-- HIER KOMMEN DIE TABS HIN (Dynamisch per JS) -->
+        <div id="libSearchTabs"></div>
+
     </div>
 
     <!-- Scrollable Content Area -->
-    <div style="flex:1; overflow-y:auto; min-height:0; padding-bottom:20px;">
-        <div id="libraryGrid" class="masonry-grid-lib"></div>
+    <div style="flex:1; overflow-y:auto; min-height:0; padding-bottom:20px;" id="libScrollArea">
+        
+        <!-- Hier landet die Liste (Tiere ODER Fakten Grid) -->
+        <div id="libraryContent"></div>
         
         <!-- Button "Mehr laden" (Nur bei Global) -->
         <button id="libLoadMoreBtn" onclick="safeRun(loadMoreGlobalFacts)" style="display:none; width:100%; margin-top:10px; opacity:0.7;">Mehr laden 👇</button>
 
         <!-- Empty States -->
-        <div id="libEmptySaved" style="text-align:center; padding:40px; display:none;">
-            <div style="font-size:40px; margin-bottom:10px; opacity:0.3;">🕸️</div>
-            <div style="opacity:0.5;">Noch keine Fakten gespeichert.</div>
-        </div>
-        <div id="libEmptySearch" style="text-align:center; padding:40px; display:none;">
-            <div style="opacity:0.5;">Keine Treffer.</div>
+        <div id="libEmptyState" style="text-align:center; padding:40px; display:none; opacity:0.6;">
+            Keine Treffer.
         </div>
     </div>
   </div>
 </div>
+
 
 <!-- FLAVOR MODAL (TAG SEARCH ENGINE) -->
 <div id="flavorModal" class="modal">
@@ -5361,6 +5604,7 @@ let storyPreviewData = null; // Speichert Daten für den Mini-Ring
 let listExpanded = localStorage.getItem('listExpandedState') === 'true';
 let sortMode = 'fav'; 
 let viewMode = 'list';
+let libSearchMode = 'animals'; // 'animals' | 'facts'
 let searchMode = 'animals'; // 'animals' oder 'notes'
 let isMuted = localStorage.getItem('muted') !== 'false';
 let notifyConfig = JSON.parse(localStorage.getItem('notifyConfig')) || { enabled: false, days: 7 };
@@ -5863,14 +6107,17 @@ function render() {
             empty.innerHTML = `<div style="font-size:40px; margin-bottom:10px;">📭</div><div>Keine Notizen zu "${searchVal}" gefunden.</div>`;
             list.appendChild(empty);
         } else {
+
+// ... (innerhalb von noteMatches.forEach) ...
+
             noteMatches.forEach((match, loopIdx) => {
                 const div = document.createElement('div');
-                div.className = 'row fade-in'; // Nutzt das gleiche Styling wie Details
+                div.className = 'log-entry fade-in';
                 div.style.animationDelay = `${loopIdx * 0.03}s`;
-                div.style.minHeight = "60px"; // Etwas kompakter
                 
-                // Datum formatieren
+                // IDs und Daten vorbereiten
                 const dateDisplay = match.date.split('-').reverse().slice(0,2).join('.');
+                const nodeId = `node-img-${loopIdx}`; // Unique ID für das Bild
                 
                 // Highlight Funktion
                 const hl = (txt) => {
@@ -5878,34 +6125,70 @@ function render() {
                     return txt.replace(new RegExp(`(${searchVal})`, 'gi'), '<mark style="background:rgba(255,235,59,0.4); color:inherit; border-radius:2px; padding:0 2px;">$1</mark>');
                 };
 
-                const hasImg = match.imageId ? '<span style="font-size:12px;">📷</span>' : '';
+                // Icons im Text
+                const hasPhotoIcon = match.imageId ? '📷 ' : ''; 
 
                 div.innerHTML = `
-                    <!-- ZONE 1: Klick öffnet Lese-Ansicht -->
-                    <div class="row-main" onclick="safeRun(viewNoteDetail, ${match.animalIdx}, '${match.date}', ${match.arrIdx})" style="padding: 10px 0 10px 15px;">
-                        
-                        <!-- Icon Links (Tier) -->
-                        <div style="font-size:24px; width:40px; text-align:center; margin-right:10px;">${match.animalEmoji}</div>
-                        
-                        <div style="flex:1; min-width:0;">
-                            <!-- Header: Name & Datum -->
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                                <span style="font-weight:800; font-size:14px; color:var(--text);">${hl(match.animalName)}</span>
-                                <span style="font-size:11px; opacity:0.6; font-weight:bold; margin-right:10px;">${dateDisplay} • ${match.time}</span>
-                            </div>
-                            
-                            <!-- Notiz Text -->
-                            <div style="font-size:13px; color:var(--sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:5px;">
-                                ${hasImg} ${hl(match.note) || 'Kein Text'}
-                            </div>
-                            ${match.location ? `<div style="font-size:11px; color:var(--accent); margin-top:2px;">📍 ${hl(match.location)}</div>` : ''}
+                    <!-- 1. LINKS: TIMELINE & BILD -->
+                    <div class="log-left">
+                        <div class="log-node" id="${nodeId}">
+                            ${match.animalEmoji} <!-- Standard Emoji -->
                         </div>
+                        <div class="log-line"></div>
                     </div>
 
-                    <!-- ZONE 2: Menü -->
-                    <div class="row-menu" onclick="openHistoryMenu(${match.animalIdx}, '${match.date}', ${match.arrIdx}, event)">⋮</div>
+                    <!-- 2. MITTE: KARTE (KLICKBAR) -->
+                    <div class="log-card" onclick="safeRun(viewNoteDetail, ${match.animalIdx}, '${match.date}', ${match.arrIdx})">
+                        <div class="log-header">
+                            <span class="log-title">${hl(match.animalName)}</span>
+                            <span class="log-meta">${dateDisplay} • ${match.time}</span>
+                        </div>
+                        <div class="log-text">
+                            ${hasPhotoIcon}${hl(match.note) || 'Kein Text'}
+                        </div>
+                        ${match.location ? `<div class="log-loc">📍 ${hl(match.location)}</div>` : ''}
+                    </div>
+
+                    <!-- 3. RECHTS: DEADZONE & MENU -->
+                    <div class="log-right">
+                        <div class="log-deadzone" onclick="event.stopPropagation()"></div>
+                        <div class="log-menu-btn" onclick="openHistoryMenu(${match.animalIdx}, '${match.date}', ${match.arrIdx}, event)">⋮</div>
+                    </div>
                 `;
+                
                 list.appendChild(div);
+
+                // --- BILD NACHLADEN LOGIK ---
+                // Prio 1: Notiz-Bild (match.imageId enthält hier noteImageId aus der Suche-Logik, 
+                // falls du das in Schritt 4 von vorhin so gemappt hast. 
+                // Falls nicht, müssen wir sicherstellen, dass render() auch noteImageId und animalImageId übergibt.)
+                
+                // HINWEIS: In deiner render() Suche-Logik für Notizen solltest du sicherstellen, 
+                // dass du 'noteImageId' und 'animal.imageId' in das 'noteMatches' Objekt pushst.
+                // Ich ergänze das hier sicherheitshalber:
+                
+                const targetImgId = match.imageId; // Das ist laut deinem Code das noteImageId
+                
+                // Funktion zum Bild setzen
+                const setImg = (src) => {
+                    const el = document.getElementById(nodeId);
+                    if(el && src) {
+                        el.innerHTML = `<img src="${src}">`;
+                        el.style.border = "2px solid var(--accent)"; // Highlight Rahmen
+                    }
+                };
+
+                if (targetImgId) {
+                    // Notiz-Bild laden
+                    dbGetImg(targetImgId).then(src => setImg(src));
+                } else {
+                    // Fallback: Tier-Profilbild laden (wir müssen die ID holen)
+                    // Da wir sie im Match-Objekt vielleicht nicht haben, holen wir sie vom Tier-Array
+                    const animal = animals[match.animalIdx];
+                    if (animal && animal.imageId) {
+                        dbGetImg(animal.imageId).then(src => setImg(src));
+                    }
+                }
             });
         }
         return; // HIER ENDET DER RENDER FÜR NOTIZEN
@@ -9866,120 +10149,165 @@ function removeAnimalFilter() {
 }
 
 // CORE RENDER FUNCTION
+
+// CORE RENDER FUNCTION FOR LIBRARY
 function renderLibrary() {
-    const grid = document.getElementById('libraryGrid');
-    const bubbleCont = document.getElementById('libBubbleContainer');
+    const contentBox = document.getElementById('libraryContent');
+    const tabsBox = document.getElementById('libSearchTabs');
     const filterCont = document.getElementById('libFilterContainer');
     const loadBtn = document.getElementById('libLoadMoreBtn');
-    const emptySaved = document.getElementById('libEmptySaved');
-    const emptySearch = document.getElementById('libEmptySearch');
+    const emptyState = document.getElementById('libEmptyState');
+    const badgeSaved = document.getElementById('badgeSaved');
 
-    // 1. Datenquelle wählen
+    // 1. Quelle wählen
     let sourceData = (activeLibTab === 'saved') ? savedFacts : allGlobalFacts;
-    if(activeLibTab === 'saved') document.getElementById('badgeSaved').innerText = `(${savedFacts.length})`;
+    if(badgeSaved) badgeSaved.innerText = `(${savedFacts.length})`;
 
-    // 2. FILTERN (Logik-Pipeline)
-    let finalMatches = sourceData;
+    // Reset UI
+    contentBox.innerHTML = '';
+    tabsBox.innerHTML = '';
+    if(loadBtn) loadBtn.style.display = 'none';
+    if(emptyState) emptyState.style.display = 'none';
 
-    // SCHRITT A: Ist ein Tier-Filter aktiv? (Chip)
-    if (libSearchState.animalFilter) {
-        // Chip anzeigen
-        filterCont.style.display = 'block';
-        document.getElementById('libActiveFilterName').innerText = libSearchState.animalFilter;
-        bubbleCont.style.display = 'none'; // Keine Bubbles im Drill-Down Modus
-
-        // Harter Filter auf das Tier
-        finalMatches = finalMatches.filter(f => f.animal === libSearchState.animalFilter);
-        
-        // Wenn User JETZT tippt, filtern wir innerhalb dieses Tiers weiter
-        if (libSearchState.query.length > 0) {
-            const q = libSearchState.query;
-            finalMatches = finalMatches.filter(f => 
-                f.text.toLowerCase().includes(q) || 
-                (f.tags && f.tags.some(t => t.toLowerCase().includes(q)))
-            );
-        }
-
+// Grid-Klasse setzen, außer wir zeigen die Tier-Liste
+    if (libSearchState.query.length > 0 && libSearchMode === 'animals' && !libSearchState.animalFilter) {
+        contentBox.className = ''; // Normale Liste (Block)
     } else {
-        // SCHRITT B: Kein Tier-Filter (Gemischte Suche)
-        filterCont.style.display = 'none'; // Chip weg
-
-        if (libSearchState.query.length > 0) {
-            const q = libSearchState.query;
-            
-            // 1. Suche nach Inhalt, Tags UND Tiernamen
-            finalMatches = finalMatches.filter(f => {
-                const inText = f.text.toLowerCase().includes(q);
-                const inTags = f.tags && f.tags.some(t => t.toLowerCase().includes(q));
-                const inAnimal = f.animal && f.animal.toLowerCase().includes(q);
-                return inText || inTags || inAnimal;
-            });
-
-            // 2. Bubbles berechnen (Tiere die zur Suche passen)
-            const animalsFound = new Set();
-            // Wir schauen, welche Tiere in den Treffern vorkommen
-            // ODER welche Tiernamen direkt gematcht wurden
-            finalMatches.forEach(f => {
-                // Bedingung für Bubble: Tiername matcht Query ODER Query ist im Text dieses Tiers
-                if (f.animal) animalsFound.add(f.animal);
-            });
-
-            // 3. Bubbles anzeigen
-            if (animalsFound.size > 0) {
-                bubbleCont.innerHTML = '';
-                bubbleCont.style.display = 'flex';
-                animalsFound.forEach(anim => {
-                    // Zähle Fakten für dieses Tier in der aktuellen Auswahl
-                    const count = finalMatches.filter(m => m.animal === anim).length;
-                    const icon = finalMatches.find(m => m.animal === anim).icon || '🐾';
-                    
-                    const b = document.createElement('div');
-                    b.className = 'discovery-bubble';
-                    b.innerHTML = `${icon} ${anim} <span>(${count})</span>`;
-                    
-                    // WICHTIG: Klick löst Drill-Down aus
-                    b.onclick = () => drillDownToAnimal(anim);
-                    
-                    bubbleCont.appendChild(b);
-                });
-            } else {
-                bubbleCont.style.display = 'none';
-            }
-
-        } else {
-            // Keine Suche, Kein Filter -> Standard Ansicht
-            bubbleCont.style.display = 'none';
-            
-            // Bei Global ohne Suche: Random Mix (Gatcha)
-            if(activeLibTab === 'discover') {
-                finalMatches = [...sourceData].sort(() => 0.5 - Math.random()).slice(0, 20);
-                if(loadBtn) {
-                    loadBtn.innerText = "🎲 Neu würfeln";
-                    loadBtn.style.display = 'block';
-                    loadBtn.onclick = () => renderLibrary();
-                }
-            } else {
-                // Bei Saved: Chronologisch
-                finalMatches = [...sourceData].reverse();
-                if(loadBtn) loadBtn.style.display = 'none';
-            }
-        }
+        contentBox.className = 'masonry-grid-lib'; // Grid
     }
 
-    // 3. UI RENDERN (Grid)
-    grid.innerHTML = '';
-    if(emptySaved) emptySaved.style.display = 'none';
-    if(emptySearch) emptySearch.style.display = 'none';
+    // === SZENARIO 1: DRILL DOWN (Tier ist ausgewählt) ===
+    if (libSearchState.animalFilter) {
+        filterCont.style.display = 'block';
+        document.getElementById('libActiveFilterName').innerHTML = `🦊 ${libSearchState.animalFilter}`;
+        
+        // Filtern: Nur Fakten dieses Tieres
+        let filtered = sourceData.filter(f => f.animal === libSearchState.animalFilter);
+        
+        // Optional: Suche im Drilldown? (Falls User im Filter noch tippt)
+        if (libSearchState.query.length > 0) {
+            const q = libSearchState.query;
+            filtered = filtered.filter(f => f.text.toLowerCase().includes(q));
+        }
 
-    // Empty States
-    if (finalMatches.length === 0) {
-        if (libSearchState.query.length > 0 || libSearchState.animalFilter) emptySearch.style.display = 'block';
-        else if (activeLibTab === 'saved') emptySaved.style.display = 'block';
+        renderFactGrid(filtered, contentBox);
+        return; // Fertig
+    } 
+    
+    // Chip ausblenden
+    filterCont.style.display = 'none';
+
+    // === SZENARIO 2: SUCHE AKTIV ===
+    if (libSearchState.query.length > 0) {
+        const q = libSearchState.query;
+
+        // A) Fakten Matches (Text-Suche)
+        const factMatches = sourceData.filter(f => 
+            f.text.toLowerCase().includes(q) || 
+            (f.tags && f.tags.some(t => t.toLowerCase().includes(q)))
+        );
+
+        // B) Tier Matches (Name-Suche) -> Unique Liste erstellen
+        const animalSet = new Set();
+        sourceData.forEach(f => {
+            if (f.animal && f.animal.toLowerCase().includes(q)) {
+                animalSet.add(f.animal); // Treffer im Tiernamen
+            }
+            // Optional: Auch Tiere finden, deren Text matched?
+            // Nein, das verwirrt. Tabs sollen trennen: "Suche ich das Tier?" vs "Suche ich den Text?"
+        });
+        const animalMatches = Array.from(animalSet).sort();
+
+        // C) TABS RENDERN
+        tabsBox.innerHTML = `
+            <div class="lib-search-tabs">
+                <div class="lib-tab ${libSearchMode==='animals'?'active':''}" onclick="setLibMode('animals')">
+                    🐾 Tiere <span class="lib-tab-count">${animalMatches.length}</span>
+                </div>
+                <div class="lib-tab ${libSearchMode==='facts'?'active':''}" onclick="setLibMode('facts')">
+                    💡 Fakten <span class="lib-tab-count">${factMatches.length}</span>
+                </div>
+            </div>
+        `;
+
+        // D) INHALT RENDERN (Je nach Tab)
+        
+// ... innerhalb von renderLibrary ...
+        
+        // D) INHALT RENDERN (Je nach Tab)
+        if (libSearchMode === 'animals') {
+            if (animalMatches.length === 0) {
+                emptyState.style.display = 'block';
+                emptyState.innerText = "Keine Tiere mit diesem Namen gefunden.";
+            } else {
+                // Tier Liste bauen
+                animalMatches.forEach(animName => {
+                    // Icon suchen (vom ersten Fakt dieses Tieres)
+                    const icon = sourceData.find(f => f.animal === animName)?.icon || '🐾';
+                    
+                    const row = document.createElement('div');
+                    row.className = 'lib-animal-row fade-in';
+                    
+                    // HIER DIE ÄNDERUNG: Text + Pfeil
+                    row.innerHTML = `
+                        <div class="lib-row-icon">${icon}</div>
+                        <div style="font-weight:bold; font-size:15px;">${animName}</div>
+                        
+                        <!-- Neu: Text "Fakten anzeigen" + Pfeil -->
+                        <div style="margin-left:auto; display:flex; align-items:center; gap:6px; font-size:11px; opacity:0.6; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;">
+                            Fakten anzeigen <span style="font-size:16px; color:var(--accent);">➔</span>
+                        </div>
+                    `;
+                    row.onclick = () => drillDownToAnimal(animName);
+                    contentBox.appendChild(row);
+                });
+            } 
+        
+        // ... Rest der Funktion (else { Grid... }) bleibt gleich
+        } else {
+            // Fakten Grid
+            if (factMatches.length === 0) {
+                emptyState.style.display = 'block';
+                emptyState.innerText = "Keine Fakten mit diesem Text gefunden.";
+            } else {
+                renderFactGrid(factMatches, contentBox);
+            }
+        }
         return;
     }
 
-    // Tiles bauen
-    finalMatches.forEach((fact, i) => {
+    // === SZENARIO 3: STANDAR ANSICHT (Keine Suche, kein Filter) ===
+    // Einfach Grid anzeigen (Random oder Saved)
+    let displayFacts = sourceData;
+    
+    if (activeLibTab === 'discover') {
+        // Random Mix für Discover
+        // (Hier vereinfacht, normalerweise würde man nicht bei jedem Render neu shufflen, 
+        // aber für die Demo okay. Besser: Shuffle nur beim Tab-Switch speichern)
+        displayFacts = [...sourceData].sort(() => 0.5 - Math.random()).slice(0, 20);
+        if(loadBtn) {
+            loadBtn.style.display = 'block';
+            loadBtn.onclick = () => renderLibrary(); // Re-Roll
+        }
+    } else {
+        // Saved: Neueste oben
+        displayFacts = [...sourceData].reverse();
+    }
+
+    if (displayFacts.length === 0) {
+        emptyState.style.display = 'block';
+        emptyState.innerText = (activeLibTab === 'saved') ? "Noch keine Fakten gespeichert." : "Datenbank leer.";
+    } else {
+        renderFactGrid(displayFacts, contentBox);
+    }
+}
+
+// Helper: Grid rendern (Ausgelagert, da oft genutzt)
+function renderFactGrid(facts, container) {
+    // Container Grid-Klasse geben
+    container.className = 'masonry-grid-lib'; // Falls es überschrieben wurde
+    
+    facts.forEach((fact, i) => {
         const isSaved = savedFacts.some(sf => sf.text === fact.text);
         const tile = document.createElement('div');
         tile.className = 'lib-tile fade-in';
@@ -9994,14 +10322,24 @@ function renderLibrary() {
                 <div class="lib-icon">${fact.icon || '💡'}</div>
                 <div>
                     <div style="font-weight:bold; font-size:12px;">${fact.animal || 'Fakt'}</div>
-                    <div class="lib-source">${fact.source || 'Wissen'}</div>
+                    <div class="lib-source">${fact.source || fact.deckSource || 'Wissen'}</div>
                 </div>
             </div>
             <div class="lib-text">"${fact.text}"</div>
             ${tagStr ? `<div style="margin-top:8px; font-size:10px; opacity:0.5;">🏷️ ${tagStr}</div>` : ''}
         `;
-        grid.appendChild(tile);
+        container.appendChild(tile);
     });
+    // Grid Klasse nach dem Loop entfernen? Nein, der Container selbst ist das Grid.
+    // Aber Achtung: Wenn wir 'lib-animal-row' rendern (oben), darf der Container NICHT 'masonry-grid-lib' sein!
+    // FIX: Wir setzen die Klasse dynamisch in der Hauptfunktion.
+    // -> In renderLibrary(): contentBox.className = (libSearchMode === 'animals' && isSearching) ? '' : 'masonry-grid-lib';
+}
+
+// Helper: Modus wechseln
+function setLibMode(mode) {
+    libSearchMode = mode;
+    renderLibrary();
 }
 
 function loadMoreGlobalFacts() { renderLibrary(); } // Dummy für Refresh
