@@ -4268,100 +4268,56 @@ body.dark .fact-footer-btn:active {
     border-color: var(--accent); /* Rand wird blau */
 }
 
-/* === LEVEL UP OVERLAY === */
-#levelUpOverlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.92); /* Fast schwarz */
-    z-index: 15000; /* Über allem */
-    display: none; /* JS schaltet an */
-    align-items: center; justify-content: center;
-    overflow: hidden;
-    animation: fadeIn 0.5s;
-}
 
-/* Der Strahlenkranz */
-.lvl-sunburst {
+/* === FIX: CLOSE BUTTON NOTE VIEW (Frosted Glass) === */
+.paper-close {
+    /* 1. Positionierung & Größe */
     position: absolute;
-    width: 200vw; height: 200vw;
-    background: repeating-conic-gradient(
-        from 0deg, 
-        rgba(255, 215, 0, 0.05) 0deg 15deg, 
-        transparent 15deg 30deg
-    );
-    animation: rotateBurst 60s linear infinite;
-    z-index: 0;
-}
-
-@keyframes rotateBurst { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-/* Inhalt Container */
-.lvl-content {
-    position: relative; z-index: 1;
-    display: flex; flex-direction: column; align-items: center;
-    text-align: center;
-    width: 80%; max-width: 400px;
-}
-
-/* Die kleine Krone oben */
-.lvl-crown {
-    font-size: 40px; margin-bottom: 10px;
-    animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.lvl-up-title {
-    font-family: 'Fredoka', sans-serif;
-    font-size: 24px; font-weight: 900;
-    color: #ffd700; /* Gold */
-    letter-spacing: 4px; text-transform: uppercase;
-    margin-bottom: 30px;
-    text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-    animation: slideDown 0.8s ease-out;
-}
-
-/* Das große Rang-Icon */
-.lvl-rank-icon {
-    width: 140px; height: 140px;
-    background: linear-gradient(135deg, #ffd700, #ffa502);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 70px;
-    box-shadow: 0 0 60px rgba(255, 215, 0, 0.4);
-    border: 5px solid #fff;
-    margin-bottom: 30px;
-    animation: zoomPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.lvl-rank-name {
-    font-size: 32px; font-weight: 800; color: #fff;
-    margin-bottom: 10px;
-    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    animation: fadeIn 1s ease-out 0.5s backwards; /* Verzögert */
-}
-
-.lvl-rank-desc {
-    font-size: 14px; color: rgba(255,255,255,0.7);
-    margin-bottom: 40px; line-height: 1.5;
-    animation: fadeIn 1s ease-out 0.8s backwards;
-}
-
-.lvl-claim-btn {
-    background: transparent;
-    color: #ffd700;
-    border: 2px solid #ffd700;
-    padding: 12px 40px;
-    font-size: 16px; font-weight: bold;
-    border-radius: 30px;
+    top: 15px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    
+    /* 2. Der Look: Dunkles Milchglas */
+    background: rgba(0, 0, 0, 0.5) !important; /* Halbtransparenter schwarzer Kreis */
+    backdrop-filter: blur(5px);                /* Weichzeichner dahinter */
+    -webkit-backdrop-filter: blur(5px);
+    
+    /* 3. Rand & Schatten für Tiefe */
+    border: 1px solid rgba(255, 255, 255, 0.3) !important; /* Feiner weißer Ring */
+    border-radius: 50% !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+    
+    /* 4. Das "X" Icon */
+    color: #ffffff !important; /* Immer Weiß (bester Kontrast auf Schwarz) */
+    font-weight: bold;
+    font-size: 16px;
+    
+    /* 5. Flexbox für Zentrierung */
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    
+    z-index: 50; /* Über dem Bild */
+    transition: transform 0.2s, background 0.2s;
     cursor: pointer;
-    transition: all 0.2s;
-    animation: fadeIn 1s ease-out 1s backwards;
 }
-.lvl-claim-btn:active { background: #ffd700; color: #000; transform: scale(0.95); }
 
-/* Animationen */
-@keyframes bounceIn { 0%{transform:scale(0);} 60%{transform:scale(1.2);} 100%{transform:scale(1);} }
-@keyframes slideDown { from{transform:translateY(-50px);opacity:0;} to{transform:translateY(0);opacity:1;} }
-@keyframes zoomPop { 0%{transform:scale(0) rotate(-45deg);} 80%{transform:scale(1.1) rotate(5deg);} 100%{transform:scale(1) rotate(0);} }
+/* Klick-Effekt */
+.paper-close:active {
+    transform: scale(0.9);
+    background: rgba(0, 0, 0, 0.7) !important;
+}
 
+/* Optional: Klickfläche vergrößern (unsichtbar), damit man leichter trifft */
+.paper-close::after {
+    content: '';
+    position: absolute;
+    top: -10px; bottom: -10px; left: -10px; right: -10px;
+    background: transparent;
+    border-radius: 50%;
+}
+   
 </style>
 </head>
 <body>
@@ -5345,26 +5301,6 @@ Klicke auf ein Tier in der Liste oder auf eine Kachel um das Tier zu bearbeiten 
         </div>
     </div>
 
-<!-- LEVEL UP OVERLAY (Konzept 1: Trophäe) -->
-<div id="levelUpOverlay">
-    <!-- Der rotierende Strahlenkranz -->
-    <div class="lvl-sunburst"></div>
-    
-    <!-- Inhalt -->
-    <div class="lvl-content">
-        <div class="lvl-crown">👑</div>
-        <div class="lvl-up-title">AUFSTIEG!</div>
-        
-        <!-- Das Tier-Icon des neuen Rangs -->
-        <div class="lvl-rank-icon" id="lvlUpIcon">🦁</div>
-        
-        <div class="lvl-rank-name" id="lvlUpName">Löwen-Herz</div>
-        <div class="lvl-rank-desc" id="lvlUpDesc">Du hast eine neue Stufe der Wildnis erreicht.</div>
-        
-        <button class="lvl-claim-btn" onclick="closeLevelOverlay()">Großartig!</button>
-    </div>
-</div>
-
 <script>
 /** 
  * === TIER TICKER CORE ===
@@ -6039,7 +5975,6 @@ function change(i, delta, e){
         if(e && navigator.vibrate) navigator.vibrate(15);
         if(e) spawnParticle(e.clientX, e.clientY, "+1");
         showUndoToast(`Gezählt: ${animals[i].name} (+1)`, () => removeEntry(date, i, info.arrIdx));
-        checkLevelProgress(); 
 render();
     }
 }
@@ -10606,13 +10541,6 @@ function saveFlavorSettings() {
     loadRandomFact(); 
 }
 
-function saveFlavorSettings() {
-    localStorage.setItem('userFlavorTags', JSON.stringify(userFlavorTags));
-    closeModal('flavorModal');
-    showErrorToast("Präferenzen gespeichert!", true);
-    loadRandomFact(); 
-}
-
 /* === END ENGINE V2.1 === */
 
 function setSearchMode(mode) {
@@ -10620,130 +10548,7 @@ function setSearchMode(mode) {
     render(); // Liste neu zeichnen
 }
 
-
-
-/* === LEVEL SYSTEM ENGINE === */
-
-// 1. Zentrale XP Berechnung (Damit wir es nicht nur in Stats haben)
-function calculateTotalXP() {
-    let xp = 0;
-    const ys = getAvailableYears();
-    
-    // Globale Stats sammeln
-    let gTot=0, gNote=0, gLoc=new Set(), streak=0;
-    
-    ys.forEach(y => {
-        const h = getHistory(y); 
-        Object.values(h).forEach(e => {
-            gTot += (e.total||0); 
-            if(e.perAnimal) Object.values(e.perAnimal).forEach(l => l.forEach(x => {
-                if(x.note) gNote++;
-                if(x.location) gLoc.add(x.location);
-            }));
-        });
-    });
-
-    // Streak (Vereinfacht für global check)
-    // Wir nehmen einfach an, renderStats hat streak global gesetzt ODER berechnen es grob
-    // Da Streak aufwendig ist, nehmen wir für den Background-Check nur die "harten" Fakten
-    // + gespeicherte Quiz XP
-    
-    const photoCount = animals.filter(a => a.imageId).length;
-    
-    // Formel
-    xp = (gTot*40) + (gNote*75) + (animals.length*50) + (photoCount*100) + (gLoc.size*25) + (quizXP);
-    
-    return xp;
-}
-
-// 2. Level Index berechnen
-function getLevelIndex(xp) {
-    let idx = 0;
-    for(let i=0; i<levels.length; i++){ 
-        if(xp >= levels[i].xp) idx = i; 
-        else break; 
-    }
-    return idx;
-}
-
-// 3. PRÜFUNG BEIM START (Das wolltest du!)
-function checkLevelProgress() {
-    const currentXP = calculateTotalXP();
-    const currentLvlIdx = getLevelIndex(currentXP);
-    
-    // Gespeichertes Level laden (oder -1 beim ersten Mal)
-    let lastLvlIdx = parseInt(localStorage.getItem('lastLevelIndex'));
-    if (isNaN(lastLvlIdx)) lastLvlIdx = -1; // Init
-
-    // FALL 1: Erster Start überhaupt
-    if (lastLvlIdx === -1) {
-        // Wir speichern einfach das aktuelle, kein Popup (nervt sonst beim ersten Install)
-        localStorage.setItem('lastLevelIndex', currentLvlIdx);
-        return;
-    }
-
-    // FALL 2: Aufstieg! (Aktuell > Letztes)
-    if (currentLvlIdx > lastLvlIdx) {
-        // Overlay zeigen!
-        showLevelUpOverlay(currentLvlIdx);
-        
-        // Speichern
-        localStorage.setItem('lastLevelIndex', currentLvlIdx);
-        
-        // Konfetti & Sound
-        if(typeof fireConfetti === 'function') setTimeout(fireConfetti, 300);
-        if(typeof playSound === 'function') playSound('fanfare');
-    }
-    
-    // FALL 3: Abstieg / Reset (Aktuell < Letztes)
-    else if (currentLvlIdx < lastLvlIdx) {
-        // Still und heimlich überschreiben, damit beim nächsten Aufstieg wieder gefeiert wird
-        localStorage.setItem('lastLevelIndex', currentLvlIdx);
-    }
-    
-    // Fall 4: Gleich -> Nichts tun
-}
-
-// 4. Das Overlay füllen und zeigen
-
-function showLevelUpOverlay(idx) {
-    const lvl = levels[idx];
-    if(!lvl) return; // Sicherheits-Check
-
-    // Icon Logik
-    let rankIcon = '🐞'; 
-    if (idx >= 2) rankIcon = '🦔';
-    if (idx >= 4) rankIcon = '🌲'; 
-    if (idx >= 6) rankIcon = '🦉';
-    if (idx >= 8) rankIcon = '🐸';
-    if (idx >= 10) rankIcon = '🐬';
-    if (idx >= 12) rankIcon = '🐒';
-    if (idx >= 14) rankIcon = '🦁';
-    if (idx >= 17) rankIcon = '🦅';
-    if (idx >= 18) rankIcon = '🐺';
-    if (idx === 19) rankIcon = '👑';
-
-    // Text setzen
-    const iconEl = document.getElementById('lvlUpIcon');
-    const nameEl = document.getElementById('lvlUpName');
-    const descEl = document.getElementById('lvlUpDesc');
-    const overEl = document.getElementById('levelUpOverlay');
-
-    if(iconEl) iconEl.innerText = rankIcon;
-    if(nameEl) nameEl.innerText = lvl.name;
-    if(descEl) descEl.innerText = `Du hast ${lvl.xp.toLocaleString()} XP erreicht!\nDein Rang in der Wildnis ist gestiegen.`;
-    
-    // Anzeigen (mit !important Hack für JS, falls CSS bockt)
-    if(overEl) {
-        overEl.style.setProperty('display', 'flex', 'important');
-        // Sound abspielen
-        if(typeof playSound === 'function') playSound('fanfare');
-    }
-}
-function closeLevelOverlay() {
-    getEl('levelUpOverlay').style.display = 'none';
-}
-
+   
 function openInfoModal() {
     getEl('infoModal').style.display = 'block';
 }
