@@ -4607,7 +4607,6 @@ body.dark .deck-card {
 
 <div id="scrollTopBtn" onclick="window.scrollTo({top:0, behavior:'smooth'})">⬆️</div>
 
-
 <!-- VIEW: LIST (Startseite) -->
 <div id="view-list" class="view-section active">
     
@@ -4624,7 +4623,10 @@ body.dark .deck-card {
         </div>
     </div>
 
-    <!-- 2. RANGER FUNK BUTTON (Jetzt unter dem Header!) -->
+    <!-- 3. TAG FILTER (Vor der Liste!) -->
+    <div id="tagFilterContainer" class="tag-scroll"></div>
+
+    <!-- 2. RANGER FUNK BUTTON (JETZT HIER!) -->
     <div onclick="openChatModal()" style="margin: 0 0 15px 0; background: linear-gradient(135deg, #2c3e50, #4ca1af); color: white; padding: 15px; border-radius: 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: var(--shadow); position: relative;">
         <div style="display:flex; align-items:center; gap:10px;">
             <span style="font-size:24px;">📻</span>
@@ -4634,42 +4636,32 @@ body.dark .deck-card {
             </div>
         </div>
         <div style="font-size:20px;">➔</div>
-        <!-- Roter Punkt für neue Nachrichten -->
         <div id="chatUnreadBadge" class="unread-badge" style="display:none;">!</div>
     </div>
 
-    <!-- 3. TAG FILTER & LISTE (Der Rest bleibt wie er war) -->
-   
-  <!-- Tag Filter bleibt hier -->
-  <div id="tagFilterContainer" class="tag-scroll">...</div>
+    <!-- 1. HIER ERSCHEINT DER EINKLAPPEN BUTTON -->
+    <div id="listToggleContainer" style="margin-bottom: 10px; min-height: 5px;"></div>
 
+    <!-- 2. Die Liste (Sneak Peek Wrapper) -->
+    <div id="sneakPeekContainer" class="sneak-peek-wrapper collapsed">
+        <div class="sneak-peek-overlay" onclick="safeRun(expandList)"></div>
+        <div id="list" style="padding-bottom: 20px;"></div>
+    </div>
+    
+    <!-- Hinweis Text -->
+    <div id="sneakHint" class="sneak-peek-hint">▼ Tippe auf die Liste zum Ausklappen ▼</div>
 
-  <!-- 1. HIER ERSCHEINT DER EINKLAPPEN BUTTON (Dynamisch per JS) -->
-  <div id="listToggleContainer" style="margin-bottom: 10px; min-height: 5px;"></div>
+    <!-- 3. Favoriten Container -->
+    <div id="favContainer" style="margin-top: 20px;"></div>
 
-  <!-- 2. Die Liste (Sneak Peek Wrapper) -->
-  <div id="sneakPeekContainer" class="sneak-peek-wrapper collapsed">
-      <!-- Overlay zum Ausklappen -->
-      <div class="sneak-peek-overlay" onclick="safeRun(expandList)"></div>
-      <div id="list" style="padding-bottom: 20px;"></div>
-  </div>
-  
-  <!-- Hinweis Text (nur sichtbar wenn zugeklappt) -->
-  <div id="sneakHint" class="sneak-peek-hint">▼ Tippe auf die Liste zum Ausklappen ▼</div>
-
-  <!-- 3. Favoriten Container (Extra Bereich DARUNTER) -->
-  <div id="favContainer" style="margin-top: 20px;"></div>
-
-   <!-- === ENDE ÄNDERUNG === -->
- <div id="emptyState" style="text-align:center; padding:60px 20px; color:var(--sub); display:none;">
-      <div style="font-size:60px; margin-bottom:15px; opacity:0.5">🐾</div>
-      <h3>Keine Tiere gefunden</h3>
-      <p>Klicke auf das <b> + </b> um neue Tiere anzulegen.</p>
-  </div>
+    <!-- Empty State -->
+    <div id="emptyState" style="text-align:center; padding:60px 20px; color:var(--sub); display:none;">
+        <div style="font-size:60px; margin-bottom:15px; opacity:0.5">🐾</div>
+        <h3>Keine Tiere gefunden</h3>
+        <p>Klicke auf das <b> + </b> um neue Tiere anzulegen.</p>
+    </div>
 </div>
-
-
-<!-- === VIEW: ADMIN (Verwalten) === -->
+   
  <!-- === VIEW: ADMIN (Verwalten) === -->
 <div id="view-admin" class="view-section">
   
