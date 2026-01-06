@@ -6635,12 +6635,7 @@ function render() {
             `;
             if(item.imageId) { dbGetImg(item.imageId).then(src => { if(src) div.querySelector('.list-visual').innerHTML = `<img src="${src}" class="list-thumb-img">`; }); }
             
-            // Long Press (von vorher)
-            const rowMain = div.querySelector('.row-main');
-            addLongPress(rowMain, 
-                (e) => { if(typeof createRipple === "function") createRipple(e); safeRun(openDetail, item.idx); },
-                () => { if(navigator.vibrate) navigator.vibrate(50); safeRun(openNoteModal, item.idx); }
-            );
+   
 
             list.appendChild(div);
         });
@@ -7542,27 +7537,6 @@ function setupLocationAutocomplete() {
     });
 }
 
-// Hilfsfunktion für Long-Press
-function addLongPress(el, onClick, onLong) {
-    let timer;
-    const delay = 600; // 0.6 Sekunden drücken
-    let isLong = false;
-
-    const start = (e) => {
-        isLong = false;
-        timer = setTimeout(() => { isLong = true; onLong(e); }, delay);
-    };
-    const end = (e) => {
-        clearTimeout(timer);
-        if (!isLong) onClick(e); // Nur klicken, wenn nicht lange gedrückt wurde
-        e.preventDefault(); // Verhindert Ghost-Clicks
-    };
-
-    el.addEventListener('touchstart', start, {passive:false});
-    el.addEventListener('touchend', end, {passive:false});
-    el.addEventListener('mousedown', start);
-    el.addEventListener('mouseup', end);
-}
 
 // === NOTES ===
 let editNoteRef = null;
