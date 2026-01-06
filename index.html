@@ -5484,8 +5484,7 @@ function solveQuiz(btnElement, userChoice, mode) {
             const rect = btnElement.getBoundingClientRect();
             spawnParticle(rect.left + rect.width/2, rect.top, "🎉");
         }
-checkLevelProgress(); 
-    } else {
+    } else 
         // FALSCH
         btnElement.classList.add('wrong');
         if(navigator.vibrate) navigator.vibrate(200);
