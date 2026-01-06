@@ -9676,6 +9676,7 @@ async function handleNoteImgUpload(input) {
 
 // 3. Share Funktion (Bleibt gleich, muss aber im Block sein)
 /* === SINGLE NOTE SHARE GENERATOR (PROPORTIONAL FIX) === */
+/* === SINGLE NOTE SHARE GENERATOR (PROFI STYLE) === */
 async function shareSingleNote() {
     const dateEl = document.getElementById('nvDate');
     const locEl = document.getElementById('nvLoc');
@@ -9684,60 +9685,55 @@ async function shareSingleNote() {
 
     if(!dateEl) return;
 
-    // 1. Texte holen
+    // 1. Daten holen
     const dateTxt = dateEl.innerText;
     const locTxt = locEl.innerText.replace('📍 ', '');
     const noteTxt = noteEl.innerText;
     
-    // 2. Titel holen
     let titleText = "Tier Sichtung";
     if (typeof detailAnimalIdx !== 'undefined' && animals[detailAnimalIdx]) {
         titleText = animals[detailAnimalIdx].name;
     }
 
-    showErrorToast("🎨 Berechne Layout...", true);
+    showErrorToast("🎨 Designe Karte...", true);
 
-    // 3. Bild laden & Dimensionen berechnen
+    // 2. Bild vorbereiten
     const hasImg = (imgEl && imgEl.style.display !== 'none' && imgEl.src);
     let imgObj = null;
     let imgDrawH = 0;
-    const cardW = 800; // Feste Breite
-    const margin = 40;
-    const contentW = cardW - (margin * 2); // Breite für Inhalt (720px)
-
+    
+    // Layout-Konstanten
+    const cardW = 900; // Höhere Auflösung
+    const margin = 50; // Dickerer Rand (Polaroid Style)
+    const contentW = cardW - (margin * 2);
+    
     if (hasImg) {
         try {
             imgObj = new Image();
             imgObj.crossOrigin = "anonymous";
             imgObj.src = imgEl.src;
-            // Warten bis Bild geladen ist, um Größe zu kennen
             await new Promise((r, e) => { imgObj.onload = r; imgObj.onerror = e; });
             
-            // Aspekt-Ratio berechnen
             const ratio = imgObj.height / imgObj.width;
-            imgDrawH = contentW * ratio; // Höhe proportional zur Breite
-        } catch(e) {
-            console.log("Bildfehler:", e);
-        }
+            imgDrawH = contentW * ratio; 
+        } catch(e) { console.log(e); }
     } else {
-        // Platzhalter-Höhe für Icon
-        imgDrawH = 200; 
+        imgDrawH = 250; // Platz für Icon
     }
 
-    // 4. Text-Platzbedarf berechnen (Pre-Calculation)
-    // Wir müssen wissen, wie hoch der Text ist, BEVOR wir den Canvas erstellen.
+    // 3. Text-Höhe berechnen
     const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d'); // Dummy Context zum Messen
+    const ctx = canvas.getContext('2d');
     
-    // Schriftarten setzen (muss identisch zum Drawing sein)
-    const titleFont = "bold 50px sans-serif";
-    const metaFont = "bold 24px monospace";
-    const noteFont = "italic 28px serif";
-    const lineHeight = 40;
+    // Fonts (Etwas edler)
+    const titleFont = "900 60px 'Segoe UI', Roboto, sans-serif";
+    const metaFont = "700 26px monospace";
+    const noteFont = "italic 400 32px serif";
+    const lineHeight = 48;
 
-    // Notiz umbrechen simulieren
     let noteHeight = 0;
     let lines = [];
+    
     if(noteTxt && noteTxt !== "Keine Notiz.") {
         ctx.font = noteFont;
         const words = noteTxt.split(' ');
@@ -9757,66 +9753,110 @@ async function shareSingleNote() {
         noteHeight = lines.length * lineHeight;
     }
 
-    // 5. Gesamthöhe berechnen
-    // MarginOben + Bild + Gap + Titel + Gap + Meta + Gap + Note + Gap + Footer + MarginUnten
-    const totalHeight = margin + imgDrawH + 40 + 50 + 20 + 30 + 40 + noteHeight + 60 + margin;
+    // 4. Gesamthöhe (Mit mehr "Luft")
+    const spacingTitle = 60; // Mehr Platz nach Bild
+    const spacingMeta = 30;
+    const spacingNote = 60; // Mehr Platz vor Notiz
+    const spacingFooter = 80;
+    
+    const totalHeight = margin + imgDrawH + spacingTitle + 60 + spacingMeta + 30 + spacingNote + noteHeight + spacingFooter + margin;
 
-    // 6. Canvas erstellen (Jetzt mit perfekter Größe)
+    // 5. Canvas Finalisieren
     canvas.width = cardW;
     canvas.height = totalHeight;
 
-    // Hintergrund (Papier-Look)
+    // Background (Subtile Papier-Textur via Farbe)
     const grad = ctx.createLinearGradient(0, 0, cardW, totalHeight);
-    grad.addColorStop(0, '#fdfbf7'); 
-    grad.addColorStop(1, '#e6e2d8'); 
+    grad.addColorStop(0, '#f8f9fa'); 
+    grad.addColorStop(1, '#e9ecef'); 
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, cardW, totalHeight);
 
-    // Weißer Polaroid-Kasten (Schatten)
+    // Die "Karte" (Weißer Kasten)
     ctx.fillStyle = "#ffffff";
-    ctx.shadowColor = "rgba(0,0,0,0.1)"; ctx.shadowBlur = 25; ctx.shadowOffsetY = 10;
-    ctx.fillRect(margin, margin, contentW, totalHeight - (margin*2));
-    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; 
-
-    // === INHALT ZEICHNEN ===
-    let currentY = margin + 20; // Startpunkt innen
-
-    // A) Bild oder Icon
-    if (imgObj) {
-        // Bild zeichnen (Proportional!)
-        // drawImage(img, x, y, width, height) -> skaliert ohne Crop
-        ctx.drawImage(imgObj, margin + 20, currentY, contentW - 40, imgDrawH);
-        
-        // Rahmen ums Bild
-        ctx.strokeStyle = "rgba(0,0,0,0.05)"; ctx.lineWidth = 1;
-        ctx.strokeRect(margin + 20, currentY, contentW - 40, imgDrawH);
-        
-        currentY += imgDrawH + 40;
-    } else {
-        // Fallback Icon
-        currentY += 40;
-        ctx.font = "100px serif"; ctx.textAlign = "center"; ctx.fillStyle = "#333";
-        ctx.fillText("🐾", cardW/2, currentY + 80);
-        currentY += 160;
+    ctx.shadowColor = "rgba(0,0,0,0.15)"; ctx.shadowBlur = 40; ctx.shadowOffsetY = 20;
+    
+    // Helper für runde Ecken
+    function roundRect(x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
     }
 
-    // B) Texte
-    ctx.textAlign = "center"; 
+    roundRect(margin, margin, contentW, totalHeight - (margin*2), 20); // Karte abrunden
+    ctx.fill();
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; // Reset Shadow
+
+    // === INHALT ===
+    let currentY = margin + 30; // Padding innen
+
+    // A) BILD
+    if (imgObj) {
+        const imgX = margin + 30;
+        const imgY = currentY;
+        const imgW = contentW - 60;
+        const imgH = imgDrawH;
+        const imgRadius = 16; // Schöne runde Ecken fürs Bild
+
+        // Bild-Schatten
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.2)"; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10;
+        ctx.fillStyle = "#000"; // Dummy für Schattenwurf
+        roundRect(imgX, imgY, imgW, imgH, imgRadius);
+        ctx.fill(); 
+        ctx.restore();
+
+        // Bild-Clipping & Drawing
+        ctx.save();
+        roundRect(imgX, imgY, imgW, imgH, imgRadius);
+        ctx.clip();
+        ctx.drawImage(imgObj, imgX, imgY, imgW, imgH);
+        ctx.restore();
+        
+        // Feiner innerer Rand (Overlay) für Definition
+        ctx.strokeStyle = "rgba(0,0,0,0.05)"; ctx.lineWidth = 2;
+        roundRect(imgX, imgY, imgW, imgH, imgRadius);
+        ctx.stroke();
+
+        currentY += imgH + spacingTitle;
+    } else {
+        // Fallback Icon
+        currentY += 60;
+        ctx.font = "120px serif"; ctx.textAlign = "center"; ctx.fillStyle = "#333";
+        ctx.fillText("🐾", cardW/2, currentY + 80);
+        currentY += 200;
+    }
+
+    // B) TEXTE
+    ctx.textAlign = "center";
     
     // Titel
-    ctx.fillStyle = "#2c2c2e";
+    ctx.fillStyle = "#1a1a1a";
     ctx.font = titleFont;
     ctx.fillText(titleText, cardW/2, currentY);
     currentY += 50;
 
     // Meta (Datum/Ort)
-    ctx.fillStyle = "#666";
+    ctx.fillStyle = "#2196f3"; // Accent Farbe für Meta
     ctx.font = metaFont;
     const metaStr = (dateTxt + " • " + (locTxt || 'Unbekannt')).toUpperCase();
     ctx.fillText(metaStr, cardW/2, currentY);
-    currentY += 50; // Mehr Abstand vor Notiz
+    currentY += 40;
 
-    // Notiz (Die Zeilen, die wir vorhin berechnet haben)
+    // Trennlinie (Separator)
+    ctx.strokeStyle = "rgba(0,0,0,0.1)"; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cardW/2 - 50, currentY);
+    ctx.lineTo(cardW/2 + 50, currentY);
+    ctx.stroke();
+    
+    currentY += 50; // Abstand nach Linie
+
+    // Notiz
     if(lines.length > 0) {
         ctx.font = noteFont;
         ctx.fillStyle = "#444";
@@ -9824,21 +9864,22 @@ async function shareSingleNote() {
             ctx.fillText(line, cardW/2, currentY);
             currentY += lineHeight;
         });
-        currentY += 20;
     }
 
-    // Footer (Ganz unten anpinnen relativ zur Gesamthöhe)
-    ctx.fillStyle = "#2196f3";
-    ctx.font = "bold 16px sans-serif";
-    ctx.fillText("TIER TICKER APP", cardW/2, totalHeight - margin - 25);
+    // Footer
+    const footerY = totalHeight - margin - 30;
+    ctx.font = "bold 14px sans-serif";
+    ctx.fillStyle = "#aaa";
+    ctx.fillText("ERSTELLT MIT TIER TICKER APP", cardW/2, footerY);
 
-    // 7. Export
+    // 6. EXPORT
     canvas.toBlob(async (blob) => {
-        const file = new File([blob], "sichtung.png", { type: "image/png" });
+        const file = new File([blob], `sichtung-${titleText}.png`, { type: "image/png" });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try { await navigator.share({ files: [file], title: 'Sichtung', text: `Habe einen ${titleText} gesehen! 🐾` }); } catch (err) {}
+            try { await navigator.share({ files: [file], title: 'Sichtung', text: `Schau mal: ${titleText} 🐾` }); } catch (err) {}
         } else {
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `sichtung-${titleText}.png`; a.click(); showErrorToast("Bild gespeichert!", true);
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `sichtung-${titleText}.png`; a.click(); 
+            showErrorToast("Bild gespeichert!", true);
         }
     });
 }
