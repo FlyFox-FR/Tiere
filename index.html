@@ -7769,8 +7769,7 @@ function renderStats(){
     }
 
     // DIESE ZEILE EINFÜGEN:
-const xp = calculateTotalXP();
-
+   const xp = (gTot * 40) + (gNote * 75) + (animals.length * 50) + (photoCount * 100) + (gLoc.size * 25) + quizXP;
     // Level Logik
     let lvl = levels[0], nxt = null; 
     let lvlIdx = 0;
