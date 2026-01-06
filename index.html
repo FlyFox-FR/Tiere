@@ -5633,6 +5633,29 @@ Klicke auf ein Tier in der Liste oder auf eine Kachel um das Tier zu bearbeiten 
 
 
 <script>
+// === DEBUG BLOCK (Später wieder löschen) ===
+console.log("Script geladen!");
+
+window.openChatModal = function() {
+    console.log("🔥 openChatModal wurde aufgerufen!");
+    alert("Button funktioniert! Modal wird jetzt geöffnet...");
+    
+    const modal = document.getElementById('chatModal');
+    console.log("Modal Element:", modal);
+    
+    if(!modal) {
+        alert("FEHLER: chatModal nicht gefunden!");
+        return;
+    }
+    
+    modal.style.display = 'block';
+    console.log("Modal sollte jetzt sichtbar sein");
+};
+// === ENDE DEBUG ===
+
+
+
+   
 /** 
  * === TIER TICKER CORE ===
  * Fixes: Disabled Swipe for Details View
