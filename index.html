@@ -5634,24 +5634,231 @@ Klicke auf ein Tier in der Liste oder auf eine Kachel um das Tier zu bearbeiten 
 
 <script>
 // === DEBUG BLOCK (Später wieder löschen) ===
-console.log("Script geladen!");
-
+// === CHAT MODAL BUILDER (Ersetzt den Debug-Block) ===
 window.openChatModal = function() {
-    console.log("🔥 openChatModal wurde aufgerufen!");
-    alert("Button funktioniert! Modal wird jetzt geöffnet...");
+    console.log("🔥 Chat wird geöffnet...");
     
-    const modal = document.getElementById('chatModal');
-    console.log("Modal Element:", modal);
+    // 1. Modal suchen oder neu bauen
+    let modal = document.getElementById('chatModal');
     
-    if(!modal) {
-        alert("FEHLER: chatModal nicht gefunden!");
-        return;
+    if (!modal) {
+        console.log("⚠️ Modal existiert nicht - baue es neu!");
+        modal = document.createElement('div');
+        modal.id = 'chatModal';
+        modal.className = 'modal';
+        
+        // WICHTIG: Inline-Styles überschreiben CSS-Probleme
+        modal.style.cssText = `
+            display: flex !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(0,0,0,0.85) !important;
+            z-index: 99999 !important;
+            align-items: center !important;
+            justify-content: center !important;
+            backdrop-filter: blur(5px);
+        `;
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="
+                background: var(--card-solid);
+                width: 90%;
+                max-width: 500px;
+                height: 85vh;
+                border-radius: 24px;
+                padding: 25px;
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            ">
+                <!-- Close Button -->
+                <div class="close-btn" onclick="closeModal('chatModal')" style="
+                    position: absolute;
+                    top: 15px;
+                    right: 20px;
+                    width: 30px;
+                    height: 30px;
+                    background: var(--btn);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    font-size: 18px;
+                    z-index: 10;
+                ">✕</div>
+                
+                <!-- Header -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="margin:0;">📻 Ranger Funk</h3>
+                    <button onclick="toggleChatSettings()" style="
+                        background: transparent;
+                        border: 1px solid var(--btn);
+                        font-size: 12px;
+                        padding: 5px 10px;
+                        border-radius: 8px;
+                        cursor: pointer;
+                    ">⚙️ Setup</button>
+                </div>
+
+                <!-- SETUP SCREEN -->
+                <div id="chatSetup" style="
+                    display: none;
+                    flex-direction: column;
+                    gap: 15px;
+                    padding: 20px;
+                    text-align: center;
+                ">
+                    <p style="font-size: 13px; opacity: 0.7; margin: 0;">
+                        Verbinde dich mit deinem Team-Kanal.
+                    </p>
+                    
+                    <div style="text-align: left;">
+                        <label style="font-size: 12px; font-weight: bold; display: block; margin-bottom: 5px;">
+                            Dein Rufzeichen (Name):
+                        </label>
+                        <input id="chatUserInp" placeholder="z.B. Adlerauge" style="
+                            width: 100%;
+                            padding: 12px;
+                            border-radius: 12px;
+                            border: 1px solid var(--btn);
+                            background: var(--card-solid);
+                            color: var(--text);
+                        ">
+                    </div>
+                    
+                    <div style="text-align: left;">
+                        <label style="font-size: 12px; font-weight: bold; display: block; margin-bottom: 5px;">
+                            Geheimer Kanal (Topic):
+                        </label>
+                        <div style="display: flex; gap: 5px;">
+                            <input id="chatTopicInp" placeholder="Geheimer Code..." style="
+                                flex: 1;
+                                padding: 12px;
+                                border-radius: 12px;
+                                border: 1px solid var(--btn);
+                                background: var(--card-solid);
+                                color: var(--text);
+                                font-family: monospace;
+                            ">
+                            <button onclick="generateTopic()" style="
+                                width: 50px;
+                                font-size: 18px;
+                                cursor: pointer;
+                            ">🎲</button>
+                        </div>
+                    </div>
+                    
+                    <button onclick="saveChatConfig()" style="
+                        width: 100%;
+                        background: var(--accent);
+                        color: white;
+                        padding: 12px;
+                        border-radius: 12px;
+                        border: none;
+                        font-weight: bold;
+                        cursor: pointer;
+                        margin-top: 10px;
+                    ">Verbinden 📡</button>
+                </div>
+
+                <!-- CHAT UI -->
+                <div id="chatUI" style="
+                    display: flex;
+                    flex-direction: column;
+                    flex: 1;
+                    overflow: hidden;
+                ">
+                    <div id="chatStatus" style="
+                        font-size: 11px;
+                        text-align: center;
+                        opacity: 0.5;
+                        margin-bottom: 5px;
+                    ">Offline</div>
+                    
+                    <div id="chatHistory" style="
+                        flex: 1;
+                        overflow-y: auto;
+                        padding: 15px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 12px;
+                        background: rgba(0,0,0,0.02);
+                        margin-bottom: 10px;
+                        border-radius: 12px;
+                        border: 1px solid var(--btn);
+                    ">
+                        <!-- Nachrichten kommen hier rein -->
+                    </div>
+
+                    <div style="
+                        display: flex;
+                        gap: 10px;
+                        padding-top: 10px;
+                        border-top: 1px solid var(--btn);
+                    ">
+                        <button onclick="shareChatLink()" style="
+                            width: 44px;
+                            padding: 0;
+                            font-size: 18px;
+                        ">🔗</button>
+                        <input id="chatMsgInp" placeholder="Funken..." style="
+                            flex: 1;
+                            padding: 12px;
+                            border-radius: 12px;
+                            border: 1px solid var(--btn);
+                            background: var(--card-solid);
+                            color: var(--text);
+                        " onkeydown="if(event.key==='Enter') sendChat()">
+                        <button onclick="sendChat()" style="
+                            background: var(--accent);
+                            color: white;
+                            width: 50px;
+                            border: none;
+                            border-radius: 12px;
+                            font-size: 18px;
+                            cursor: pointer;
+                        ">➤</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        console.log("✅ Modal wurde neu gebaut und zum DOM hinzugefügt!");
+    } else {
+        // Modal existiert bereits
+        modal.style.display = 'flex';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.zIndex = '99999';
+        console.log("✅ Modal existierte bereits - wurde angezeigt!");
     }
     
-    modal.style.display = 'block';
-    console.log("Modal sollte jetzt sichtbar sein");
+    // Body-Scroll sperren
+    document.body.classList.add('no-scroll');
+    
+    // Chat-Logik initialisieren
+    chatUnread = 0;
+    updateUnreadBadge();
+    
+    if(!chatConfig.topic) {
+        toggleChatSettings(true);
+    } else {
+        renderChatHistory();
+        connectToChat();
+        scrollToBottom();
+    }
 };
-// === ENDE DEBUG ===
+// === ENDE CHAT MODAL BUILDER ===
+
 
 
 
