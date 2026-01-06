@@ -4362,6 +4362,56 @@ body.dark .fact-footer-btn:active {
 @keyframes slideDown { from{transform:translateY(-50px);opacity:0;} to{transform:translateY(0);opacity:1;} }
 @keyframes zoomPop { 0%{transform:scale(0) rotate(-45deg);} 80%{transform:scale(1.1) rotate(5deg);} 100%{transform:scale(1) rotate(0);} }
 
+/* === FIX: CLOSE BUTTON NOTE VIEW (Frosted Glass) === */
+.paper-close {
+    /* 1. Positionierung & Größe */
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    
+    /* 2. Der Look: Dunkles Milchglas */
+    background: rgba(0, 0, 0, 0.5) !important; /* Halbtransparenter schwarzer Kreis */
+    backdrop-filter: blur(5px);                /* Weichzeichner dahinter */
+    -webkit-backdrop-filter: blur(5px);
+    
+    /* 3. Rand & Schatten für Tiefe */
+    border: 1px solid rgba(255, 255, 255, 0.3) !important; /* Feiner weißer Ring */
+    border-radius: 50% !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+    
+    /* 4. Das "X" Icon */
+    color: #ffffff !important; /* Immer Weiß (bester Kontrast auf Schwarz) */
+    font-weight: bold;
+    font-size: 16px;
+    
+    /* 5. Flexbox für Zentrierung */
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    
+    z-index: 50; /* Über dem Bild */
+    transition: transform 0.2s, background 0.2s;
+    cursor: pointer;
+}
+
+/* Klick-Effekt */
+.paper-close:active {
+    transform: scale(0.9);
+    background: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Optional: Klickfläche vergrößern (unsichtbar), damit man leichter trifft */
+.paper-close::after {
+    content: '';
+    position: absolute;
+    top: -10px; bottom: -10px; left: -10px; right: -10px;
+    background: transparent;
+    border-radius: 50%;
+}
+
+   
 </style>
 </head>
 <body>
