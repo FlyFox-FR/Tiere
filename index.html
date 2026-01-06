@@ -10975,8 +10975,9 @@ loadGlobals(); render(); initSwipeGestures();
 
 
 </script>
+
 <script>
-/* === ULTIMATE PIXEL GAME ENGINE (DYNAMIC INJECTION) === */
+/* === ULTIMATE PIXEL GAME ENGINE (DYNAMIC HTML FIX) === */
 
 // 1. STYLES (Sofort laden)
 (function injectPixelStyles() {
@@ -10990,6 +10991,7 @@ loadGlobals(); render(); initSwipeGestures();
         .px-content { 
             background: #1a1a1a; color: white; border: 1px solid #444; 
             border-radius: 16px; padding: 20px; width: 90%; max-width: 500px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); 
+            position: relative;
         }
         .px-game-area {
             position: relative; width: 100%; height: 280px; background: #000; 
@@ -11020,44 +11022,27 @@ loadGlobals(); render(); initSwipeGestures();
 // Global State
 window.pxState = { timer: null, step: 0, maxSteps: 20, currentAnimal: null, mode: 'blur', imgObj: null };
 
-
-/* === FIX: DEEP IMAGE SCAN (PROFIL + NOTIZEN) === */
-
-// 1. Hilfsfunktion: Sammelt ALLE Bilder aus der ganzen App
+// 1. Hilfsfunktion: Sammelt ALLE Bilder
 window.getAllPixelCandidates = function() {
     let pool = [];
-
-    // A) Profilbilder
     if(typeof animals !== 'undefined') {
         animals.forEach((a, i) => {
-            if(a.imageId) {
-                // Wir speichern Name und ID
-                pool.push({ name: a.name, imgId: a.imageId, type: 'Profilbild' });
-            }
+            if(a.imageId) pool.push({ name: a.name, imgId: a.imageId, type: 'Profilbild' });
         });
     }
-
-    // B) Notiz-Bilder (Der Deep Scan durch alle Jahre)
     if(typeof getAvailableYears === 'function' && typeof getHistory === 'function') {
         const years = getAvailableYears();
         years.forEach(y => {
             const h = getHistory(y);
-            // Durch alle Tage loopen
             Object.values(h).forEach(day => {
                 if(day.perAnimal) {
-                    // Durch alle Tiere loopen
                     Object.entries(day.perAnimal).forEach(([idxStr, entries]) => {
                         const idx = parseInt(idxStr);
                         const animal = animals[idx];
                         if(animal) {
-                            // Durch alle Einträge dieses Tiers loopen
                             entries.forEach(entry => {
                                 if(entry.noteImageId) {
-                                    pool.push({ 
-                                        name: animal.name, 
-                                        imgId: entry.noteImageId, 
-                                        type: 'Notiz-Foto' // Für Debugging/Spaß
-                                    });
+                                    pool.push({ name: animal.name, imgId: entry.noteImageId, type: 'Notiz-Foto' });
                                 }
                             });
                         }
@@ -11069,26 +11054,57 @@ window.getAllPixelCandidates = function() {
     return pool;
 };
 
-// 2. Öffnen (Mit Check)
+// 2. Öffnen (MIT AUTOMATISCHEM HTML BAU)
 window.openPixelQuiz = function() {
     console.log("Starte Pixel-Jäger...");
 
-    // NEU: Wir nutzen den Deep Scan
     const candidates = window.getAllPixelCandidates();
-
     if (candidates.length < 3) {
-        alert(`Zu wenig Fotos!\n\nDu hast aktuell nur ${candidates.length} Fotos (Profil + Notizen).\nDu brauchst mindestens 3 verschiedene Fotos, um zu spielen.`);
+        alert(`Zu wenig Fotos!\n\nDu hast aktuell nur ${candidates.length} Fotos.\nDu brauchst mindestens 3 verschiedene Fotos (Profil oder Notizen), um zu spielen.`);
         return;
     }
 
-    // Modal bauen (wie gehabt, falls noch nicht da)
+    // === HIER IST DER FIX: MODAL BAUEN WENN ES FEHLT ===
     let modal = document.getElementById('pixelModal');
     if (!modal) {
-        // Falls das Modal HTML fehlt, bauen wir es hier NICHT neu (wurde vorhin schon gemacht)
-        // Aber wir zeigen es an:
-        alert("Fehler: Modal #pixelModal nicht gefunden. Bitte Seite neu laden.");
-        return;
+        modal = document.createElement('div');
+        modal.id = 'pixelModal';
+        modal.innerHTML = `
+            <div class="px-content">
+                <div style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:20px; font-weight:bold;" onclick="document.getElementById('pixelModal').style.display='none'">✕</div>
+                
+                <div style="margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:10px;">
+                    <span style="font-size:24px">📸</span> 
+                    <span style="color:#bd93f9; font-weight:900; letter-spacing:1px; text-transform:uppercase;">Pixel Jäger</span>
+                </div>
+
+                <div class="px-game-area">
+                    <canvas id="pxCanvas" width="600" height="400" style="width:100%; height:100%; object-fit:contain; display:none;"></canvas>
+                    <div id="pxTileGrid" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none; grid-template-columns:repeat(4, 1fr); grid-template-rows:repeat(4, 1fr);"></div>
+                    
+                    <!-- Start Overlay -->
+                    <div id="pxOverlay" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:10;">
+                        <p style="margin-bottom:20px; font-weight:bold;">Wähle Modus:</p>
+                        <div style="display:flex; gap:15px;">
+                            <div class="px-mode-card" onclick="window.startPixelGame('blur')">
+                                <div class="px-mode-icon">🌫️</div><div>Nebel</div>
+                            </div>
+                            <div class="px-mode-card" onclick="window.startPixelGame('pixel')">
+                                <div class="px-mode-icon">👾</div><div>8-Bit</div>
+                            </div>
+                            <div class="px-mode-card" onclick="window.startPixelGame('tiles')">
+                                <div class="px-mode-icon">🧱</div><div>Kacheln</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="pxOptions" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;"></div>
+            </div>
+        `;
+        document.body.appendChild(modal);
     }
+    // ====================================================
 
     // UI Reset
     document.getElementById('pxOverlay').style.display = 'flex';
@@ -11100,79 +11116,52 @@ window.openPixelQuiz = function() {
     modal.style.display = 'flex';
 };
 
-// 3. Spiel Start (Mit Pool Auswahl)
+// 3. Spiel Start
 window.startPixelGame = async function(mode) {
-    // Pool laden
     const candidates = window.getAllPixelCandidates();
-    
-    if (candidates.length < 3) {
-        alert("Zu wenig Bilder für eine Runde.");
-        return;
-    }
+    if (candidates.length < 3) { alert("Zu wenig Bilder."); return; }
 
     window.pxState.mode = mode;
     window.pxState.step = 0;
     
-    // ZUFALLS-BILD WÄHLEN
-    // Wir wählen jetzt ein "Candidate Objekt" (das hat Name und imgId)
     const targetItem = candidates[Math.floor(Math.random() * candidates.length)];
-    
-    // Wir speichern das "Tier" so, wie die anderen Funktionen es erwarten (als Objekt mit .name)
-    // Damit pxGenerateOptions weiterhin funktioniert.
     window.pxState.currentAnimal = { name: targetItem.name };
 
     console.log(`Quiz Ziel: ${targetItem.name} (${targetItem.type})`);
 
-    // Bild laden
     try {
         const src = await dbGetImg(targetItem.imgId);
         if(!src) throw new Error("Bilddaten leer");
-        
         const img = new Image();
         img.src = src;
         await new Promise(r => img.onload = r);
         window.pxState.imgObj = img;
     } catch(e) {
-        console.error(e);
-        alert("Fehler beim Laden des Bildes: " + targetItem.name); 
-        return;
+        alert("Fehler beim Laden des Bildes."); return;
     }
 
-    // UI Setup (bleibt gleich)
     document.getElementById('pxOverlay').style.display = 'none';
     const canvas = document.getElementById('pxCanvas');
     const grid = document.getElementById('pxTileGrid');
     canvas.width = 600; canvas.height = 400; 
     
     if (mode === 'tiles') {
-        canvas.style.display = 'block';
-        grid.style.display = 'grid';
-        grid.innerHTML = '';
+        canvas.style.display = 'block'; grid.style.display = 'grid'; grid.innerHTML = '';
         const ctx = canvas.getContext('2d');
         window.pxDrawContain(ctx, window.pxState.imgObj, canvas.width, canvas.height);
-        
-        for(let i=0; i<16; i++) {
-            const t = document.createElement('div');
-            t.className = 'px-tile';
-            grid.appendChild(t);
-        }
+        for(let i=0; i<16; i++) { const t = document.createElement('div'); t.className = 'px-tile'; grid.appendChild(t); }
         window.pxState.maxSteps = 16;
     } else {
-        grid.style.display = 'none';
-        canvas.style.display = 'block';
-        window.pxState.maxSteps = 20;
+        grid.style.display = 'none'; canvas.style.display = 'block'; window.pxState.maxSteps = 20;
     }
 
-    // Buttons generieren (nutzt targetItem.name)
     window.pxGenerateOptions(window.pxState.currentAnimal);
-
     clearInterval(window.pxState.timer);
     window.pxRenderFrame(); 
-    // Hier nutzen wir 800ms als Standard, aber deine "Speed Fixes" in RenderFrame greifen trotzdem!
     window.pxState.timer = setInterval(window.pxRenderFrame, 800); 
 };
 
-// 3. Render Loop (Angepasste Geschwindigkeit)
+// 4. Render Loop (Optimierte Geschwindigkeit)
 window.pxRenderFrame = function() {
     const s = window.pxState;
     const canvas = document.getElementById('pxCanvas');
@@ -11180,56 +11169,27 @@ window.pxRenderFrame = function() {
     const w = canvas.width; const h = canvas.height;
 
     s.step++;
-    
-    // Game Over / Fertig Check
-    if (s.step > s.maxSteps) { 
-        clearInterval(s.timer); 
-        window.pxDrawContain(ctx, s.imgObj, w, h); 
-        return; 
-    }
+    if (s.step > s.maxSteps) { clearInterval(s.timer); window.pxDrawContain(ctx, s.imgObj, w, h); return; }
 
-    // --- MODUS: NEBEL (BLUR) ---
     if (s.mode === 'blur') {
-        // EINSTELLUNG: Geschwindigkeit
-        // "60" ist die Start-Unschärfe (höher = unschärfer)
-        // "* 5" ist die Geschwindigkeit (höher = schneller klar)
-        // Vorher war es "* 2". Jetzt geht es mehr als doppelt so schnell weg.
         const blurAmount = Math.max(0, 60 - (s.step * 5));
-        
-        ctx.clearRect(0,0,w,h);
-        ctx.filter = `blur(${blurAmount}px)`;
-        window.pxDrawContain(ctx, s.imgObj, w, h);
-        ctx.filter = 'none';
+        ctx.clearRect(0,0,w,h); ctx.filter = `blur(${blurAmount}px)`;
+        window.pxDrawContain(ctx, s.imgObj, w, h); ctx.filter = 'none';
     } 
-    
-    // --- MODUS: 8-BIT (PIXEL) ---
     else if (s.mode === 'pixel') {
         const percent = s.step / s.maxSteps; 
-        
-        // EINSTELLUNG: Geschwindigkeit
-        // Wir nutzen "Math.pow(percent, 2)" statt nur "percent".
-        // Das sorgt dafür, dass die Pixel am Anfang langsamer kleiner werden 
-        // und erst zum Schluss schnell scharf werden.
         const scale = 0.02 + (Math.pow(percent, 2) * 0.98); 
-        
-        ctx.imageSmoothingEnabled = false; 
-        ctx.clearRect(0,0,w,h);
-        
+        ctx.imageSmoothingEnabled = false; ctx.clearRect(0,0,w,h);
         const tmpCanvas = document.createElement('canvas');
         tmpCanvas.width = Math.max(4, Math.floor(w * scale)); 
         tmpCanvas.height = Math.max(4, Math.floor(h * scale));
         const tCtx = tmpCanvas.getContext('2d');
         window.pxDrawContain(tCtx, s.imgObj, tmpCanvas.width, tmpCanvas.height);
-        
         ctx.drawImage(tmpCanvas, 0, 0, tmpCanvas.width, tmpCanvas.height, 0, 0, w, h);
     }
-    
-    // --- MODUS: KACHELN ---
     else if (s.mode === 'tiles') {
         const remaining = Array.from(document.querySelectorAll('.px-tile:not(.hidden)'));
-        if (remaining.length > 0) {
-            remaining[Math.floor(Math.random() * remaining.length)].classList.add('hidden');
-        }
+        if (remaining.length > 0) remaining[Math.floor(Math.random() * remaining.length)].classList.add('hidden');
     }
 };
 
@@ -11245,11 +11205,9 @@ window.pxGenerateOptions = function(target) {
     box.innerHTML = '';
     const wrongs = animals.filter(a => a.name !== target.name).sort(() => 0.5 - Math.random()).slice(0, 3);
     const opts = [target, ...wrongs].sort(() => 0.5 - Math.random());
-    
     opts.forEach(a => {
         const btn = document.createElement('div');
-        btn.className = 'px-btn';
-        btn.innerText = a.name;
+        btn.className = 'px-btn'; btn.innerText = a.name;
         btn.onclick = () => window.pxCheck(btn, a.name === target.name);
         box.appendChild(btn);
     });
@@ -11259,19 +11217,17 @@ window.pxCheck = function(btn, isCorrect) {
     if (document.getElementById('pxOptions').style.pointerEvents === 'none') return;
     const s = window.pxState;
     clearInterval(s.timer); 
-    
     const canvas = document.getElementById('pxCanvas');
     const ctx = canvas.getContext('2d');
     ctx.filter = 'none'; ctx.imageSmoothingEnabled = true;
     window.pxDrawContain(ctx, s.imgObj, canvas.width, canvas.height);
     document.querySelectorAll('.px-tile').forEach(t => t.classList.add('hidden'));
     
-    document.getElementById('pxOptions').style.pointerEvents = 'none'; // Lock
+    document.getElementById('pxOptions').style.pointerEvents = 'none'; 
 
     if (isCorrect) {
         btn.classList.add('correct');
         if(typeof playSound === 'function') playSound('pop');
-        // XP Logic
         const pts = Math.max(10, 100 - (s.step * 4));
         quizXP += pts; localStorage.setItem('quizXP', quizXP);
         setTimeout(() => { 
