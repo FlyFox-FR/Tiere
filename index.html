@@ -5446,6 +5446,16 @@ Klicke auf ein Tier in der Liste oder auf eine Kachel um das Tier zu bearbeiten 
             </div>
         </div>
 
+<!-- FOTO RÄTSEL KACHEL (Text Farbe Fix) -->
+<div class="quiz-mode-card" onclick="window.openPixelQuiz()" style="border-color: #bd93f9;">
+    <div class="qmc-icon">📸</div>
+    <div class="qmc-info">
+        <!-- HIER GEÄNDERT: Kein style="color:..." mehr -->
+        <span class="qmc-title">Foto-Rätsel</span>
+        <span class="qmc-desc">Erkennst du deine eigenen Fotos?</span>
+    </div>
+</div>
+
         <!-- Modus 3 -->
         <div class="quiz-mode-card" onclick="selectQuizMode('mixed')">
             <div class="qmc-icon">🔀</div>
@@ -10948,6 +10958,271 @@ setTimeout(() => { startTutorial(); }, 1500);
 loadGlobals(); render(); initSwipeGestures();
 
 
+</script>
+<script>
+/* === ULTIMATE PIXEL GAME ENGINE (DYNAMIC INJECTION) === */
+
+// 1. STYLES (Sofort laden)
+(function injectPixelStyles() {
+    const style = document.createElement('style');
+    style.innerHTML = `
+        #pixelModal { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.85); z-index: 20000; 
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); 
+        }
+        .px-content { 
+            background: #1a1a1a; color: white; border: 1px solid #444; 
+            border-radius: 16px; padding: 20px; width: 90%; max-width: 500px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); 
+        }
+        .px-game-area {
+            position: relative; width: 100%; height: 280px; background: #000; 
+            border-radius: 12px; overflow: hidden; margin: 15px 0; box-shadow: 0 0 20px rgba(189, 147, 249, 0.2);
+        }
+        .px-tile { background: #111; border: 1px solid #222; transition: opacity 0.2s, transform 0.2s; }
+        .px-tile.hidden { opacity: 0; transform: scale(0); }
+        .px-btn { 
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); 
+            padding: 12px; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; transition: 0.1s; font-size: 13px;
+        }
+        .px-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.2); }
+        .px-btn.correct { background: #4cd137 !important; color: #000; border-color: #4cd137; }
+        .px-btn.wrong { background: #ff4757 !important; opacity: 0.4; }
+        
+        .px-mode-card {
+            cursor: pointer; text-align: center; padding: 10px; border-radius: 10px; transition: background 0.2s;
+        }
+        .px-mode-card:active { background: rgba(255,255,255,0.1); }
+        .px-mode-icon {
+            font-size: 28px; width: 50px; height: 50px; background: rgba(255,255,255,0.1);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 5px auto;
+        }
+    `;
+    document.head.appendChild(style);
+})();
+
+// Global State
+window.pxState = { timer: null, step: 0, maxSteps: 20, currentAnimal: null, mode: 'blur', imgObj: null };
+
+// 2. ÖFFNEN & BAUEN
+window.openPixelQuiz = function() {
+    console.log("Starte Pixel-Jäger...");
+
+    // Check: Haben wir genug Bilder?
+    let candidates = [];
+    if(typeof animals !== 'undefined') {
+        animals.forEach((a, i) => { if(a.imageId || a.lastNoteImageId) candidates.push(i); });
+    }
+
+    if (candidates.length < 3) {
+        alert("Zu wenig Fotos!\n\nDu brauchst mindestens 3 Tiere mit eigenen Bildern (Profilbild oder Notiz-Foto), um dieses Spiel zu spielen.");
+        return;
+    }
+
+    // Modal bauen (falls nicht da)
+    let modal = document.getElementById('pixelModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'pixelModal';
+        modal.innerHTML = `
+            <div class="px-content">
+                <div style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:20px; font-weight:bold;" onclick="document.getElementById('pixelModal').style.display='none'">✕</div>
+                
+                <div style="margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:10px;">
+                    <span style="font-size:24px">📸</span> 
+                    <span style="color:#bd93f9; font-weight:900; letter-spacing:1px; text-transform:uppercase;">Pixel Jäger</span>
+                </div>
+
+                <div class="px-game-area">
+                    <canvas id="pxCanvas" width="600" height="400" style="width:100%; height:100%; object-fit:contain; display:none;"></canvas>
+                    <div id="pxTileGrid" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none; grid-template-columns:repeat(4, 1fr); grid-template-rows:repeat(4, 1fr);"></div>
+                    
+                    <!-- Start Overlay -->
+                    <div id="pxOverlay" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:10;">
+                        <p style="margin-bottom:20px; font-weight:bold;">Wähle Modus:</p>
+                        <div style="display:flex; gap:15px;">
+                            <div class="px-mode-card" onclick="window.startPixelGame('blur')">
+                                <div class="px-mode-icon">🌫️</div><div>Nebel</div>
+                            </div>
+                            <div class="px-mode-card" onclick="window.startPixelGame('pixel')">
+                                <div class="px-mode-icon">👾</div><div>8-Bit</div>
+                            </div>
+                            <div class="px-mode-card" onclick="window.startPixelGame('tiles')">
+                                <div class="px-mode-icon">🧱</div><div>Kacheln</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="pxOptions" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;"></div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    // Reset
+    document.getElementById('pxOverlay').style.display = 'flex';
+    document.getElementById('pxCanvas').style.display = 'none';
+    document.getElementById('pxTileGrid').style.display = 'none';
+    document.getElementById('pxOptions').innerHTML = '';
+    
+    // Anzeigen
+    modal.style.display = 'flex';
+};
+
+// 3. SPIEL LOGIK
+window.startPixelGame = async function(mode) {
+    // Kandidaten erneut laden (sicher ist sicher)
+    let candidates = [];
+    animals.forEach((a, i) => { if(a.imageId || a.lastNoteImageId) candidates.push(i); });
+
+    window.pxState.mode = mode;
+    window.pxState.step = 0;
+    
+    const targetIdx = candidates[Math.floor(Math.random() * candidates.length)];
+    const targetAnimal = animals[targetIdx];
+    window.pxState.currentAnimal = targetAnimal;
+
+    // Bild ID finden (Prio: Profilbild > Notizbild)
+    const imgId = targetAnimal.imageId || targetAnimal.lastNoteImageId;
+
+    try {
+        const src = await dbGetImg(imgId);
+        if(!src) throw new Error("Bild leer");
+        
+        const img = new Image();
+        img.src = src;
+        await new Promise(r => img.onload = r);
+        window.pxState.imgObj = img;
+    } catch(e) {
+        alert("Bild konnte nicht geladen werden."); 
+        return;
+    }
+
+    // UI Setup
+    document.getElementById('pxOverlay').style.display = 'none';
+    const canvas = document.getElementById('pxCanvas');
+    const grid = document.getElementById('pxTileGrid');
+    canvas.width = 600; canvas.height = 400; 
+    
+    if (mode === 'tiles') {
+        canvas.style.display = 'block';
+        grid.style.display = 'grid';
+        grid.innerHTML = '';
+        const ctx = canvas.getContext('2d');
+        window.pxDrawContain(ctx, window.pxState.imgObj, canvas.width, canvas.height);
+        
+        for(let i=0; i<16; i++) {
+            const t = document.createElement('div');
+            t.className = 'px-tile';
+            grid.appendChild(t);
+        }
+        window.pxState.maxSteps = 16;
+    } else {
+        grid.style.display = 'none';
+        canvas.style.display = 'block';
+        window.pxState.maxSteps = 20;
+    }
+
+    window.pxGenerateOptions(targetAnimal);
+
+    clearInterval(window.pxState.timer);
+    window.pxRenderFrame(); 
+    window.pxState.timer = setInterval(window.pxRenderFrame, 800); 
+};
+
+window.pxRenderFrame = function() {
+    const s = window.pxState;
+    const canvas = document.getElementById('pxCanvas');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width; const h = canvas.height;
+
+    s.step++;
+    
+    if (s.step > s.maxSteps) { clearInterval(s.timer); window.pxDrawContain(ctx, s.imgObj, w, h); return; }
+
+    if (s.mode === 'blur') {
+        const blurAmount = Math.max(0, 40 - (s.step * 2));
+        ctx.clearRect(0,0,w,h);
+        ctx.filter = `blur(${blurAmount}px)`;
+        window.pxDrawContain(ctx, s.imgObj, w, h);
+        ctx.filter = 'none';
+    } 
+    else if (s.mode === 'pixel') {
+        const percent = s.step / s.maxSteps; 
+        const scale = 0.02 + (percent * 0.98); 
+        ctx.imageSmoothingEnabled = false; ctx.clearRect(0,0,w,h);
+        
+        const tmpCanvas = document.createElement('canvas');
+        tmpCanvas.width = Math.max(4, Math.floor(w * scale)); 
+        tmpCanvas.height = Math.max(4, Math.floor(h * scale));
+        const tCtx = tmpCanvas.getContext('2d');
+        window.pxDrawContain(tCtx, s.imgObj, tmpCanvas.width, tmpCanvas.height);
+        
+        ctx.drawImage(tmpCanvas, 0, 0, tmpCanvas.width, tmpCanvas.height, 0, 0, w, h);
+    }
+    else if (s.mode === 'tiles') {
+        const remaining = Array.from(document.querySelectorAll('.px-tile:not(.hidden)'));
+        if (remaining.length > 0) {
+            remaining[Math.floor(Math.random() * remaining.length)].classList.add('hidden');
+        }
+    }
+};
+
+window.pxDrawContain = function(ctx, img, cw, ch) {
+    const scale = Math.min(cw / img.width, ch / img.height);
+    const x = (cw / 2) - (img.width / 2) * scale;
+    const y = (ch / 2) - (img.height / 2) * scale;
+    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+};
+
+window.pxGenerateOptions = function(target) {
+    const box = document.getElementById('pxOptions');
+    box.innerHTML = '';
+    const wrongs = animals.filter(a => a.name !== target.name).sort(() => 0.5 - Math.random()).slice(0, 3);
+    const opts = [target, ...wrongs].sort(() => 0.5 - Math.random());
+    
+    opts.forEach(a => {
+        const btn = document.createElement('div');
+        btn.className = 'px-btn';
+        btn.innerText = a.name;
+        btn.onclick = () => window.pxCheck(btn, a.name === target.name);
+        box.appendChild(btn);
+    });
+};
+
+window.pxCheck = function(btn, isCorrect) {
+    if (document.getElementById('pxOptions').style.pointerEvents === 'none') return;
+    const s = window.pxState;
+    clearInterval(s.timer); 
+    
+    const canvas = document.getElementById('pxCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.filter = 'none'; ctx.imageSmoothingEnabled = true;
+    window.pxDrawContain(ctx, s.imgObj, canvas.width, canvas.height);
+    document.querySelectorAll('.px-tile').forEach(t => t.classList.add('hidden'));
+    
+    document.getElementById('pxOptions').style.pointerEvents = 'none'; // Lock
+
+    if (isCorrect) {
+        btn.classList.add('correct');
+        if(typeof playSound === 'function') playSound('pop');
+        // XP Logic
+        const pts = Math.max(10, 100 - (s.step * 4));
+        quizXP += pts; localStorage.setItem('quizXP', quizXP);
+        setTimeout(() => { 
+            document.getElementById('pxOptions').style.pointerEvents = 'auto';
+            document.getElementById('pxOverlay').style.display = 'flex'; 
+        }, 1500);
+    } else {
+        btn.classList.add('wrong');
+        if(navigator.vibrate) navigator.vibrate(200);
+        setTimeout(() => { 
+            document.getElementById('pxOptions').style.pointerEvents = 'auto';
+            document.getElementById('pxOverlay').style.display = 'flex'; 
+        }, 2000);
+    }
+};
 </script>
 </body>
 </html>
