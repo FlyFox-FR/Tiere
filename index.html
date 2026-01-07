@@ -4531,7 +4531,60 @@ body.dark .deck-card {
     z-index: 5;
 }
 
+/* === FIX: FAKTEN DECK MANAGER UI === */
+.dm-grid {
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px;
+    margin-top: 10px; 
+    margin-bottom: 20px;
+    max-height: 350px; 
+    overflow-y: auto;
+    padding: 5px;
+}
 
+.dm-item {
+    position: relative !important; /* WICHTIG: Überschreibt absolute Positionierung */
+    background: var(--card-solid) !important;
+    border: 1px solid var(--btn) !important;
+    border-radius: 16px !important; 
+    padding: 15px !important;
+    display: flex !important; 
+    align-items: center !important; 
+    justify-content: space-between !important;
+    gap: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    transform: none !important; /* Verhindert Rotation vom Memory-Deck */
+}
+
+.dm-info { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    text-align: left;
+}
+
+.dm-title { 
+    font-weight: 800; 
+    font-size: 14px; 
+    color: var(--text);
+    margin-bottom: 2px;
+}
+
+.dm-meta { 
+    font-size: 11px; 
+    opacity: 0.6; 
+    color: var(--sub);
+}
+
+/* Der Switch im Manager */
+.dm-switch { 
+    position: relative; 
+    display: inline-block; 
+    width: 44px; 
+    height: 24px; 
+    flex-shrink: 0;
+}
 </style>
 </head>
 <body>
@@ -5495,35 +5548,29 @@ Klicke auf ein Tier in der Liste oder auf eine Kachel um das Tier zu bearbeiten 
     
     <h3>🗂️ Fakten-Decks</h3>
     <p style="opacity:0.7; font-size:13px; margin-bottom:15px;">
-        Verwalte deine Wissens-Quellen. Importiere eigene JSON-Dateien oder deaktiviere Themen.
+        Wähle deine Wissens-Quellen oder importiere eigene JSON-Dateien.
     </p>
 
     <!-- Liste der Decks -->
-    <div id="deckListContainer" class="deck-grid">
+    <div id="deckListContainer" class="dm-grid">
         <!-- Wird per JS gefüllt -->
     </div>
 
-  <!-- Import Area -->
+    <!-- Import & Anleitung -->
     <div style="margin-top:15px; padding-top:15px; border-top:1px solid var(--btn);">
-        
-        <!-- Button -->
-        <button onclick="document.getElementById('deckImportInput').click()" style="width:100%; background:var(--accent); color:#fff; padding:15px; border-radius:16px; font-weight:bold; box-shadow:0 4px 10px var(--accent-glow);">
+        <button onclick="document.getElementById('deckImportInput').click()" style="width:100%; background:var(--accent); color:#fff; padding:15px; border-radius:16px; font-weight:bold;">
             📥 JSON Deck importieren
         </button>
         <input type="file" id="deckImportInput" accept=".json" hidden onchange="safeRun(importFactDeck, this)">
         
-        <!-- ChatGPT Anleitung -->
         <div style="margin-top:20px; background:var(--bg); padding:15px; border-radius:12px;">
-            <p style="margin:0 0 10px 0; font-size:12px; font-weight:bold; opacity:0.7;">🤖 Eigene Decks mit ChatGPT erstellen:</p>
-            
-            <!-- Kopierbarer Bereich -->
-            <textarea id="deckPromptOutput" readonly style="width:100%; height:80px; font-family:monospace; font-size:11px; padding:10px; border:1px solid var(--btn); border-radius:8px; resize:none; background:var(--card-solid); color:var(--text);"></textarea>
-            
-            <p style="font-size:10px; opacity:0.5; margin-top:5px; text-align:center;">
-                Kopiere diesen Text, füge dein Thema ein und sende es an die KI. <br>Die Antwort (JSON) speicherst du als .json Datei.
-            </p>
+            <p style="margin:0 0 10px 0; font-size:12px; font-weight:bold; opacity:0.7;">🤖 Anleitung für ChatGPT:</p>
+            <textarea id="deckPromptOutput" readonly style="width:100%; height:80px; font-family:monospace; font-size:11px; padding:10px; border-radius:8px; resize:none; background:var(--card-solid); color:var(--text);"></textarea>
         </div>
     </div>
+  </div>
+</div>
+
 
 <!-- LEVEL UP OVERLAY (Konzept 1: Trophäe) -->
 <div id="levelUpOverlay">
@@ -10376,20 +10423,21 @@ async function openDeckManager() {
 
 function renderDeckList(decks) {
     const list = document.getElementById('deckListContainer');
+    if(!list) return;
     list.innerHTML = '';
 
     // 1. Built-in Deck
     const isBuiltInActive = activeDeckIDs.includes('builtin');
     const div = document.createElement('div');
-    div.className = `deck-card ${isBuiltInActive?'':'disabled'}`;
+    div.className = `dm-item ${isBuiltInActive ? '' : 'disabled'}`;
     div.innerHTML = `
-        <div class="deck-info">
-            <span class="deck-title">📦 Standard Bibliothek</span>
-            <span class="deck-meta">Die integrierten Fakten der App.</span>
+        <div class="dm-info">
+            <span class="dm-title">📦 Standard Bibliothek</span>
+            <span class="dm-meta">Die integrierten Fakten der App.</span>
         </div>
-        <label class="deck-switch">
-            <input type="checkbox" ${isBuiltInActive?'checked':''} onchange="toggleDeck('builtin')">
-            <span class="deck-slider"></span>
+        <label class="dm-switch switch">
+            <input type="checkbox" ${isBuiltInActive ? 'checked' : ''} onchange="toggleDeck('builtin')">
+            <span class="slider"></span>
         </label>
     `;
     list.appendChild(div);
@@ -10398,17 +10446,17 @@ function renderDeckList(decks) {
     decks.forEach(d => {
         const isActive = activeDeckIDs.includes(d.id);
         const el = document.createElement('div');
-        el.className = `deck-card ${isActive?'':'disabled'}`;
+        el.className = `dm-item ${isActive ? '' : 'disabled'}`;
         el.innerHTML = `
-            <div class="deck-info">
-                <span class="deck-title">${d.name}</span>
-                <span class="deck-meta">${d.facts.length} Fakten • ${d.description || 'Importiert'}</span>
+            <div class="dm-info">
+                <span class="dm-title">${d.name}</span>
+                <span class="dm-meta">${d.facts.length} Fakten • Importiert</span>
             </div>
-            <div class="deck-actions">
-                <div class="deck-delete" onclick="deleteDeck('${d.id}')">🗑️</div>
-                <label class="deck-switch">
-                    <input type="checkbox" ${isActive?'checked':''} onchange="toggleDeck('${d.id}')">
-                    <span class="deck-slider"></span>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="color:var(--err-text); cursor:pointer; padding:5px;" onclick="deleteDeck('${d.id}')">🗑️</div>
+                <label class="dm-switch switch">
+                    <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleDeck('${d.id}')">
+                    <span class="slider"></span>
                 </label>
             </div>
         `;
