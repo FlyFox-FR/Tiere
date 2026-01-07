@@ -11924,14 +11924,26 @@ function openAddSyncModal() {
     document.getElementById('syncAddModal').style.display = 'flex'; // Flex für Zentrierung
 }
 
+/* === FIX: Topic Länge korrigiert (Max 64 Zeichen total) === */
 function generateRandomTopic() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
-    let result = 'tierticker-sync-';
-    // Länge zwischen 40 und 60
-    const len = 40 + Math.floor(Math.random() * 20); 
+    
+    // Präfix ist 16 Zeichen lang
+    let result = 'tierticker-sync-'; 
+    
+    // Ntfy erlaubt max 64 Zeichen.
+    // 64 - 16 (Präfix) = 48 Zeichen Platz maximal.
+    // Wir nehmen sicherheitshalber 32 bis 45 Zeichen Zufall.
+    const len = 32 + Math.floor(Math.random() * 14); 
+    
     const randomValues = new Uint8Array(len);
     crypto.getRandomValues(randomValues);
-    for (let i = 0; i < len; i++) result += chars[randomValues[i] % chars.length];
+    
+    for (let i = 0; i < len; i++) {
+        result += chars[randomValues[i] % chars.length];
+    }
+    
+    // Das Ergebnis in das Input-Feld schreiben
     document.getElementById('newSyncTopic').value = result;
 }
 
