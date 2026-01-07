@@ -5021,7 +5021,7 @@ body.dark .deck-card {
 
 
   <!-- BUBBLE 3: DATEN (Akkordeon) -->
-  <div class="card-section">
+  <div id="backupCard" class="card-section">
     <!-- ONCLICK JETZT NUR HIER IM HEADER -->
     <div class="accordion-header" onclick="toggleAccordion(this)">
         <h3>💾 Daten & Sicherung</h3>
@@ -9868,35 +9868,48 @@ const tourSteps = [
     },
     { 
         view: 'view-list', 
-        target: '.nav-main-fab', // Das mittlere Plus
-        title: "2. Schnell-Erfassung ⚡", 
-        text: "Der wichtigste Knopf: Hier legst du neue Sichtungen an – jetzt auch direkt mit Foto!" 
+        target: '.tag-story-item', // Der Story Ring
+        title: "2. Story Highlights ⭕", 
+        text: "Ganz neu: Hier oben siehst du zufällige Erinnerungen und Fotos aus deiner Sammlung. Tippe drauf für einen Rückblick!" 
     },
     { 
         view: 'view-list', 
-        target: 'button[onclick="openRangerChat()"]', // Der Funk Button
+        target: 'div[onclick="openRangerChat()"]', // Der Funk Chip
         title: "3. Ranger Funk 📻", 
-        text: "Neu! Kommuniziere mit Freunden. Erstelle Kanäle und teile deine Entdeckungen live." 
+        text: "Im Ranger Funk kannst Du über einen geheimen Chat reden. Tausche dich live mit Freunden aus, teile Funde und Bilder." 
+    },
+
+    { 
+        view: 'view-list', 
+        target: '.nav-main-fab', // Das mittlere Plus
+        title: "4. Schnell-Erfassung ⚡", 
+        text: "Der wichtigste Knopf: Hier legst du neue Sichtungen an – jetzt auch direkt mit Foto!" 
     },
     { 
         view: 'view-stats', 
         target: '#factWidget', 
-        title: "4. Wissen & Quiz 🧠", 
+        title: "5. Wissen & Quiz 🧠", 
         text: "Täglich neue Fakten. Klicke auf die <b>drei Punkte (⋮)</b>, um dein Wissen im Quiz zu testen und XP zu sammeln!" 
     },
     { 
         view: 'view-admin', 
         target: '.sync-card', // Die neue Sync Karte
-        title: "5. Cloud Sync ☁️", 
+        title: "6. Cloud Sync ☁️", 
         text: "Das Highlight: Synchronisiere deine Daten verschlüsselt zwischen Handy, Tablet und PC.<br>Ohne Anmeldung, sicher und einfach." 
     },
     { 
         view: 'view-admin', 
-        target: '.admin-tools-grid', 
-        title: "6. Fertig! 🎉", 
+        target: '#backupCard', // Die Karte mit der ID von Schritt 1
+        title: "7. Lokales Backup 💾", 
+        text: "<b>WICHTIG!</b> Deine Daten sind NUR auf diesem Gerät.<br>Bitte erstelle hier regelmäßig ein Backup, damit bei Verlust nichts weg ist!" 
+    },
+    { 
+        view: 'view-admin', 
+        title: "8. Fertig! 🎉", 
         text: "Du bist bereit. Viel Spaß beim Entdecken, Sammeln und Leveln!" 
     }
 ];
+
 
 function startTutorial(force = false) {
     if (!force && localStorage.getItem('tutorial_v3_done') === 'true') return;
