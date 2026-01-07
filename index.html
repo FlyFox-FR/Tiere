@@ -10509,8 +10509,7 @@ async function handleNoteImgUpload(input) {
 }
 
 // 3. Share Funktion (Bleibt gleich, muss aber im Block sein)
-/* === SINGLE NOTE SHARE GENERATOR (PROPORTIONAL FIX) === */
-/* === SINGLE NOTE SHARE GENERATOR (PROFI STYLE) === */
+/* === SINGLE NOTE SHARE GENERATOR (MIT EIGENEM TITEL) === */
 async function shareSingleNote() {
     const dateEl = document.getElementById('nvDate');
     const locEl = document.getElementById('nvLoc');
@@ -10519,15 +10518,26 @@ async function shareSingleNote() {
 
     if(!dateEl) return;
 
-    // 1. Daten holen
+    // 1. Standard-Titel ermitteln
+    let defaultTitle = "Tier Sichtung";
+    if (typeof detailAnimalIdx !== 'undefined' && animals[detailAnimalIdx]) {
+        defaultTitle = animals[detailAnimalIdx].name;
+    }
+
+    // --- NEU: TITEL ABFRAGE ---
+    // Ein Eingabefenster öffnet sich vor dem Generieren
+    const userTitle = prompt("Titel für die Share-Card eingeben:", defaultTitle);
+
+    // Wenn der User "Abbrechen" drückt, stoppen wir hier
+    if (userTitle === null) return;
+
+    // Den Titel setzen (Eingabe oder Standard, falls leer gelassen)
+    const titleText = userTitle.trim() || defaultTitle;
+    
+    // Daten auslesen
     const dateTxt = dateEl.innerText;
     const locTxt = locEl.innerText.replace('📍 ', '');
     const noteTxt = noteEl.innerText;
-    
-    let titleText = "Tier Sichtung";
-    if (typeof detailAnimalIdx !== 'undefined' && animals[detailAnimalIdx]) {
-        titleText = animals[detailAnimalIdx].name;
-    }
 
     showErrorToast("🎨 Designe Karte...", true);
 
@@ -10537,8 +10547,8 @@ async function shareSingleNote() {
     let imgDrawH = 0;
     
     // Layout-Konstanten
-    const cardW = 900; // Höhere Auflösung
-    const margin = 50; // Dickerer Rand (Polaroid Style)
+    const cardW = 900; 
+    const margin = 50; 
     const contentW = cardW - (margin * 2);
     
     if (hasImg) {
@@ -10559,7 +10569,6 @@ async function shareSingleNote() {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
-    // Fonts (Etwas edler)
     const titleFont = "900 60px 'Segoe UI', Roboto, sans-serif";
     const metaFont = "700 26px monospace";
     const noteFont = "italic 400 32px serif";
@@ -10588,9 +10597,9 @@ async function shareSingleNote() {
     }
 
     // 4. Gesamthöhe (Mit mehr "Luft")
-    const spacingTitle = 60; // Mehr Platz nach Bild
+    const spacingTitle = 60; 
     const spacingMeta = 30;
-    const spacingNote = 60; // Mehr Platz vor Notiz
+    const spacingNote = 60; 
     const spacingFooter = 80;
     
     const totalHeight = margin + imgDrawH + spacingTitle + 60 + spacingMeta + 30 + spacingNote + noteHeight + spacingFooter + margin;
@@ -10599,7 +10608,7 @@ async function shareSingleNote() {
     canvas.width = cardW;
     canvas.height = totalHeight;
 
-    // Background (Subtile Papier-Textur via Farbe)
+    // Background
     const grad = ctx.createLinearGradient(0, 0, cardW, totalHeight);
     grad.addColorStop(0, '#f8f9fa'); 
     grad.addColorStop(1, '#e9ecef'); 
@@ -10610,7 +10619,6 @@ async function shareSingleNote() {
     ctx.fillStyle = "#ffffff";
     ctx.shadowColor = "rgba(0,0,0,0.15)"; ctx.shadowBlur = 40; ctx.shadowOffsetY = 20;
     
-    // Helper für runde Ecken
     function roundRect(x, y, w, h, r) {
         ctx.beginPath();
         ctx.moveTo(x + r, y);
@@ -10621,12 +10629,12 @@ async function shareSingleNote() {
         ctx.closePath();
     }
 
-    roundRect(margin, margin, contentW, totalHeight - (margin*2), 20); // Karte abrunden
+    roundRect(margin, margin, contentW, totalHeight - (margin*2), 20); 
     ctx.fill();
-    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; // Reset Shadow
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; 
 
     // === INHALT ===
-    let currentY = margin + 30; // Padding innen
+    let currentY = margin + 30; 
 
     // A) BILD
     if (imgObj) {
@@ -10634,31 +10642,27 @@ async function shareSingleNote() {
         const imgY = currentY;
         const imgW = contentW - 60;
         const imgH = imgDrawH;
-        const imgRadius = 16; // Schöne runde Ecken fürs Bild
+        const imgRadius = 16;
 
-        // Bild-Schatten
         ctx.save();
         ctx.shadowColor = "rgba(0,0,0,0.2)"; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10;
-        ctx.fillStyle = "#000"; // Dummy für Schattenwurf
+        ctx.fillStyle = "#000"; 
         roundRect(imgX, imgY, imgW, imgH, imgRadius);
         ctx.fill(); 
         ctx.restore();
 
-        // Bild-Clipping & Drawing
         ctx.save();
         roundRect(imgX, imgY, imgW, imgH, imgRadius);
         ctx.clip();
         ctx.drawImage(imgObj, imgX, imgY, imgW, imgH);
         ctx.restore();
         
-        // Feiner innerer Rand (Overlay) für Definition
         ctx.strokeStyle = "rgba(0,0,0,0.05)"; ctx.lineWidth = 2;
         roundRect(imgX, imgY, imgW, imgH, imgRadius);
         ctx.stroke();
 
         currentY += imgH + spacingTitle;
     } else {
-        // Fallback Icon
         currentY += 60;
         ctx.font = "120px serif"; ctx.textAlign = "center"; ctx.fillStyle = "#333";
         ctx.fillText("🐾", cardW/2, currentY + 80);
@@ -10668,27 +10672,27 @@ async function shareSingleNote() {
     // B) TEXTE
     ctx.textAlign = "center";
     
-    // Titel
+    // Titel (JETZT DER BENUTZERDEFINIERTE)
     ctx.fillStyle = "#1a1a1a";
     ctx.font = titleFont;
     ctx.fillText(titleText, cardW/2, currentY);
     currentY += 50;
 
     // Meta (Datum/Ort)
-    ctx.fillStyle = "#2196f3"; // Accent Farbe für Meta
+    ctx.fillStyle = "#2196f3"; 
     ctx.font = metaFont;
     const metaStr = (dateTxt + " • " + (locTxt || 'Unbekannt')).toUpperCase();
     ctx.fillText(metaStr, cardW/2, currentY);
     currentY += 40;
 
-    // Trennlinie (Separator)
+    // Trennlinie
     ctx.strokeStyle = "rgba(0,0,0,0.1)"; ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(cardW/2 - 50, currentY);
     ctx.lineTo(cardW/2 + 50, currentY);
     ctx.stroke();
     
-    currentY += 50; // Abstand nach Linie
+    currentY += 50; 
 
     // Notiz
     if(lines.length > 0) {
@@ -10708,11 +10712,17 @@ async function shareSingleNote() {
 
     // 6. EXPORT
     canvas.toBlob(async (blob) => {
-        const file = new File([blob], `sichtung-${titleText}.png`, { type: "image/png" });
+        // Dateiname auch basierend auf Titel
+        const safeFilename = titleText.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const file = new File([blob], `sichtung-${safeFilename}.png`, { type: "image/png" });
+        
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try { await navigator.share({ files: [file], title: 'Sichtung', text: `Schau mal: ${titleText} 🐾` }); } catch (err) {}
+            try { await navigator.share({ files: [file], title: titleText, text: `Schau mal: ${titleText} 🐾` }); } catch (err) {}
         } else {
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `sichtung-${titleText}.png`; a.click(); 
+            const a = document.createElement('a'); 
+            a.href = URL.createObjectURL(blob); 
+            a.download = `sichtung-${safeFilename}.png`; 
+            a.click(); 
             showErrorToast("Bild gespeichert!", true);
         }
     });
