@@ -9941,10 +9941,12 @@ function processStep(index) {
 }
 
 // FIX 2: Bubble Positionierung (Sicherheitsabstand unten)
+/* === FIX: ONBOARDING POSITIONING (Smart Clamp) === */
 function showStepVisuals(step, index) {
     const bubble = document.getElementById('onboardingBubble');
     const overlay = document.getElementById('onboardingOverlay');
     
+    // 1. Text und Buttons setzen
     document.getElementById('tourTitle').innerText = step.title;
     document.getElementById('tourText').innerHTML = step.text;
     const btn = document.getElementById('tourNextBtn');
@@ -9953,47 +9955,78 @@ function showStepVisuals(step, index) {
     else if (index === 0) btn.innerText = "Starten ➔";
     else btn.innerText = "Weiter";
 
+    // 2. Highlights zurücksetzen
     document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
 
     if (step.target) {
         const el = document.querySelector(step.target);
+        // Prüfen, ob das Element existiert und sichtbar ist
         if (el && el.offsetParent !== null) {
+            
+            // Hinscrollen (Mittig, damit wir Platz haben)
             el.scrollIntoView({behavior: 'smooth', block: 'center'});
             el.classList.add('tour-highlight');
-            overlay.style.background = 'transparent';
+            overlay.style.background = 'transparent'; // Fokus-Effekt durch CSS Shadow
 
+            // --- SMARTE POSITIONIERUNG ---
             const rect = el.getBoundingClientRect();
-            bubble.style.left = "50%"; bubble.style.transform = "translateX(-50%)";
-
-            // Höhen-Check
+            const bubbleH = bubble.offsetHeight || 180; // Geschätzte Höhe falls noch nicht gerendert
             const windowH = window.innerHeight;
+            const gap = 20; // Abstand zum Element
+
+            // Standard: Zentriert über dem Element
+            bubble.style.left = "50%"; 
+            bubble.style.transform = "translateX(-50%)";
+            bubble.style.bottom = "auto"; 
+            bubble.style.top = "auto";
+
+            // ENTSCHEIDUNG: Drüber oder Drunter?
             
-            // Wenn Element oben ist (z.B. Widget) -> Bubble drunter
-            if (rect.top < windowH / 2) {
-                let topPos = rect.bottom + 15;
-                
-                // NOTBREMSE: Wenn Bubble zu weit unten landen würde (z.B. >80% der Höhe)
-                // Schieben wir sie hart nach oben (z.B. auf 60% der Höhe oder fester Wert)
-                // Damit der "Weiter" Button nicht verdeckt wird.
-                if (topPos > windowH - 220) { 
-                    topPos = windowH - 230; // Erzwinge Platz unten
+            // Platz unter dem Element berechnen
+            const spaceBelow = windowH - rect.bottom;
+            
+            // Strategie: Wenn oben wenig Platz ist (< 40%), dann lieber drunter packen
+            // ABER nur, wenn unten auch genug Platz für die Blase ist.
+            const preferBottom = (rect.top < (windowH * 0.4)) && (spaceBelow > bubbleH + gap);
+
+            if (preferBottom) {
+                // UNTER dem Element positionieren
+                let topPos = rect.bottom + gap;
+                // Sicherheits-Check: Rutscht es unten raus?
+                if (topPos + bubbleH > windowH - 10) {
+                    // Notfall: Doch drüber oder zentrieren
+                    topPos = Math.max(10, windowH - bubbleH - 10);
                 }
-                
                 bubble.style.top = topPos + "px";
-                bubble.style.bottom = "auto";
-            } 
-            // Wenn Element unten ist -> Bubble drüber
-            else {
-                let botPos = (windowH - rect.top) + 20;
-                bubble.style.bottom = botPos + "px";
-                bubble.style.top = "auto";
+            } else {
+                // ÜBER dem Element positionieren
+                let topPos = rect.top - bubbleH - gap;
+                // Sicherheits-Check: Rutscht es oben raus?
+                if (topPos < 10) {
+                    // Wenn es oben raus rutscht -> Notfall-Zentrierung
+                    fallbackBubblePosition(overlay, bubble);
+                    return; 
+                }
+                bubble.style.top = topPos + "px";
             }
+
         } else {
+            // Element nicht gefunden -> Fallback Mitte
             fallbackBubblePosition(overlay, bubble);
         }
     } else {
+        // Kein Target (Intro/Outro) -> Mitte
         fallbackBubblePosition(overlay, bubble);
     }
+}
+
+// Helper: Erzwingt die Mitte (Safe Mode)
+function fallbackBubblePosition(overlay, bubble) {
+    overlay.style.background = 'rgba(0, 0, 0, 0.85)'; // Dunkler Hintergrund
+    bubble.style.top = "50%"; 
+    bubble.style.left = "50%"; 
+    bubble.style.bottom = "auto";
+    bubble.style.transform = "translate(-50%, -50%)";
 }
 
 function fallbackBubblePosition(overlay, bubble) {
