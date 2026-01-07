@@ -5820,7 +5820,7 @@ const STORE_DECKS = 'decks'; // NEU
 
 const dbPromise = new Promise((resolve, reject) => {
     // WICHTIG: Version auf 2 erhöht!
-    const req = indexedDB.open(DB_NAME, 2); 
+    const req = indexedDB.open(DB_NAME, 3); 
     
     req.onupgradeneeded = e => { 
         const db = e.target.result;
