@@ -4775,14 +4775,18 @@ body.dark .deck-card {
         <!-- Status Feedback Element -->
         <div class="status-overlay" id="sfStatus">Sortiert: A-Z</div>
 
-        <!-- Semantic Controls -->
-        <div class="sem-controls">
-            <!-- View Toggle (LIST/GRID) -->
-            <div class="sem-btn" onclick="safeRun(toggleViewMode)" id="viewToggleBtn">LIST</div>
-            <!-- Sort Toggle (A-Z, NEU, etc.) -->
-            <div class="sem-btn active" onclick="safeRun(cycleSort)" id="sortBtn">★</div>
-        </div>
-    </div>
+   <!-- Semantic Controls (Updated) -->
+<!-- Semantic Controls (Text Toggles) -->
+<div class="sem-controls">
+    <!-- 1. Ansicht (List/Grid) -->
+    <div class="sem-btn" onclick="safeRun(toggleViewMode)" id="viewToggleBtn" style="min-width:40px;">LIST</div>
+    
+    <!-- 2. Inhalt (Tiere/Notiz/Fotos) - NEU -->
+    <div class="sem-btn" onclick="safeRun(cycleAppMode)" id="modeToggleBtn" style="min-width:45px;">TIERE</div>
+    
+    <!-- 3. Sortierung -->
+    <div class="sem-btn active" onclick="safeRun(cycleSort)" id="sortBtn">★</div>
+</div>    </div>
     
    
 </div>
@@ -6779,6 +6783,7 @@ let storyPreviewData = null; // Speichert Daten für den Mini-Ring
 // Lädt den Status aus dem Speicher. Wenn nichts gespeichert ist, ist es false (eingeklappt).
 let listExpanded = localStorage.getItem('listExpandedState') === 'true';
 let sortMode = 'fav'; 
+let appMode = 'animals'; // 'animals', 'notes', 'gallery'
 let viewMode = 'list';
 let libSearchMode = 'animals'; // 'animals' | 'facts'
 let searchMode = 'animals'; // 'animals' oder 'notes'
@@ -7150,8 +7155,10 @@ function favsWithCount(favArray, historyData) {
 }
 
 /* === RENDER (LISTE, SNEAK PEEK & FAVORITEN) === */
+
+/* === ULTIMATE RENDER ENGINE (Animals, Notes, Gallery) === */
 function render() {
-    // 1. Setup & Reset
+    // 1. UI Setup & Reset
     if(typeof renderLocations === 'function') renderLocations();
     
     const list = document.getElementById('list'); 
@@ -7160,65 +7167,44 @@ function render() {
     const sneakCont = document.getElementById('sneakPeekContainer');
     const sneakHint = document.getElementById('sneakHint');
     const emptyState = document.getElementById('emptyState');
-    const tagCont = document.getElementById('tagFilterContainer'); // Tag Container holen
+    const tagCont = document.getElementById('tagFilterContainer');
     
     if(list) list.innerHTML = '';
     if(favCont) favCont.innerHTML = '';
     if(toggleCont) toggleCont.innerHTML = '';
 
     const searchVal = document.getElementById('listSearch').value.toLowerCase().trim();
-    const isSearching = searchVal.length > 0 || currentFilter !== 'ALL';
-    
+    const isSearching = searchVal.length > 0;
 
-   // --- TAG FILTER RENDERN ---
-if(tagCont) {
-    if(searchVal.length > 0 && searchMode === 'notes') {
-        tagCont.style.display = 'none'; 
-    } else {
-        tagCont.style.display = 'flex'; 
-        let tagHTML = '';
-        
-        // 1. STORY RING (Links)
-        if (typeof storyPreviewData !== 'undefined' && storyPreviewData) {
-           const innerContent = storyPreviewData.img 
-               ? `<img src="${storyPreviewData.img}">` 
-               : storyPreviewData.emoji;
-               
-           tagHTML += `
-           <div class="tag-story-item" onclick="window.openStoryModal()">
-               <div class="tsr-border"></div>
-               <div class="tsr-inner">${innerContent}</div>
-               <div class="tsr-badge">${storyPreviewData.count}</div>
-           </div>`;
-        }
-        
-        // 2. RANGER FUNK CHIP (NEU: Rechts neben dem Ring)
-        // Wir nutzen die Klasse 'tag-pill', überschreiben aber die Farbe für den "Ranger-Look"
-        tagHTML += `
-        <div class="tag-pill" onclick="openRangerChat()" style="background: linear-gradient(135deg, #00b894, #008970); color: white; border: none; margin-right:8px; box-shadow: 0 2px 8px rgba(0, 184, 148, 0.3);">
-            <span style="font-size:16px; margin-right:5px;">📻</span> 
-            <span>Funk</span>
-        </div>`;
-        
-        // 3. Der "Alle" Button
-        tagHTML += `<div class="tag-pill ${currentFilter==='ALL'?'active':''}" onclick="safeRun(filterTags, 'ALL')" id="tag-ALL">Alle</div>`;
-        
-        // 4. Die restlichen Tags
-        const allTags = new Set(); 
-        animals.forEach(a => a.tags?.forEach(t => allTags.add(t)));
-        
-        allTags.forEach(t => { 
-            tagHTML += `<div class="tag-pill ${currentFilter===t?'active':''}" onclick="safeRun(filterTags, '${t}')" id="tag-${t}">${t}</div>`; 
-        });
-        
-        tagCont.innerHTML = tagHTML;
-    }
+/* === UI BUTTON UPDATE (SICHERE VERSION) === */
+
+// 1. Alle Buttons resetten
+document.querySelectorAll('.sem-btn').forEach(b => b.classList.remove('active'));
+
+// 2. Den Sortier-Button aktivieren (nur im Tier-Modus)
+const sortBtn = document.getElementById('sortBtn');
+if (sortBtn && appMode === 'animals') {
+    sortBtn.classList.add('active');
 }
 
-    // --- DATEN SAMMELN ---
+// 3. Den neuen Toggle-Button beschriften & färben
+const modeBtn = document.getElementById('modeToggleBtn');
+if (modeBtn) {
+    if (appMode === 'animals') {
+        modeBtn.innerText = 'TIERE';
+        // Kein active, sieht neutral aus
+    } else if (appMode === 'notes') {
+        modeBtn.innerText = 'NOTIZ';
+        modeBtn.classList.add('active'); // Farbig markieren
+    } else if (appMode === 'gallery') {
+        modeBtn.innerText = 'FOTOS';
+        modeBtn.classList.add('active'); // Farbig markieren
+    }
+}
+    // --- DATEN SAMMELN (Je nach Modus) ---
     const h = getHistory(currentSystemYear);
-
-    // A) TIERE SUCHEN
+    
+    // A) Tiere filtern (Immer nötig für Tag-Filter etc.)
     let animalMatches = animals.map((a, i) => {
         let count = 0;
         Object.values(h).forEach(day => { if(day.perAnimal?.[i]) count += day.perAnimal[i].length; });
@@ -7232,9 +7218,13 @@ if(tagCont) {
         return true;
     });
 
-    // B) NOTIZEN SUCHEN (DEEP SEARCH)
+    // B) Notizen & Galerie sammeln (Wenn Modus aktiv ODER Suche aktiv)
     let noteMatches = [];
-    if (searchVal) {
+    let galleryItems = [];
+    const needDeepData = isSearching || appMode === 'notes' || appMode === 'gallery';
+
+    if (needDeepData) {
+        // Durch alle Tage iterieren
         Object.entries(h).forEach(([dateStr, dayData]) => {
             if (dayData.perAnimal) {
                 Object.entries(dayData.perAnimal).forEach(([idxStr, entries]) => {
@@ -7243,252 +7233,76 @@ if(tagCont) {
                     if (!animal) return;
 
                     entries.forEach((entry, arrIdx) => {
-                        // Wir suchen im Text, im Ort oder im Tiernamen (für Kontext)
+                        // Filter-Logik
                         const textMatch = entry.note && entry.note.toLowerCase().includes(searchVal);
                         const locMatch = entry.location && entry.location.toLowerCase().includes(searchVal);
-                        // Optional: Auch Tiername matchen, damit man "Fuchs" tippt und alle Fuchs-Notizen sieht
                         const animalNameMatch = animal.name.toLowerCase().includes(searchVal);
+                        const tagMatch = animal.tags && animal.tags.some(t => t.toLowerCase().includes(searchVal));
+                        
+                        // Wenn keine Suche: Alles nehmen. Wenn Suche: Filter prüfen.
+                        const isMatch = !isSearching || textMatch || locMatch || animalNameMatch || tagMatch;
 
-                        if (textMatch || locMatch || (animalNameMatch && entry.note)) {
-                            noteMatches.push({
-                                date: dateStr,
-                                time: entry.time,
-                                location: entry.location,
-                                note: entry.note,
-                                animalName: animal.name,
-                                animalEmoji: animal.emoji,
-                                animalIdx: idx,
-                                arrIdx: arrIdx,
-                                imageId: entry.noteImageId
-                            });
+                        if (isMatch) {
+                            // Für Notizen sammeln
+                            if (entry.note || isSearching) { // Bei Suche zeigen wir auch Treffer ohne Notiz (z.B. Ort)
+                                noteMatches.push({
+                                    date: dateStr, time: entry.time, location: entry.location,
+                                    note: entry.note, animalName: animal.name, animalEmoji: animal.emoji,
+                                    animalIdx: idx, arrIdx: arrIdx, imageId: entry.noteImageId
+                                });
+                            }
+                            
+                            // Für Galerie sammeln (Nur wenn Bild da ist)
+                            if (entry.noteImageId) {
+                                galleryItems.push({ 
+                                    imgId: entry.noteImageId, title: animal.name, sub: dateStr, 
+                                    type: 'Sichtung', idx: idx, date: dateStr, arrIdx: arrIdx 
+                                });
+                            }
                         }
                     });
                 });
             }
         });
-        // Sortieren: Neueste zuerst
-        noteMatches.sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
-    }
-
-
-
-// --- C) TABS RENDERN (Nur wenn Suche aktiv) ---
-const tabsContainer = document.createElement('div');
-
-if (searchVal) {
-    // 1. Galerie-Zähler berechnen, BEVOR wir das HTML bauen
-    let galleryItemCount = 0;
-    animalMatches.forEach(a => { if(a.imageId) galleryItemCount++; });
-    noteMatches.forEach(n => { if(n.imageId) galleryItemCount++; });
-
-    tabsContainer.className = 'search-tabs-container';
-    
-    // 2. Das HTML bauen und die berechneten Zahlen direkt einsetzen
-    tabsContainer.innerHTML = `
-        <div class="search-tab ${searchMode==='animals'?'active':''}" onclick="setSearchMode('animals')">
-            🐾 Tiere <span class="search-tab-count">${animalMatches.length}</span>
-        </div>
-        <div class="search-tab ${searchMode==='notes'?'active':''}" onclick="setSearchMode('notes')">
-            📝 Notizen <span class="search-tab-count">${noteMatches.length}</span>
-        </div>
-        <div class="search-tab ${searchMode==='gallery'?'active':''}" onclick="setSearchMode('gallery')">
-            🖼️ Galerie <span class="search-tab-count" id="galleryCount">${galleryItemCount}</span>
-        </div>
-    `;
-    
-    // 3. Jetzt erst in die Liste einfügen
-    list.appendChild(tabsContainer);
-    
-} else {
-    // Reset Search Mode wenn Suche gelöscht wird
-    searchMode = 'animals'; 
-}
-
-
-// === FALL 3: GALERIE ANZEIGEN (In der render() Funktion einfügen) ===
-if (searchVal && searchMode === 'gallery') {
-    const galleryGrid = document.createElement('div');
-    galleryGrid.className = 'grid-container'; // Nutzt dein bestehendes Grid-Layout
-    
-    // Bilder sammeln: Aus Tieren (Profilbildern) UND Notizen
-    let galleryItems = [];
-    
-    // 1. Profilbilder durchsuchen
-    animalMatches.forEach(a => {
-        if(a.imageId) galleryItems.push({ imgId: a.imageId, title: a.name, type: 'Profil', idx: a.idx });
-    });
-    
-    // 2. Notiz-Fotos durchsuchen
-    noteMatches.forEach(n => {
-        if(n.imageId) galleryItems.push({ imgId: n.imageId, title: n.animalName, sub: n.date, type: 'Sichtung', idx: n.animalIdx, date: n.date, arrIdx: n.arrIdx });
-    });
-
-    getEl('galleryCount').innerText = galleryItems.length;
-
-    if (galleryItems.length === 0) {
-        list.innerHTML += `<div style="text-align:center; padding:40px; opacity:0.5;">Keine Fotos zu "${searchVal}" gefunden.</div>`;
-    } else {
-        galleryItems.forEach((item, i) => {
-            const div = document.createElement('div');
-            div.className = 'grid-item fade-in';
-            div.style.height = '180px';
-            
-            // Container für das Bild vorbereiten
-            const imgContainerId = `gal-img-${i}`;
-            div.innerHTML = `
-                <div id="${imgContainerId}" class="grid-bg-img" style="background:var(--btn); display:flex; align-items:center; justify-content:center;">
-                    <div class="loader-spinner" style="width:20px; height:20px;"></div>
-                </div>
-                <div class="grid-overlay"></div>
-                <div class="grid-info">
-                    <div class="grid-name" style="font-size:12px !important;">${item.title}</div>
-                    <div class="grid-sub" style="font-size:9px !important;">${item.type} ${item.sub || ''}</div>
-                </div>
-            `;
-            
-            // Klick-Logik: Öffnet Detailansicht oder Notiz
-            div.onclick = () => {
-                if(item.type === 'Profil') openDetail(item.idx);
-                else viewNoteDetail(item.idx, item.date, item.arrIdx);
-            };
-
-            galleryGrid.appendChild(div);
-            
-            // Bild asynchron laden
-            dbGetImg(item.imgId).then(src => {
-                if(src) getEl(imgContainerId).innerHTML = `<img src="${src}" class="grid-bg-img">`;
-            });
-        });
-        list.appendChild(galleryGrid);
-    }
-    return;
-}
-
-
-    // --- D) INHALT RENDERN (Switch) ---
-
-    // === FALL 1: NOTIZEN ANZEIGEN ===
-    if (searchVal && searchMode === 'notes') {
         
-        // Sneak Peek muss aufgeklappt sein
-        if(sneakCont) sneakCont.classList.remove('collapsed');
-        if(sneakHint) sneakHint.style.display = 'none';
+        // Galerie: Auch Profilbilder hinzufügen
+        animalMatches.forEach(a => {
+            if(a.imageId) {
+                galleryItems.push({ imgId: a.imageId, title: a.name, type: 'Profil', idx: a.idx });
+            }
+        });
 
-        if (noteMatches.length === 0) {
-            // Empty State für Notizen
-            const empty = document.createElement('div');
-            empty.style.textAlign = "center"; empty.style.padding = "40px 20px"; empty.style.opacity = "0.6";
-            empty.innerHTML = `<div style="font-size:40px; margin-bottom:10px;">📭</div><div>Keine Notizen zu "${searchVal}" gefunden.</div>`;
-            list.appendChild(empty);
-        } else {
+        // Sortieren
+        noteMatches.sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
+        galleryItems.reverse(); // Neueste zuerst (grob)
+    }
 
-// ... (innerhalb von noteMatches.forEach) ...
+    // --- ANZEIGE STEUERUNG ---
 
-            noteMatches.forEach((match, loopIdx) => {
-                const div = document.createElement('div');
-                div.className = 'log-entry fade-in';
-                div.style.animationDelay = `${loopIdx * 0.03}s`;
-                
-                // IDs und Daten vorbereiten
-                const dateDisplay = match.date.split('-').reverse().slice(0,2).join('.');
-                const nodeId = `node-img-${loopIdx}`; // Unique ID für das Bild
-                
-                // Highlight Funktion
-                const hl = (txt) => {
-                    if(!txt) return '';
-                    return txt.replace(new RegExp(`(${searchVal})`, 'gi'), '<mark style="background:rgba(255,235,59,0.4); color:inherit; border-radius:2px; padding:0 2px;">$1</mark>');
-                };
-
-                // Icons im Text
-                const hasPhotoIcon = match.imageId ? '📷 ' : ''; 
-
-                div.innerHTML = `
-                    <!-- 1. LINKS: TIMELINE & BILD -->
-                    <div class="log-left">
-                        <div class="log-node" id="${nodeId}">
-                            ${match.animalEmoji} <!-- Standard Emoji -->
-                        </div>
-                        <div class="log-line"></div>
-                    </div>
-
-                    <!-- 2. MITTE: KARTE (KLICKBAR) -->
-                    <div class="log-card" onclick="safeRun(viewNoteDetail, ${match.animalIdx}, '${match.date}', ${match.arrIdx})">
-                        <div class="log-header">
-                            <span class="log-title">${hl(match.animalName)}</span>
-                            <span class="log-meta">${dateDisplay} • ${match.time}</span>
-                        </div>
-                        <div class="log-text">
-                            ${hasPhotoIcon}${hl(match.note) || 'Kein Text'}
-                        </div>
-                        ${match.location ? `<div class="log-loc">📍 ${hl(match.location)}</div>` : ''}
-                    </div>
-
-                    <!-- 3. RECHTS: DEADZONE & MENU -->
-                    <div class="log-right">
-                        <div class="log-deadzone" onclick="event.stopPropagation()"></div>
-                        <div class="log-menu-btn" onclick="openHistoryMenu(${match.animalIdx}, '${match.date}', ${match.arrIdx}, event)">⋮</div>
-                    </div>
-                `;
-                
-                list.appendChild(div);
-
-                // --- BILD NACHLADEN LOGIK ---
-                // Prio 1: Notiz-Bild (match.imageId enthält hier noteImageId aus der Suche-Logik, 
-                // falls du das in Schritt 4 von vorhin so gemappt hast. 
-                // Falls nicht, müssen wir sicherstellen, dass render() auch noteImageId und animalImageId übergibt.)
-                
-                // HINWEIS: In deiner render() Suche-Logik für Notizen solltest du sicherstellen, 
-                // dass du 'noteImageId' und 'animal.imageId' in das 'noteMatches' Objekt pushst.
-                // Ich ergänze das hier sicherheitshalber:
-                
-                const targetImgId = match.imageId; // Das ist laut deinem Code das noteImageId
-                
-                // Funktion zum Bild setzen
-                const setImg = (src) => {
-                    const el = document.getElementById(nodeId);
-                    if(el && src) {
-                        el.innerHTML = `<img src="${src}">`;
-                        el.style.border = "2px solid var(--accent)"; // Highlight Rahmen
-                    }
-                };
-
-                if (targetImgId) {
-                    // Notiz-Bild laden
-                    dbGetImg(targetImgId).then(src => setImg(src));
-                } else {
-                    // Fallback: Tier-Profilbild laden (wir müssen die ID holen)
-                    // Da wir sie im Match-Objekt vielleicht nicht haben, holen wir sie vom Tier-Array
-                    const animal = animals[match.animalIdx];
-                    if (animal && animal.imageId) {
-                        dbGetImg(animal.imageId).then(src => setImg(src));
-                    }
-                }
-            });
+    // 1. Tag Container (Ausblenden bei Notizen/Galerie, außer bei Suche)
+    if(tagCont) {
+        if(appMode !== 'animals') tagCont.style.display = 'none';
+        else {
+            // ... (Hier dein bestehender Tag-Code, ich kürze es ab, füge deinen Tag-Block hier ein) ...
+            // TAG CODE KOPIEREN VOM VORHERIGEN SCHRITT (oder so lassen wenn du ihn nicht gelöscht hast)
+            tagCont.style.display = 'flex'; 
+            let tagHTML = '';
+            if (typeof storyPreviewData !== 'undefined' && storyPreviewData) {
+               const innerContent = storyPreviewData.img ? `<img src="${storyPreviewData.img}">` : storyPreviewData.emoji;
+               tagHTML += `<div class="tag-story-item" onclick="window.openStoryModal()"><div class="tsr-border"></div><div class="tsr-inner">${innerContent}</div><div class="tsr-badge">${storyPreviewData.count}</div></div>`;
+            }
+            tagHTML += `<div class="tag-pill" onclick="openRangerChat()" style="background: linear-gradient(135deg, #00b894, #008970); color: white; border: none; margin-right:8px; box-shadow: 0 2px 8px rgba(0, 184, 148, 0.3);"><span style="font-size:16px; margin-right:5px;">📻</span><span>Funk</span></div>`;
+            tagHTML += `<div class="tag-pill ${currentFilter==='ALL'?'active':''}" onclick="safeRun(filterTags, 'ALL')" id="tag-ALL">Alle</div>`;
+            const allTags = new Set(); animals.forEach(a => a.tags?.forEach(t => allTags.add(t)));
+            allTags.forEach(t => { tagHTML += `<div class="tag-pill ${currentFilter===t?'active':''}" onclick="safeRun(filterTags, '${t}')" id="tag-${t}">${t}</div>`; });
+            tagCont.innerHTML = tagHTML;
         }
-        return; // HIER ENDET DER RENDER FÜR NOTIZEN
     }
 
-
-    // === FALL 2: TIERE ANZEIGEN (Standard Logik) ===
-    
-    // Smart Create Button (Nur bei Tier-Suche & Leer)
-    if(searchVal && animalMatches.length === 0) {
-        if(emptyState) emptyState.style.display='none';
-        const searchRaw = document.getElementById('listSearch').value;
-        const div = document.createElement('div');
-        div.style.textAlign = "center"; div.style.padding = "40px 20px"; div.className = "fade-in";
-        div.innerHTML = `
-            <div style="font-size:60px; margin-bottom:15px; display:inline-block;">🐾<div style="position:absolute; bottom:0; right:-10px; font-size:30px;">❓</div></div>
-            <h3 style="margin:10px 0 5px 0;">Nichts gefunden</h3>
-            <p style="margin:0 0 25px 0; font-size:14px; opacity:0.6;">"${searchRaw}" ist nicht in der Liste.</p>
-            <button onclick="safeRun(quickCreate, '${searchRaw}')" style="background:var(--accent); color:#fff; padding:12px 24px; border-radius:30px; font-weight:bold; border:none; box-shadow:0 8px 20px var(--accent-glow);">⚡ Als Tier anlegen</button>
-        `;
-        list.appendChild(div);
-        return;
-    }
-
-    // Sneak Peek Logik (Wann zuklappen?)
-    const isExpandedState = listExpanded || isSearching;
+    // 2. Sneak Peek Steuerung
+    // Bei Notes/Gallery/Suche immer aufklappen
+    const forceExpand = isSearching || appMode !== 'animals';
+    const isExpandedState = listExpanded || forceExpand;
     
     if (sneakCont) {
         if (isExpandedState) {
@@ -7499,17 +7313,20 @@ if (searchVal && searchMode === 'gallery') {
             if(sneakHint) sneakHint.style.display = 'block';
         }
     }
-
-    // Toggle Button (Nur wenn nicht gesucht wird)
-    if (toggleCont && isExpandedState && !isSearching) {
-        toggleCont.innerHTML = `<div class="list-toggle-btn is-open" onclick="safeRun(collapseList)">Liste einklappen <span class="arrow-icon">▲</span></div>`;
+    // Toggle Button nur im Animal Modus zeigen
+    if (toggleCont) {
+        if (appMode === 'animals' && isExpandedState && !isSearching) {
+            toggleCont.innerHTML = `<div class="list-toggle-btn is-open" onclick="safeRun(collapseList)">Liste einklappen <span class="arrow-icon">▲</span></div>`;
+        } else {
+            toggleCont.innerHTML = '';
+        }
     }
 
-    // Favoriten Container (Nur wenn nicht ausgeklappt)
+    // 3. Favoriten (Nur im Animal Modus ohne Suche)
     if (favCont) {
-        if (!isExpandedState && !isSearching) {
+        if (appMode === 'animals' && !isExpandedState && !isSearching) {
             favCont.style.display = 'block'; 
-            // Fav Logic...
+            // Fav Logic... (Dein Code)
             const favs = animals.map((a,i)=>({...a, idx:i})).filter(a => a.isFav);
             const favsData = favsWithCount(favs, h);
             if(favsData.length > 0) {
@@ -7528,8 +7345,124 @@ if (searchVal && searchMode === 'gallery') {
         } else { favCont.style.display = 'none'; }
     }
 
+    // === RENDER MODE SWITCH ===
+
+    // CASE A: GALERIE
+    if (appMode === 'gallery') {
+        if (galleryItems.length === 0) {
+            list.innerHTML = `<div style="text-align:center; padding:60px 20px; opacity:0.5;">
+                <div style="font-size:50px; margin-bottom:10px;">📸</div>
+                Noch keine Fotos.<br>Füge Fotos zu deinen Sichtungen hinzu!
+            </div>`;
+            return;
+        }
+        
+        const galleryGrid = document.createElement('div');
+        galleryGrid.className = 'grid-container';
+        
+        galleryItems.forEach((item, i) => {
+            const div = document.createElement('div');
+            div.className = 'grid-item fade-in';
+            div.style.height = '180px';
+            const imgContainerId = `gal-img-${i}`;
+            
+            div.innerHTML = `
+                <div id="${imgContainerId}" class="grid-bg-img" style="background:var(--btn); display:flex; align-items:center; justify-content:center;">
+                    <div class="loader-spinner" style="width:20px; height:20px;"></div>
+                </div>
+                <div class="grid-overlay"></div>
+                <div class="grid-info">
+                    <div class="grid-name" style="font-size:12px !important;">${item.title}</div>
+                    <div class="grid-sub" style="font-size:9px !important;">${item.type} ${item.sub || ''}</div>
+                </div>
+            `;
+            div.onclick = () => {
+                if(item.type === 'Profil') openDetail(item.idx);
+                else viewNoteDetail(item.idx, item.date, item.arrIdx);
+            };
+            galleryGrid.appendChild(div);
+            dbGetImg(item.imgId).then(src => { if(src) document.getElementById(imgContainerId).innerHTML = `<img src="${src}" class="grid-bg-img">`; });
+        });
+        list.appendChild(galleryGrid);
+        return;
+    }
+
+    // CASE B: NOTIZEN
+    if (appMode === 'notes') {
+        if (noteMatches.length === 0) {
+            list.innerHTML = `<div style="text-align:center; padding:60px 20px; opacity:0.5;">
+                <div style="font-size:50px; margin-bottom:10px;">📝</div>
+                Keine Notizen gefunden.<br>Schreibe etwas zu deinen Sichtungen!
+            </div>`;
+            return;
+        }
+
+        noteMatches.forEach((match, loopIdx) => {
+            const div = document.createElement('div');
+            div.className = 'log-entry fade-in';
+            div.style.animationDelay = `${loopIdx * 0.03}s`;
+            
+            const dateDisplay = match.date.split('-').reverse().slice(0,2).join('.');
+            const nodeId = `node-img-${loopIdx}`;
+            
+            // Highlight Funktion (nur wenn gesucht wird)
+            const hl = (txt) => {
+                if(!txt) return '';
+                if(!isSearching) return txt;
+                return txt.replace(new RegExp(`(${searchVal})`, 'gi'), '<mark style="background:rgba(255,235,59,0.4); color:inherit; border-radius:2px; padding:0 2px;">$1</mark>');
+            };
+
+            const hasPhotoIcon = match.imageId ? '📷 ' : ''; 
+
+            div.innerHTML = `
+                <div class="log-left">
+                    <div class="log-node" id="${nodeId}">${match.animalEmoji}</div>
+                    <div class="log-line"></div>
+                </div>
+                <div class="log-card" onclick="safeRun(viewNoteDetail, ${match.animalIdx}, '${match.date}', ${match.arrIdx})">
+                    <div class="log-header">
+                        <span class="log-title">${hl(match.animalName)}</span>
+                        <span class="log-meta">${dateDisplay} • ${match.time}</span>
+                    </div>
+                    <div class="log-text">${hasPhotoIcon}${hl(match.note) || 'Kein Text'}</div>
+                    ${match.location ? `<div class="log-loc">📍 ${hl(match.location)}</div>` : ''}
+                </div>
+                <div class="log-right">
+                    <div class="log-deadzone" onclick="event.stopPropagation()"></div>
+                    <div class="log-menu-btn" onclick="openHistoryMenu(${match.animalIdx}, '${match.date}', ${match.arrIdx}, event)">⋮</div>
+                </div>
+            `;
+            list.appendChild(div);
+
+            const targetImgId = match.imageId;
+            const setImg = (src) => {
+                const el = document.getElementById(nodeId);
+                if(el && src) { el.innerHTML = `<img src="${src}">`; el.style.border = "2px solid var(--accent)"; }
+            };
+            if (targetImgId) { dbGetImg(targetImgId).then(src => setImg(src)); } 
+            else { const animal = animals[match.animalIdx]; if (animal && animal.imageId) { dbGetImg(animal.imageId).then(src => setImg(src)); } }
+        });
+        return;
+    }
+
+    // CASE C: ANIMALS (Standard)
     if(animalMatches.length === 0) {
         if(emptyState) emptyState.style.display = 'block';
+        
+        // Smart Create Button (Nur bei Suche)
+        if(isSearching) {
+            emptyState.style.display='none';
+            const searchRaw = document.getElementById('listSearch').value;
+            const div = document.createElement('div');
+            div.style.textAlign = "center"; div.style.padding = "40px 20px"; div.className = "fade-in";
+            div.innerHTML = `
+                <div style="font-size:60px; margin-bottom:15px; display:inline-block;">🐾<div style="position:absolute; bottom:0; right:-10px; font-size:30px;">❓</div></div>
+                <h3 style="margin:10px 0 5px 0;">Nichts gefunden</h3>
+                <p style="margin:0 0 25px 0; font-size:14px; opacity:0.6;">"${searchRaw}" ist nicht in der Liste.</p>
+                <button onclick="safeRun(quickCreate, '${searchRaw}')" style="background:var(--accent); color:#fff; padding:12px 24px; border-radius:30px; font-weight:bold; border:none; box-shadow:0 8px 20px var(--accent-glow);">⚡ Als Tier anlegen</button>
+            `;
+            list.appendChild(div);
+        }
         return;
     }
     if(emptyState) emptyState.style.display = 'none';
@@ -7541,7 +7474,7 @@ if (searchVal && searchMode === 'gallery') {
         return b.count - a.count;
     });
 
-    // --- LISTE BAUEN (Animals) ---
+    // Liste bauen
     if (viewMode === 'grid') {
         const gridCont = document.createElement('div'); gridCont.className = 'grid-container';
         animalMatches.forEach((item, loopIdx) => {
@@ -7558,7 +7491,6 @@ if (searchVal && searchMode === 'gallery') {
             const div = document.createElement('div'); 
             div.className = `row fade-in`; div.style.animationDelay = `${loopIdx*0.05}s`;
             
-            // Subtext Logic
             const dates = Object.keys(h).filter(d => h[d].perAnimal && h[d].perAnimal[item.idx]).sort().reverse();
             let subText = "Noch nie gesehen", timeIcon = '🌑';
             if(dates.length > 0) {
@@ -7567,9 +7499,7 @@ if (searchVal && searchMode === 'gallery') {
                 else { const [y,m,d] = last.split('-'); subText = `Zuletzt: ${d}.${m}.`; timeIcon='📅'; }
             }
 
-            // Highlighting
-            const hlName = searchVal ? item.name.replace(new RegExp(`(${searchVal})`, 'gi'), '<mark style="background:rgba(255,235,59,0.5); border-radius:2px;">$1</mark>') : item.name;
-
+            const hlName = isSearching ? item.name.replace(new RegExp(`(${searchVal})`, 'gi'), '<mark style="background:rgba(255,235,59,0.5); border-radius:2px;">$1</mark>') : item.name;
             const colors = ['#e84393', '#0984e3', '#00b894', '#fdcb6e', '#6c5ce7', '#d63031'];
             const itemColor = colors[item.name.length % colors.length];
             const imgHTML = `<div class="list-thumb-placeholder" style="background:${itemColor}20; color:${itemColor}; border:1px solid ${itemColor}40;">${item.emoji}</div>`;
@@ -7586,13 +7516,11 @@ if (searchVal && searchMode === 'gallery') {
                 <div class="row-menu" onclick="openItemMenu(${item.idx}, event)">⋮</div>
             `;
             if(item.imageId) { dbGetImg(item.imageId).then(src => { if(src) div.querySelector('.list-visual').innerHTML = `<img src="${src}" class="list-thumb-img">`; }); }
-            
-   
-
             list.appendChild(div);
         });
     }
 }
+
 
 function filterTags(t) { currentFilter=t; render(); }
 
@@ -7642,8 +7570,14 @@ function cycleSort() {
 }
 
 function toggleViewMode() { 
-    viewMode = viewMode === 'list' ? 'grid' : 'list'; 
-    localStorage.setItem('viewMode', viewMode);
+    // Wenn wir in Notizen/Galerie sind -> Zurück zu Tieren
+    if (appMode !== 'animals') {
+        appMode = 'animals';
+    } else {
+        // Sonst wie gehabt umschalten
+        viewMode = viewMode === 'list' ? 'grid' : 'list'; 
+        localStorage.setItem('viewMode', viewMode);
+    }
     
     const btn = document.getElementById('viewToggleBtn');
     if(btn) btn.innerText = viewMode === 'list' ? 'LIST' : 'GRID';
@@ -7651,8 +7585,6 @@ function toggleViewMode() {
     showFeedback(viewMode === 'list' ? "Ansicht: Liste" : "Ansicht: Raster");
     render(); 
 }
-
-
 
 // === DETAILS & EDIT ===
 
@@ -12801,6 +12733,35 @@ async function decryptText(base64Data, password) {
     }
 }
 
+function setAppMode(mode) {
+    // Toggle Logik: Wenn man auf den aktiven Modus klickt, zurück zu Tieren
+    if (appMode === mode && mode !== 'animals') {
+        appMode = 'animals';
+    } else {
+        appMode = mode;
+    }
+    
+    // Feedback
+    let text = "Ansicht: Tiere";
+    if (appMode === 'notes') text = "Ansicht: Notizen";
+    if (appMode === 'gallery') text = "Ansicht: Galerie";
+    showFeedback(text);
+    
+    render();
+}
+
+function cycleAppMode() {
+    // Zyklus: Tiere -> Notizen -> Fotos -> Tiere
+    if (appMode === 'animals') {
+        appMode = 'notes';
+    } else if (appMode === 'notes') {
+        appMode = 'gallery';
+    } else {
+        appMode = 'animals';
+    }
+    
+    render(); // Aktualisiert Liste und Button-Text
+}
 
 // Start-Check
 setTimeout(() => { startTutorial(); }, 1500);
