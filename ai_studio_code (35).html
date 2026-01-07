@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<!-- WICHTIG: 100dvh Fix + Keyboard Resize -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, interactive-widget=resizes-content">
+<title>Ranger Funk Pro 📻</title>
+<meta name="theme-color" content="#121212">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📡</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+    /* === GLOBAL === */
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    :root {
+        --bg: #121212;
+        --sidebar-bg: #1e1e1e;
+        --header-bg: #222;
+        --accent: #00b894; /* Ranger Green */
+        --text: #ffffff;
+        --sub: #b2bec3;
+        --border: rgba(255,255,255,0.1);
+        --bubble-me: #00b894;
+        --bubble-other: #2d3436;
+        --font: 'Inter', sans-serif;
+    }
+
+    body {
+        margin: 0; padding: 0;
+        font-family: var(--font);
+        background-color: var(--bg);
+        color: var(--text);
+        height: 100vh; 
+        height: 100dvh; /* Mobile Fix */
+        display: flex;
+        overflow: hidden; 
+        position: fixed; width: 100%;
+    }
+
+    /* === SCROLLBARS === */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+    /* === SIDEBAR === */
+    .sidebar {
+        width: 280px; 
+        background: var(--sidebar-bg); 
+        border-right: 1px solid var(--border);
+        display: flex; flex-direction: column; z-index: 100;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        flex-shrink: 0;
+    }
+    
+    @media (max-width: 700px) {
+        .sidebar { position: absolute; top:0; bottom:0; left:0; transform: translateX(-100%); box-shadow: 10px 0 50px rgba(0,0,0,0.5); }
+        .sidebar.open { transform: translateX(0); }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 90; display: none; opacity: 0; transition: opacity 0.3s;
+        }
+        .sidebar-overlay.active { display: block; opacity: 1; }
+    }
+
+    .sb-header { padding: 20px; font-weight: 800; font-size: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; height: 60px; }
+    .sb-list { flex: 1; overflow-y: auto; padding: 10px; }
+    
+    .channel-item {
+        padding: 12px 15px; border-radius: 10px; cursor: pointer; margin-bottom: 5px;
+        display: flex; align-items: center; gap: 12px; transition: background 0.2s;
+    }
+    .channel-item:hover { background: rgba(255,255,255,0.05); }
+    .channel-item.active { background: rgba(0, 184, 148, 0.15); border-left: 3px solid var(--accent); }
+    
+    .ch-avatar { width: 36px; height: 36px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .ch-info { flex: 1; overflow: hidden; }
+    .ch-name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ch-last { font-size: 11px; color: var(--sub); opacity: 0.7; }
+    
+    .sb-footer { padding: 15px; border-top: 1px solid var(--border); }
+    .btn-add-ch { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+    /* === MAIN CHAT AREA === */
+    .main-area { flex: 1; display: flex; flex-direction: column; position: relative; background: var(--bg); height: 100%; overflow: hidden; }
+    
+    .chat-header {
+        height: 60px; flex-shrink: 0; padding: 0 15px; background: var(--header-bg); 
+        border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 15px; z-index: 10;
+    }
+    .menu-btn { font-size: 24px; cursor: pointer; display: none; }
+    @media (max-width: 700px) { .menu-btn { display: block; } }
+
+    .header-info { flex: 1; }
+    .header-title { font-weight: 700; font-size: 16px; }
+    .header-status { font-size: 11px; color: var(--accent); display: flex; align-items: center; gap: 5px; }
+    .status-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 5px var(--accent); }
+    .status-dot.offline { background: #ff4757; box-shadow: none; }
+
+    /* Messages */
+    .chat-history { 
+        flex: 1; overflow-y: auto; padding: 20px; 
+        display: flex; flex-direction: column; gap: 8px; 
+        scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
+    }
+    
+    .msg-row { display: flex; flex-direction: column; max-width: 85%; animation: popIn 0.2s; position: relative; }
+    .msg-row.me { align-self: flex-end; align-items: flex-end; }
+    .msg-row.other { align-self: flex-start; align-items: flex-start; }
+
+    .msg-bubble {
+        padding: 10px 14px; border-radius: 16px; font-size: 15px; line-height: 1.4; word-wrap: break-word;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .msg-row.me .msg-bubble { background: var(--bubble-me); color: #fff; border-bottom-right-radius: 2px; }
+    .msg-row.other .msg-bubble { background: var(--bubble-other); color: #fff; border-bottom-left-radius: 2px; }
+    
+    .msg-meta { font-size: 10px; color: var(--sub); margin-top: 4px; padding: 0 2px; }
+    .msg-img { max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
+    .msg-file { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-top: 5px; text-decoration: none; color: inherit; border: 1px solid rgba(255,255,255,0.1); }
+
+    /* Input Area */
+    .chat-input-container { 
+        flex-shrink: 0; padding: 10px 15px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom));
+        background: var(--header-bg); border-top: 1px solid var(--border); 
+        display: flex; align-items: flex-end; gap: 10px; 
+    }
+    
+    .btn-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--sidebar-bg); border: 1px solid var(--border); color: var(--sub); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .btn-icon:hover { color: var(--text); background: #333; }
+    
+    textarea {
+        flex: 1; padding: 12px; border-radius: 20px; border: 1px solid var(--border);
+        background: #121212; color: white; font-family: inherit; font-size: 15px;
+        resize: none; outline: none; height: 44px; max-height: 120px;
+    }
+    textarea:focus { border-color: var(--accent); }
+    
+    .btn-send { background: var(--accent); color: white; border: none; }
+
+    /* MODALS */
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; }
+    .modal-box { background: var(--sidebar-bg); width: 90%; max-width: 400px; padding: 20px; border-radius: 16px; border: 1px solid var(--border); }
+    .modal h3 { margin-top: 0; }
+    .full-input { width: 100%; padding: 12px; margin-bottom: 10px; background: #000; border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 14px; }
+    
+    /* Helper */
+    .hidden { display: none !important; }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    
+    /* File Preview */
+    #filePreviewArea { display: none; padding: 10px 15px 0 15px; background: var(--header-bg); font-size: 12px; color: var(--accent); border-top: 1px solid var(--border); }
+
+</style>
+</head>
+<body>
+
+    <!-- OVERLAY (Mobile Sidebar Close) -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <div class="sb-header">
+            <span>Ranger Funk</span>
+            <span style="font-size:12px; opacity:0.5; cursor:pointer;" onclick="appReset()">⚙️</span>
+        </div>
+        <div class="sb-list" id="channelList"></div>
+        <div class="sb-footer">
+            <button class="btn-add-ch" onclick="openAddModal()">+ Neuer Kanal</button>
+        </div>
+    </div>
+
+    <!-- MAIN CHAT -->
+    <div class="main-area">
+        <div class="chat-header">
+            <div class="menu-btn" onclick="toggleSidebar()">☰</div>
+            <div class="header-info">
+                <div class="header-title" id="headerTitle">Kein Kanal gewählt</div>
+                <div class="header-status"><span class="status-dot" id="statusDot"></span> <span id="statusText">Offline</span></div>
+            </div>
+            <button class="btn-icon" onclick="copyInvite()" title="Invite">🔗</button>
+        </div>
+
+        <div class="chat-history" id="chatHistory">
+            <div style="text-align:center; opacity:0.3; margin-top:50px;">
+                <h1>📻</h1>
+                <p>Wähle oder erstelle einen Kanal<br>im Menü links.</p>
+            </div>
+        </div>
+        
+        <!-- File Preview Bar -->
+        <div id="filePreviewArea">📎 Anhang ausgewählt: <span id="fileName"></span> <span onclick="clearFile()" style="cursor:pointer;margin-left:10px;color:white;">✕</span></div>
+
+        <div class="chat-input-container">
+            <button class="btn-icon" onclick="document.getElementById('fileInput').click()">📎</button>
+            <input type="file" id="fileInput" hidden onchange="handleFileSelect(this)">
+            
+            <textarea id="msgInput" placeholder="Nachricht..." rows="1" oninput="autoResize(this)" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendMessage();}"></textarea>
+            
+            <button class="btn-icon btn-send" onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+
+    <!-- ADD CHANNEL MODAL (UPDATED) -->
+    <div id="addModal" class="modal">
+        <div class="modal-box">
+            <h3 style="margin-bottom:15px;">Neuer Kanal</h3>
+            
+            <!-- SERVER SELECTION -->
+            <label style="font-size:11px;color:var(--sub);font-weight:bold;">SERVER</label>
+            <div style="margin-bottom:10px;">
+                <select id="serverSelect" class="full-input" style="cursor:pointer; margin-bottom:5px;" onchange="toggleServerInput()">
+                    <option value="ntfy.sh">🌐 ntfy.sh (Standard)</option>
+                    <option value="custom">⚙️ Eigener Server...</option>
+                </select>
+                <input id="customServerInput" class="full-input" style="display:none;" placeholder="z.B. ntfy.mein-server.de">
+            </div>
+
+            <!-- TOPIC (SMART INPUT) -->
+            <label style="font-size:11px;color:var(--sub);font-weight:bold;">KANAL-CODE / TOPIC</label>
+            <div style="display:flex; gap:10px; margin-bottom:5px;">
+                <input id="newTopic" class="full-input" style="margin-bottom:0; font-family:monospace;" placeholder="Code oder Link einfügen..." oninput="smartParseTopic(this)">
+                <button onclick="generateTopic()" style="padding:0 15px; height:45px; background:var(--border); color:white; border:none; border-radius:8px; cursor:pointer;">🎲</button>
+            </div>
+            <p id="serverPreview" style="font-size:10px; color:var(--accent); margin:0 0 15px 0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">
+                Link: https://ntfy.sh/...
+            </p>
+            
+            <label style="font-size:11px;color:var(--sub);font-weight:bold;">ANZEIGENAME</label>
+            <input id="newChName" class="full-input" placeholder="z.B. Team Alpha">
+            
+            <!-- USER -->
+            <label style="font-size:11px;color:var(--sub);font-weight:bold;">DEIN RUFZEICHEN</label>
+            <input id="newUser" class="full-input" placeholder="z.B. Adlerauge">
+            
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button onclick="saveNewChannel()" class="btn-add-ch">Speichern</button>
+                <button onclick="closeAddModal()" class="btn-add-ch" style="background:#333;">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+/* =========================================================================
+   RANGER FUNK ENGINE V5 (PRO)
+   ========================================================================= */
+
+// --- 1. CONFIG & STATE ---
+let channels = JSON.parse(localStorage.getItem('ranger_channels')) || [];
+let activeChannelId = localStorage.getItem('ranger_active_id') || null;
+let eventSource = null;
+let currentFile = null;
+
+// --- 2. INDEXED DB (Multi-Channel Support) ---
+const DB_NAME = 'RangerProDB';
+const DB_VERSION = 1;
+const STORE = 'messages'; 
+
+const dbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE)) {
+            const store = db.createObjectStore(STORE, { keyPath: 'id' });
+            store.createIndex('topic', 'topic', { unique: false });
+        }
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e);
+});
+
+async function dbSaveMsg(msg) {
+    const db = await dbPromise;
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put(msg);
+    return tx.complete;
+}
+
+async function dbGetMsgs(topic) {
+    const db = await dbPromise;
+    return new Promise(resolve => {
+        const tx = db.transaction(STORE, 'readonly');
+        const index = tx.objectStore(STORE).index('topic');
+        const req = index.getAll(topic);
+        req.onsuccess = () => resolve(req.result);
+    });
+}
+
+// --- 3. INIT ---
+window.onload = () => {
+    if (Notification.permission === 'default') Notification.requestPermission();
+    
+    // Check if empty
+    if(channels.length === 0) {
+        openAddModal();
+    } else {
+        renderChannelList();
+        if(activeChannelId) {
+            const ch = channels.find(c => c.id === activeChannelId);
+            if(ch) switchChannel(ch.id);
+            else if(channels.length > 0) switchChannel(channels[0].id);
+        } else {
+            switchChannel(channels[0].id);
+        }
+    }
+};
+
+// --- 4. CHANNEL & SERVER LOGIC ---
+
+// Helper: Smart Parse
+function toggleServerInput() {
+    const sel = document.getElementById('serverSelect');
+    const inp = document.getElementById('customServerInput');
+    if (sel.value === 'custom') { inp.style.display = 'block'; inp.focus(); } 
+    else { inp.style.display = 'none'; }
+    updateLinkPreview();
+}
+
+function smartParseTopic(inputEl) {
+    const val = inputEl.value.trim();
+    
+    // Check URL
+    if (val.includes('://') || val.includes('ntfy.sh/')) {
+        try {
+            let urlStr = val.startsWith('http') ? val : 'https://' + val;
+            const url = new URL(urlStr);
+            const topic = url.pathname.replace(/^\//, ''); 
+            const server = url.hostname;
+            
+            inputEl.value = topic; // Topic setzen
+            
+            const sel = document.getElementById('serverSelect');
+            const cust = document.getElementById('customServerInput');
+            
+            if (server === 'ntfy.sh') {
+                sel.value = 'ntfy.sh'; cust.style.display = 'none';
+            } else {
+                sel.value = 'custom'; cust.style.display = 'block'; cust.value = server;
+            }
+            
+            inputEl.style.borderColor = '#00b894';
+            setTimeout(() => inputEl.style.borderColor = 'var(--border)', 500);
+
+        } catch (e) { console.log("Parsing error", e); }
+    }
+    updateLinkPreview();
+}
+
+function updateLinkPreview() {
+    const sel = document.getElementById('serverSelect');
+    const cust = document.getElementById('customServerInput');
+    const topic = document.getElementById('newTopic').value;
+    let server = sel.value === 'custom' ? cust.value : sel.value;
+    if(!server) server = 'ntfy.sh';
+    document.getElementById('serverPreview').innerText = `Link: https://${server}/${topic || '...'}`;
+}
+
+function renderChannelList() {
+    const list = document.getElementById('channelList');
+    list.innerHTML = '';
+    
+    channels.forEach(ch => {
+        const div = document.createElement('div');
+        div.className = `channel-item ${ch.id === activeChannelId ? 'active' : ''}`;
+        div.innerHTML = `
+            <div class="ch-avatar">${ch.topic.substring(0,2).toUpperCase()}</div>
+            <div class="ch-info">
+                <div class="ch-name">#${ch.topic}</div>
+                <div class="ch-last">${ch.name}</div>
+            </div>
+            <div onclick="deleteChannel('${ch.id}', event)" style="color:#ff4757; font-size:12px; padding:5px;">✕</div>
+        `;
+        div.onclick = (e) => {
+            if(e.target.innerText === '✕') return;
+            switchChannel(ch.id);
+            toggleSidebar(); 
+        };
+        list.appendChild(div);
+    });
+}
+
+function saveNewChannel() {
+    const name = document.getElementById('newChName').value.trim();
+    const topic = document.getElementById('newTopic').value.trim();
+    const user = document.getElementById('newUser').value.trim();
+    
+    const sel = document.getElementById('serverSelect');
+    let server = sel.value === 'custom' ? document.getElementById('customServerInput').value.trim() : 'ntfy.sh';
+    server = server.replace(/^https?:\/\//, '').replace(/\/$/, '');
+
+    if(!name || !topic || !user || !server) return alert("Bitte alles ausfüllen!");
+    
+    const newCh = {
+        id: Date.now().toString(),
+        name: name,
+        topic: topic,
+        user: user,
+        server: server // NEU: Server speichern
+    };
+    
+    channels.push(newCh);
+    localStorage.setItem('ranger_channels', JSON.stringify(channels));
+    
+    closeAddModal();
+    renderChannelList();
+    switchChannel(newCh.id);
+}
+
+function deleteChannel(id, e) {
+    if(e) e.stopPropagation();
+    if(!confirm("Kanal wirklich löschen?")) return;
+    
+    channels = channels.filter(c => c.id !== id);
+    localStorage.setItem('ranger_channels', JSON.stringify(channels));
+    
+    if(activeChannelId === id) {
+        if(eventSource) eventSource.close();
+        document.getElementById('headerTitle').innerText = "Kein Kanal";
+        document.getElementById('chatHistory').innerHTML = "";
+        activeChannelId = null;
+    }
+    renderChannelList();
+}
+
+async function switchChannel(id) {
+    activeChannelId = id;
+    localStorage.setItem('ranger_active_id', id);
+    renderChannelList();
+    
+    const ch = channels.find(c => c.id === id);
+    if(!ch) return;
+
+    document.getElementById('headerTitle').innerText = `#${ch.topic}`;
+    document.getElementById('statusText').innerText = "Verbinden...";
+    document.getElementById('statusDot').className = "status-dot offline";
+    
+    const msgs = await dbGetMsgs(ch.topic);
+    msgs.sort((a,b) => a.time - b.time);
+    
+    const list = document.getElementById('chatHistory');
+    list.innerHTML = '';
+    msgs.forEach(msg => renderMessage(msg));
+    scrollToBottom();
+    
+    startStream(ch);
+}
+
+// --- 5. NETWORK & STREAM ---
+function startStream(ch) {
+    if (eventSource) eventSource.close();
+    
+    // Server nutzen
+    const server = ch.server || 'ntfy.sh';
+    const url = `https://${server}/${ch.topic}/sse`;
+    
+    eventSource = new EventSource(url);
+    
+    eventSource.onopen = () => {
+        document.getElementById('statusText').innerText = "Online";
+        document.getElementById('statusDot').className = "status-dot";
+    };
+    
+    eventSource.onerror = () => {
+        document.getElementById('statusText').innerText = "Verbindung verloren...";
+        document.getElementById('statusDot').className = "status-dot offline";
+    };
+
+    eventSource.onmessage = async (e) => {
+        const data = JSON.parse(e.data);
+        if (data.event === 'message') {
+            const msgObj = {
+                id: data.id,
+                time: data.time * 1000,
+                user: data.title || 'Unbekannt',
+                text: data.message || '',
+                topic: ch.topic,
+                attachment: data.attachment || null
+            };
+
+            await dbSaveMsg(msgObj);
+            
+            // Live Update
+            if(activeChannelId && channels.find(c => c.id === activeChannelId)?.topic === ch.topic) {
+                renderMessage(msgObj);
+                scrollToBottom();
+            }
+            
+            // Notification
+            if (document.visibilityState === 'hidden' && msgObj.user !== ch.user) {
+                new Notification(`Funk: ${msgObj.user}`, { body: msgObj.text || 'Datei empfangen' });
+            }
+        }
+    };
+}
+
+// --- 6. SENDING (TEXT & FILES - FIX FÜR EMOJIS) ---
+async function sendMessage() {
+    const ch = channels.find(c => c.id === activeChannelId);
+    if(!ch) return;
+
+    const inp = document.getElementById('msgInput');
+    const text = inp.value.trim();
+    
+    if (!text && !currentFile) return;
+
+    // UI Feedback
+    const btn = document.querySelector('.btn-send');
+    btn.disabled = true; btn.style.opacity = 0.5;
+
+    try {
+        let body = text;
+        const headers = {}; // Wir lassen den Title hier leer!
+        
+        // TRICK: Wir bauen den Titel mit Emoji sicher in die URL ein
+        // encodeURIComponent wandelt das 💬 in %F0%9F%92%AC um, was der Browser erlaubt
+        const safeTitle = encodeURIComponent(`💬 ${ch.user}`);
+        
+        // Server bestimmen
+        const server = ch.server || 'ntfy.sh';
+        let url = `https://${server}/${ch.topic}?title=${safeTitle}`;
+
+        // Datei Logik
+        if (currentFile) {
+            body = currentFile; 
+            headers['Filename'] = currentFile.name;
+            
+            // Wenn Text dabei ist, muss er als Header mit gesendet werden.
+            // ACHTUNG: Auch hier können Emojis crashen, deshalb packen wir den Text
+            // bei Datei-Uploads lieber auch in die URL, wenn er Sonderzeichen hat.
+            if(text) {
+                // Wir nutzen den 'message' Parameter für den Text, um Header-Probleme zu vermeiden
+                const safeText = encodeURIComponent(text);
+                url += `&message=${safeText}`;
+            }
+        }
+
+        await fetch(url, {
+            method: 'POST',
+            body: body,
+            headers: headers
+        });
+
+        // Reset
+        inp.value = '';
+        inp.style.height = '44px'; 
+        clearFile();
+        
+    } catch(e) {
+        alert("Senden fehlgeschlagen: " + e.message);
+    } finally {
+        btn.disabled = false; btn.style.opacity = 1;
+        inp.focus();
+    }
+}
+
+
+// --- 7. RENDERING ---
+function renderMessage(msg) {
+    if(document.getElementById(msg.id)) return;
+
+    const list = document.getElementById('chatHistory');
+    const ch = channels.find(c => c.id === activeChannelId);
+    const isMe = (msg.user.includes(ch.user)); // Einfacher Check
+    const timeStr = new Date(msg.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+    const row = document.createElement('div');
+    row.className = `msg-row ${isMe ? 'me' : 'other'}`;
+    row.id = msg.id;
+
+    let content = "";
+    
+    if (msg.attachment) {
+        if (msg.attachment.type.startsWith('image/')) {
+            content += `<img src="${msg.attachment.url}" class="msg-img" onclick="window.open('${msg.attachment.url}')">`;
+        } else {
+            content += `<a href="${msg.attachment.url}" target="_blank" class="msg-file">📄 ${msg.attachment.name}</a>`;
+        }
+    }
+    
+    if (msg.text) {
+        const linked = msg.text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:white;text-decoration:underline;">Link</a>');
+        content += `<div style="margin-top:${msg.attachment?5:0}px">${linked}</div>`;
+    }
+
+    row.innerHTML = `
+        ${!isMe ? `<div class="msg-sender">${msg.user.replace('💬 ','')}</div>` : ''}
+        <div class="msg-bubble">${content}</div>
+        <div class="msg-meta"><span>${timeStr}</span></div>
+    `;
+
+    list.appendChild(row);
+}
+
+// --- 8. FILE HANDLING ---
+function handleFileSelect(input) {
+    if(input.files && input.files[0]) {
+        currentFile = input.files[0];
+        document.getElementById('filePreviewArea').style.display = 'block';
+        document.getElementById('fileName').innerText = currentFile.name;
+    }
+}
+
+function clearFile() {
+    currentFile = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('filePreviewArea').style.display = 'none';
+}
+
+// --- 9. UTILS ---
+function openAddModal() { document.getElementById('addModal').style.display = 'flex'; generateTopic(); }
+function closeAddModal() { document.getElementById('addModal').style.display = 'none'; }
+
+function generateTopic() {
+    document.getElementById('newTopic').value = 'ranger_' + Math.random().toString(36).substring(2, 6);
+    updateLinkPreview();
+}
+
+function toggleSidebar() {
+    const sb = document.getElementById('sidebar');
+    const ov = document.querySelector('.sidebar-overlay');
+    if(sb.classList.contains('open')) {
+        sb.classList.remove('open'); ov.classList.remove('active');
+    } else {
+        sb.classList.add('open'); ov.classList.add('active');
+    }
+}
+
+function scrollToBottom() {
+    const list = document.getElementById('chatHistory');
+    list.scrollTop = list.scrollHeight;
+}
+
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+function copyInvite() {
+    const ch = channels.find(c => c.id === activeChannelId);
+    if(!ch) return;
+    
+    const server = ch.server || 'ntfy.sh';
+    const url = `https://${server}/${ch.topic}`;
+    const text = `Komm in den Funk! 📻\nKanal: #${ch.topic}`;
+
+    if (navigator.share) {
+        navigator.share({ title: 'Ranger Funk', text: text, url: url }).catch(console.error);
+    } else {
+        prompt("Link kopieren:", url);
+    }
+}
+
+function appReset() {
+    if(confirm("ACHTUNG: Alle Kanäle und Chats löschen?")) {
+        localStorage.clear();
+        indexedDB.deleteDatabase(DB_NAME);
+        location.reload();
+    }
+}
+
+</script>
+</body>
+</html>
