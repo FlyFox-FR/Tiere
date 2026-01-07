@@ -4791,13 +4791,6 @@ body.dark .deck-card {
 <!-- ... nach dem tagFilterContainer ... -->
 <div id="tagFilterContainer" class="tag-scroll">...</div>
 
-<!-- NEUER RANGER FUNK BUTTON -->
-<div style="padding: 0 5px; margin-bottom: 15px;">
-    <button onclick="openRangerChat()" style="width:100%; background: linear-gradient(135deg, #00b894, #008970); color: white; border-radius: 18px; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3); border: none;">
-        <span style="font-size: 20px;">📻</span>
-        <span style="font-weight: 800; letter-spacing: 0.5px;">RANGER FUNK ÖFFNEN</span>
-    </button>
-</div>
 
 
   <!-- 1. HIER ERSCHEINT DER EINKLAPPEN BUTTON (Dynamisch per JS) -->
@@ -7176,43 +7169,51 @@ function render() {
     const searchVal = document.getElementById('listSearch').value.toLowerCase().trim();
     const isSearching = searchVal.length > 0 || currentFilter !== 'ALL';
     
-  
-// --- TAG FILTER RENDERN ---
-    if(tagCont) {
-        if(searchVal.length > 0 && searchMode === 'notes') {
-            tagCont.style.display = 'none'; 
-        } else {
-            tagCont.style.display = 'flex'; 
-            let tagHTML = '';
-            
-            // STORY RING (Der Fix)
-            if (typeof storyPreviewData !== 'undefined' && storyPreviewData) {
-               // Wir nutzen window.openStoryModal() um sicher zu sein
-               const innerContent = storyPreviewData.img 
-                   ? `<img src="${storyPreviewData.img}">` 
-                   : storyPreviewData.emoji;
-                   
-               tagHTML += `
-               <div class="tag-story-item" onclick="window.openStoryModal()">
-                   <div class="tsr-border"></div>
-                   <div class="tsr-inner">${innerContent}</div>
-                   <div class="tsr-badge">${storyPreviewData.count}</div>
-               </div>`;
-            }
-            
-            // Normale Tags
-            tagHTML += `<div class="tag-pill ${currentFilter==='ALL'?'active':''}" onclick="safeRun(filterTags, 'ALL')" id="tag-ALL">Alle</div>`;
-            
-            const allTags = new Set(); 
-            animals.forEach(a => a.tags?.forEach(t => allTags.add(t)));
-            
-            allTags.forEach(t => { 
-                tagHTML += `<div class="tag-pill ${currentFilter===t?'active':''}" onclick="safeRun(filterTags, '${t}')" id="tag-${t}">${t}</div>`; 
-            });
-            
-            tagCont.innerHTML = tagHTML;
+
+   // --- TAG FILTER RENDERN ---
+if(tagCont) {
+    if(searchVal.length > 0 && searchMode === 'notes') {
+        tagCont.style.display = 'none'; 
+    } else {
+        tagCont.style.display = 'flex'; 
+        let tagHTML = '';
+        
+        // 1. STORY RING (Links)
+        if (typeof storyPreviewData !== 'undefined' && storyPreviewData) {
+           const innerContent = storyPreviewData.img 
+               ? `<img src="${storyPreviewData.img}">` 
+               : storyPreviewData.emoji;
+               
+           tagHTML += `
+           <div class="tag-story-item" onclick="window.openStoryModal()">
+               <div class="tsr-border"></div>
+               <div class="tsr-inner">${innerContent}</div>
+               <div class="tsr-badge">${storyPreviewData.count}</div>
+           </div>`;
         }
+        
+        // 2. RANGER FUNK CHIP (NEU: Rechts neben dem Ring)
+        // Wir nutzen die Klasse 'tag-pill', überschreiben aber die Farbe für den "Ranger-Look"
+        tagHTML += `
+        <div class="tag-pill" onclick="openRangerChat()" style="background: linear-gradient(135deg, #00b894, #008970); color: white; border: none; margin-right:8px; box-shadow: 0 2px 8px rgba(0, 184, 148, 0.3);">
+            <span style="font-size:16px; margin-right:5px;">📻</span> 
+            <span>Funk</span>
+        </div>`;
+        
+        // 3. Der "Alle" Button
+        tagHTML += `<div class="tag-pill ${currentFilter==='ALL'?'active':''}" onclick="safeRun(filterTags, 'ALL')" id="tag-ALL">Alle</div>`;
+        
+        // 4. Die restlichen Tags
+        const allTags = new Set(); 
+        animals.forEach(a => a.tags?.forEach(t => allTags.add(t)));
+        
+        allTags.forEach(t => { 
+            tagHTML += `<div class="tag-pill ${currentFilter===t?'active':''}" onclick="safeRun(filterTags, '${t}')" id="tag-${t}">${t}</div>`; 
+        });
+        
+        tagCont.innerHTML = tagHTML;
     }
+}
 
     // --- DATEN SAMMELN ---
     const h = getHistory(currentSystemYear);
