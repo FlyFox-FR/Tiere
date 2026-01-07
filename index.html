@@ -4734,111 +4734,6 @@ body.dark .deck-card {
     height: 100%; background: linear-gradient(90deg, var(--accent), #00b894); 
     width: 0%; transition: width 0.3s linear;
 }
-/* === TOUR MODE FIXES (Repariert) === */
-
-/* 1. Clipping verhindern (Dauerhaft während der Tour) */
-/* Wir erlauben den Containern, über ihren Rand zu malen, heben sie aber NICHT an */
-body.tour-active .tag-scroll, 
-body.tour-active .search-fusion-wrapper,
-body.tour-active .list-header,
-body.tour-active .nav-island {
-    overflow: visible !important;
-    mask-image: none !important;
-    -webkit-mask-image: none !important;
-    /* WICHTIG: Hier KEIN z-index mehr! */
-}
-
-/* 2. Das aktive Element nach vorne holen */
-/* Nur wer die Klasse .tour-highlight hat, darf über den Schatten! */
-.tour-highlight {
-    z-index: 10010 !important; /* Höher als Overlay */
-    position: relative !important; /* Nötig damit z-index greift */
-    /* Den riesigen Schatten für den Abdunkelungs-Effekt */
-    box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.85), 0 0 15px var(--accent) !important;
-}
-
-/* 3. Spezial-Fix für Bottom Nav Icons */
-/* Da die Icons transparent sind, brauchen sie einen Hintergrund, wenn sie gehighlighted werden */
-.nav-item.tour-highlight {
-    background: var(--card-solid) !important; /* Damit man den Schatten nicht drunter sieht */
-    border-radius: 16px !important;
-    z-index: 10015 !important; /* Noch ein Stück höher */
-    /* Kleinerer Schattenradius für die Icons, damit es hübsch aussieht */
-    box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.85), 0 0 20px var(--accent) !important;
-}
-
-/* 4. Nav Highlight erzwingen (Grüne Farbe) */
-.nav-item.force-active {
-    color: var(--accent) !important;
-    font-weight: 700 !important;
-}
-.nav-item.force-active .nav-icon {
-    transform: translateY(-5px) scale(1.1);
-    filter: drop-shadow(0 4px 5px var(--accent-glow));
-}
-
-/* === ONBOARDING Z-INDEX FIX === */
-
-/* 1. Die Sprechblase muss GANZ oben sein (höher als Highlight & Schatten) */
-.onboarding-box {
-    z-index: 30000 !important; /* Brutal hoch setzen */
-    position: fixed !important; /* Sicherstellen, dass sie fixed ist */
-}
-
-/* 2. Der Klick-Schutz-Hintergrund */
-#onboardingOverlay {
-    z-index: 10000 !important; /* Basis Ebene für Tour */
-}
-
-/* ZUR ERINNERUNG (schon drin, aber zur Info): 
-   .tour-highlight ist ca. 10010 
-   Die Box muss also > 10010 sein. 30000 ist sicher.
-*/
-/* === TOUR MODE FINAL FIXES === */
-
-/* 1. Reset der Container: Sie müssen UNTER dem Overlay (10000) bleiben */
-body.tour-active .nav-island-container,
-body.tour-active .nav-island,
-body.tour-active .list-header,
-body.tour-active .tag-scroll {
-    z-index: 9000 !important; /* Sicher unter dem Overlay */
-    position: fixed; /* Oder relative, je nach Element, aber z-index greift nur so */
-}
-
-/* Spezialfall List Header: Muss relativ sein für z-index */
-body.tour-active .list-header {
-    position: relative !important;
-    z-index: 9000 !important;
-}
-
-/* 2. Clipping erlauben (damit Schatten sichtbar ist), aber nicht anheben */
-body.tour-active .tag-scroll, 
-body.tour-active .search-fusion-wrapper {
-    overflow: visible !important;
-    mask-image: none !important;
-    -webkit-mask-image: none !important;
-}
-
-/* 3. Das aktive Element nach oben holen (Über Overlay) */
-.tour-highlight {
-    z-index: 10010 !important;
-    position: relative !important;
-    box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.85), 0 0 15px var(--accent) !important;
-    pointer-events: none; /* Klicks durchlassen (optional) */
-}
-
-/* 4. Spezialfall Nav-Items: Die brauchen einen Hintergrund, wenn aktiv */
-.nav-item.tour-highlight {
-    background: var(--card-solid) !important;
-    border-radius: 16px !important;
-    z-index: 10015 !important; /* Über der Nav-Leiste */
-}
-
-/* 5. Sprechblase GANZ oben */
-.onboarding-box {
-    z-index: 30000 !important;
-}
-
 </style>
 </head>
 <body>
@@ -10017,86 +9912,47 @@ const tourSteps = [
 
 
 function startTutorial(force = false) {
-    if (!force && localStorage.getItem('tutorial_v7_done') === 'true') return;
-    
-    // 1. Klasse setzen für CSS Fixes
-    document.body.classList.add('tour-active');
-    
+    if (!force && localStorage.getItem('tutorial_v3_done') === 'true') return;
     document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
     window.scrollTo({top: 0, behavior: 'smooth'});
-    
     currentStep = 0;
     document.getElementById('onboardingOverlay').style.display = 'block';
     document.getElementById('onboardingBubble').style.display = 'block';
-    
     processStep(0);
 }
 
-function endTutorial(completed = false) {
-    // 1. Klasse entfernen
-    document.body.classList.remove('tour-active');
-    
-    document.getElementById('onboardingOverlay').style.display = 'none';
-    document.getElementById('onboardingBubble').style.display = 'none';
-    document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
-    
-    // Nav Reset
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('force-active'));
-    
-    // Zurück zur Liste
-    const listBtn = document.querySelectorAll('.nav-item')[0]; 
-    switchView('view-list', listBtn);
-    window.scrollTo({top: 0, behavior: 'smooth'});
-
-    if (completed) {
-        localStorage.setItem('tutorial_v7_done', 'true');
-        showErrorToast("Alles klar! Viel Spaß! 🐾", true);
-        if(typeof playSound === 'function') playSound('fanfare');
-    }
-}
-
 // FIX 1: Korrekte Indices für die Navigation
-/* === PROCESS STEP (MIT NAV HIGHLIGHT FIX) === */
-/* === FIX: NAV HIGHLIGHT INDICES === */
 function processStep(index) {
     if (index >= tourSteps.length) { endTutorial(true); return; }
     const step = tourSteps[index];
     
-    // 1. Navigation Mapping (View -> Button Index)
-    // Die Nav-Items sind: [0]Liste, [1]Stats, [2]FAB(Mitte), [3]Map, [4]Admin
-    let btnIndex = 0; // Default Liste
-    
-    if(step.view === 'view-stats') btnIndex = 1;
-    if(step.view === 'view-map')   btnIndex = 3; // KORRIGIERT (war 2)
-    if(step.view === 'view-admin') btnIndex = 4; // KORRIGIERT (war 3)
+    if (step.view) {
+        // Nav-Items sind: [0]Liste, [1]Stats, (FAB), [2]Map, [3]Admin
+        let btnIndex = 0;
+        if(step.view === 'view-stats') btnIndex = 1;
+        if(step.view === 'view-map') btnIndex = 2;   // KORRIGIERT (war 3)
+        if(step.view === 'view-admin') btnIndex = 3; // KORRIGIERT (war 4)
 
-    // 2. Ansicht wechseln & Button erzwingen
-    const navBtns = document.querySelectorAll('.nav-item');
-    // Sicherheitscheck, falls Element existiert
-    if(navBtns[btnIndex]) {
-        // View wechseln
-        switchView(step.view, navBtns[btnIndex]);
+        const navBtns = document.querySelectorAll('.nav-item');
+        if(navBtns[btnIndex]) {
+            switchView(step.view, navBtns[btnIndex]);
+        }
         
-        // Highlight visuell erzwingen (Klasse hinzufügen)
-        // Erst alle säubern
-        navBtns.forEach(b => b.classList.remove('force-active'));
-        // Dann den richtigen markieren
-        navBtns[btnIndex].classList.add('force-active');
-    }
-    
-    // Widget laden erzwingen
-    if (step.target === '#factWidget') loadRandomFact(); 
-    
-    // Scrollen bei Admin
-    if (step.view === 'view-admin' && (step.target === '.sync-card' || step.target === '#backupCard')) {
-         setTimeout(() => {
-             const el = document.querySelector(step.target);
-             if(el) el.scrollIntoView({behavior: 'smooth', block: 'center'});
-         }, 650);
+        // Widget laden erzwingen
+        if (step.target === '#factWidget') loadRandomFact(); 
+        
+        // Scrollen bei Admin (Verzögert)
+        if (step.view === 'view-admin' && (index === 8 || index === 9)) {
+             setTimeout(() => {
+                 const el = document.querySelector(step.target);
+                 if(el) el.scrollIntoView({behavior: 'smooth', block: 'center'});
+             }, 650);
+        }
     }
 
     setTimeout(() => { showStepVisuals(step, index); }, 600);
 }
+
 // FIX 2: Bubble Positionierung (Sicherheitsabstand unten)
 /* === FIX: ONBOARDING POSITIONING (Smart Clamp) === */
 function showStepVisuals(step, index) {
@@ -10194,6 +10050,22 @@ function fallbackBubblePosition(overlay, bubble) {
 }
 
 function nextStep() { currentStep++; processStep(currentStep); }
+
+function endTutorial(completed = false) {
+    document.getElementById('onboardingOverlay').style.display = 'none';
+    document.getElementById('onboardingBubble').style.display = 'none';
+    document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+    
+    const listBtn = document.querySelectorAll('.nav-item')[0]; 
+    switchView('view-list', listBtn);
+    window.scrollTo({top: 0, behavior: 'smooth'});
+
+    if (completed) {
+        localStorage.setItem('tutorial_v3_done', 'true');
+        showErrorToast("Alles klar! Viel Spaß! 🐾", true);
+        if(typeof playSound === 'function') playSound('fanfare');
+    }
+}
 
 
 /* === CONTEXT MENU LOGIC (DAS HAT GEFEHLT) === */
@@ -10428,11 +10300,10 @@ let deckCards = []; // Speichert die DOM Elemente
 
 /* === FIX: MEMORY DECK & STORY RING (COMBINED) === */
 
-/* === FIX: MEMORY DECK (IMMER SICHTBAR + 0 STATE) === */
 async function initMemoryDeck() {
     const container = document.getElementById('cardDeck');
     
-    // 1. Daten sammeln
+    // 1. Daten sammeln (Logic wie gehabt)
     let candidates = [];
     const years = getAvailableYears();
     
@@ -10469,88 +10340,64 @@ async function initMemoryDeck() {
         });
     });
 
-    // 2. STORY RING DATEN VORBEREITEN (IMMER!)
-    let ringImg = null;
-    let ringEmoji = '📸'; // Standard Icon für leeren Zustand
-    
-    // Wenn wir Kandidaten haben, mischen und auswählen
-    let selection = [];
-    
-    if (candidates.length > 0) {
-        // Shuffle
-        candidates.sort(() => 0.5 - Math.random());
-        selection = candidates.slice(0, 5); // Max 5 Karten
-        
-        const firstItem = selection[0];
-        ringEmoji = firstItem.emoji;
-
-        // Versuch, ein Bild für den Ring zu laden
-        if (firstItem.noteImageId) {
-            try { ringImg = await dbGetImg(firstItem.noteImageId); } catch(e){}
-        }
-        if (!ringImg && firstItem.imageId) {
-            try { ringImg = await dbGetImg(firstItem.imageId); } catch(e){}
-        }
+    // 2. CHECK: Genug Daten?
+    // Wenn weniger als 3 Memories da sind, keinen Ring anzeigen
+    if(candidates.length < 3) {
+        storyPreviewData = null;
+        render(); // UI aktualisieren (Ring verschwindet)
+        return;
     }
 
-    // Globale Variable setzen (Ring erscheint jetzt IMMER)
+    // 3. Shuffle & Auswahl
+    candidates.sort(() => 0.5 - Math.random());
+    const selection = candidates.slice(0, 5);
+
+    // --- TEIL A: STORY RING DATEN VORBEREITEN (DAS HAT GEFEHLT!) ---
+    let ringImg = null;
+    const firstItem = selection[0];
+
+    // Versuch, ein Bild für den Ring zu laden
+    if (firstItem.noteImageId) {
+        try { ringImg = await dbGetImg(firstItem.noteImageId); } catch(e){}
+    }
+    if (!ringImg && firstItem.imageId) {
+        try { ringImg = await dbGetImg(firstItem.imageId); } catch(e){}
+    }
+
+    // Globale Variable setzen
     storyPreviewData = {
-        count: candidates.length, // Wahre Gesamtanzahl (0, 1, 2...)
-        emoji: ringEmoji,
+        count: selection.length, // Gesamtzahl im Badge anzeigen
+        emoji: firstItem.emoji,
         img: ringImg
     };
 
-    // UI Update triggern (damit der Ring erscheint)
+    // WICHTIG: Startseite neu zeichnen, damit der Ring erscheint!
     render(); 
 
     // --- TEIL B: KARTEN STAPEL BAUEN (Modal Inhalt) ---
     if (!container) return;
     
+    // Reset & Empty State
     container.innerHTML = '';
     deckCards = [];
     
-    // FALL 1: KEINE DATEN (0) -> "Call to Action"
-    if (selection.length === 0) {
-        const emptyState = document.createElement('div');
-        emptyState.className = 'deck-empty';
-        // Interaktiver machen
-        emptyState.style.pointerEvents = "auto"; 
-        
-        emptyState.innerHTML = `
-            <div style="font-size:60px; margin-bottom:15px; animation:floatBubble 3s infinite;">📸</div>
-            <div style="font-weight:900; font-size:22px; margin-bottom:10px;">Deine Story ist leer</div>
-            <p style="opacity:0.7; font-size:14px; margin-top:0; max-width:250px; line-height:1.5;">
-                Hier erscheinen deine Highlights.<br>
-                Geh raus, entdecke Tiere und mache Fotos!
-            </p>
-            
-            <button onclick="closeModal('storyModal'); setTimeout(openQuickSighting, 300);" 
-                    style="margin-top:25px; background:var(--accent); color:white; border:none; padding:15px 30px; border-radius:30px; font-weight:bold; cursor:pointer; font-size:16px; box-shadow:0 5px 20px var(--accent-glow);">
-                Jetzt starten 🚀
-            </button>
-        `;
-        container.appendChild(emptyState);
-        return;
-    }
-
-    // FALL 2: DATEN VORHANDEN -> "Alles erledigt" (Ende des Stapels)
-    const doneState = document.createElement('div');
-    doneState.className = 'deck-empty';
-    doneState.innerHTML = `
+    const emptyState = document.createElement('div');
+    emptyState.className = 'deck-empty';
+    emptyState.innerHTML = `
         <div style="font-size:50px; margin-bottom:10px;">✅</div>
-        <div style="font-weight:bold; font-size:18px;">Alles gesehen!</div>
-        <div style="opacity:0.6; font-size:13px; margin-top:5px;">Komm später wieder.</div>
-        <button onclick="closeModal('storyModal')" style="margin-top:20px; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.4); color:white; padding:10px 25px; border-radius:30px; cursor:pointer;">Schließen</button>
+        <div style="font-weight:bold; font-size:18px;">Alles erledigt!</div>
+        <div style="opacity:0.6; font-size:13px; margin-top:5px;">Komm morgen wieder.</div>
+        <button onclick="closeModal('storyModal')" style="margin-top:20px; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.4); padding:10px 25px; border-radius:30px; cursor:pointer;">Schließen</button>
     `;
-    container.appendChild(doneState);
+    container.appendChild(emptyState);
 
-    // Karten rendern (Stapel)
+    // Karten rendern
     for (let i = 0; i < selection.length; i++) {
         const item = selection[i];
         const el = document.createElement('div');
         el.className = 'deck-card';
         
-        // Bild laden
+        // Bild für Karte laden
         let cardImg = '';
         if(item.noteImageId) { try { cardImg = await dbGetImg(item.noteImageId); } catch(e){} }
         if(!cardImg && item.imageId) { try { cardImg = await dbGetImg(item.imageId); } catch(e){} }
@@ -10579,9 +10426,9 @@ async function initMemoryDeck() {
         deckCards.push(el);
     }
 
+    // Visuelles Stapeln aktivieren
     updateDeckVisuals();
 }
-
 
 // 2. Das visuelle Stapeln (Der Kern-Fix)
 function updateDeckVisuals() {
