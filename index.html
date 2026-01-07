@@ -4910,53 +4910,51 @@ body.dark .deck-card {
     
     <div class="accordion-content">
         <div class="accordion-inner">
-            <p style="font-size:12px; opacity:0.8; margin-bottom:15px;">
-                Synchronisiere deine Geräte (auf Wunsch 128bit AES-GCM verschlüsselt!). Wähle einen Kanal:
-<!-- HEADER MIT HILFE-TOGGLE -->
-<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
- 
-    <button onclick="document.getElementById('syncHelpBox').style.display = document.getElementById('syncHelpBox').style.display==='none'?'block':'none'" 
-            style="font-size:11px; background:var(--bg); border:1px solid var(--accent); color:var(--accent); padding:4px 8px; border-radius:12px; cursor:pointer; font-weight:bold;">
-        ℹ️ Anleitung & Info
-    </button>
-</div>
+            
+            <!-- HEADER MIT HILFE-TOGGLE -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
+                <p style="font-size:12px; opacity:0.8; margin:0; max-width:70%;">
+                    Synchronisiere deine Geräte über einen geheimen Kanal.
+                </p>
+                <button onclick="document.getElementById('syncHelpBox').style.display = document.getElementById('syncHelpBox').style.display==='none'?'block':'none'" 
+                        style="font-size:11px; background:var(--bg); border:1px solid var(--accent); color:var(--accent); padding:4px 8px; border-radius:12px; cursor:pointer; font-weight:bold;">
+                    ℹ️ Anleitung & Info
+                </button>
+            </div>
 
-<!-- VERSTECKTE HILFE BOX -->
-<div id="syncHelpBox" style="display:none; background:var(--bg); padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid var(--btn); font-size:12px; line-height:1.5;">
-    <h4 style="margin:0 0 10px 0; color:var(--text);">So funktioniert's:</h4>
-    <ul style="margin:0; padding-left:15px; opacity:0.9;">
-        <li style="margin-bottom:8px;">
-            <b>📡 Der Briefkasten:</b> Wir nutzen <i>ntfy.sh</i> als temporären Speicher. Deine Daten liegen dort für <b>12 Stunden</b> bereit und werden dann automatisch gelöscht.
-        </li>
-        <li style="margin-bottom:8px;">
-            <b>🔐 Maximale Sicherheit:</b> Wenn du beim Kanal-Erstellen ein <b>Passwort</b> setzt, werden deine Daten auf deinem Handy verschlüsselt (AES-GCM). Der Server sieht nur Buchstabensalat. Nur du kannst es entschlüsseln.
-        </li>
-        <li style="margin-bottom:8px;">
-            <b>🔄 Der Ablauf:</b>
-            1. Erstelle hier einen Kanal (mit Passwort!).<br>
-            2. Gib <b>exakt denselben</b> Kanal & Passwort auf deinem anderen Gerät ein.<br>
-            3. Klicke hier auf <b>"Hochladen"</b> und drüben auf <b>"Prüfen" &rarr; "Laden"</b>.
-        </li>
-    </ul>
-    <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--btn); text-align:center; color:var(--sub); font-size:11px;">
-        Deine Daten verlassen niemals ungeschützt dein Gerät (bei gesetztem Passwort).
-    </div>
-</div>
+            <!-- VERSTECKTE HILFE BOX -->
+            <div id="syncHelpBox" style="display:none; background:var(--bg); padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid var(--btn); font-size:12px; line-height:1.5;">
+                <h4 style="margin:0 0 10px 0; color:var(--text);">So funktioniert's:</h4>
+                <ul style="margin:0; padding-left:15px; opacity:0.9;">
+                    <li style="margin-bottom:8px;">
+                        <b>📡 Der Briefkasten:</b> Wir nutzen <i>ntfy.sh</i> als temporären Speicher. Deine Daten liegen dort für <b>12 Stunden</b> bereit.
+                    </li>
+                    <li style="margin-bottom:8px;">
+                        <b>🔐 Maximale Sicherheit:</b> Wenn du ein <b>Passwort</b> setzt, werden deine Daten auf deinem Handy verschlüsselt (AES-GCM). Der Server sieht nur Buchstabensalat.
+                    </li>
+                    <li style="margin-bottom:8px;">
+                        <b>🔄 Der Ablauf:</b>
+                        1. Erstelle hier einen Kanal (mit Passwort!).<br>
+                        2. Gib <b>exakt denselben</b> Kanal & Passwort auf deinem anderen Gerät ein.<br>
+                        3. Klicke hier auf <b>"Hochladen"</b> und drüben auf <b>"Prüfen" &rarr; "Laden"</b>.
+                    </li>
+                </ul>
+            </div>
 
-            </p>
-
-            <!-- Kanal Wahl & Management -->
+            <!-- TEIL 1: KANAL WAHL & MANAGEMENT (Das gefixte Stück) -->
             <div class="sync-controls-row">
                 <select id="syncChannelSelect" class="sync-select" onchange="safeRun(onSyncChannelChange)">
                     <option value="" disabled selected>-- Kein Kanal --</option>
                 </select>
                 
+                <!-- Immer sichtbar: Neu erstellen -->
                 <div class="sync-icon-btn" onclick="openAddSyncModal()" title="Neuer Kanal" style="background:var(--accent); color:white;">+</div>
-                <div class="sync-icon-btn" onclick="copySyncKey()" title="Key kopieren">📋</div>
-                <div class="sync-icon-btn" onclick="deleteSyncChannel()" title="Löschen" style="color:var(--err-text);">🗑️</div>
+                
+                <!-- Kontext Menü für den aktiven Kanal -->
+                <div class="sync-icon-btn" onclick="openSyncChannelMenu(event)" title="Kanal Optionen" style="font-weight:900;">⋮</div>
             </div>
 
-            <!-- Haupt-Aktionen -->
+            <!-- TEIL 2: HAUPT-AKTIONEN -->
             <div class="sync-action-grid">
                 <button onclick="safeRun(startCloudPush)" class="sync-main-btn" style="background:linear-gradient(135deg, var(--accent), #2980b9); color:white;">
                     <span style="font-size:24px">📤</span> 
@@ -4968,7 +4966,7 @@ body.dark .deck-card {
                 </button>
             </div>
 
-            <!-- Liste gefundener Backups -->
+            <!-- TEIL 3: LISTE GEFUNDENER BACKUPS -->
             <div id="syncListContainer" style="display:none; margin-top:15px; border-top:1px solid var(--btn); padding-top:10px;">
                 <div style="font-size:11px; font-weight:bold; margin-bottom:5px; opacity:0.5;">GEFUNDENE BACKUPS (Letzte 12h):</div>
                 <div id="syncListItems"></div>
@@ -4976,7 +4974,6 @@ body.dark .deck-card {
         </div>
     </div>
 </div>
-
 
 <!-- MODAL: NEUER KANAL (Updated) -->
 <div id="syncAddModal" class="modal" style="display:none; z-index:22000; align-items:center; justify-content:center;">
@@ -6784,6 +6781,7 @@ let storyPreviewData = null; // Speichert Daten für den Mini-Ring
 let listExpanded = localStorage.getItem('listExpandedState') === 'true';
 let sortMode = 'fav'; 
 let appMode = 'animals'; // 'animals', 'notes', 'gallery'
+let editingSyncId = null; 
 let viewMode = 'list';
 let libSearchMode = 'animals'; // 'animals' | 'facts'
 let searchMode = 'animals'; // 'animals' oder 'notes'
@@ -12020,12 +12018,7 @@ function onSyncChannelChange() {
     document.getElementById('syncListContainer').style.display = 'none';
 }
 
-function openAddSyncModal() {
-    document.getElementById('newSyncName').value = '';
-    document.getElementById('newSyncTopic').value = '';
-    generateRandomTopic(); // Direkt einen vorschlagen
-    document.getElementById('syncAddModal').style.display = 'flex'; // Flex für Zentrierung
-}
+
 
 /* === FIX: Topic Länge korrigiert (Max 64 Zeichen total) === */
 function generateRandomTopic() {
@@ -12050,24 +12043,91 @@ function generateRandomTopic() {
     document.getElementById('newSyncTopic').value = result;
 }
 
+/* === EDIT & ADD LOGIC === */
+
+// Variable für Edit-Modus (oben bei den Globals einfügen oder hier)
+// let editingSyncId = null; 
+
+function openAddSyncModal() {
+    // RESET: Wir sind im "Neu"-Modus
+    editingSyncId = null; 
+    
+    document.getElementById('newSyncName').value = '';
+    document.getElementById('newSyncTopic').value = '';
+    document.getElementById('newSyncPass').value = '';
+    
+    generateRandomTopic(); // Neuen Key vorschlagen
+    
+    // Modal Titel anpassen (Kosmetik)
+    const titleEl = document.querySelector('#syncAddModal h3');
+    if(titleEl) titleEl.innerText = "Neuer Sync-Kanal";
+    
+    document.getElementById('syncAddModal').style.display = 'flex';
+}
+
+function copySyncPass() {
+    if(!activeSyncId) return;
+    const ch = syncChannels.find(c => c.id === activeSyncId);
+    
+    if(ch && ch.password) {
+        navigator.clipboard.writeText(ch.password).then(() => {
+            showErrorToast("Passwort kopiert! 🔑", true);
+        });
+    } else {
+        showErrorToast("Kein Passwort gesetzt.", true);
+    }
+}
+
+function editSyncChannel(id) {
+    const ch = syncChannels.find(c => c.id === id);
+    if(!ch) return;
+
+    // SET: Wir sind im "Bearbeiten"-Modus
+    editingSyncId = id;
+
+    // Werte füllen
+    document.getElementById('newSyncName').value = ch.name;
+    document.getElementById('newSyncTopic').value = ch.topic;
+    document.getElementById('newSyncPass').value = ch.password || '';
+
+    // Modal Titel anpassen
+    const titleEl = document.querySelector('#syncAddModal h3');
+    if(titleEl) titleEl.innerText = "Kanal bearbeiten";
+
+    document.getElementById('syncAddModal').style.display = 'flex';
+}
+
 function saveNewSyncChannel() {
     const name = document.getElementById('newSyncName').value.trim();
     const topic = document.getElementById('newSyncTopic').value.trim();
-    const password = document.getElementById('newSyncPass').value.trim(); // NEU
+    const password = document.getElementById('newSyncPass').value.trim();
     
     if(!name || topic.length < 10) return alert("Bitte Namen und gültigen Key eingeben.");
     
-    const newCh = { id: 'sync_' + Date.now(), name, topic, password }; // Password speichern
-    syncChannels.push(newCh);
-    activeSyncId = newCh.id; 
+    if (editingSyncId) {
+        // === UPDATE MODE ===
+        const idx = syncChannels.findIndex(c => c.id === editingSyncId);
+        if(idx !== -1) {
+            syncChannels[idx].name = name;
+            syncChannels[idx].topic = topic;
+            syncChannels[idx].password = password;
+            showErrorToast(`Kanal "${name}" aktualisiert!`, true);
+        }
+    } else {
+        // === CREATE MODE ===
+        const newCh = { id: 'sync_' + Date.now(), name, topic, password };
+        syncChannels.push(newCh);
+        activeSyncId = newCh.id; // Neuen direkt auswählen
+        showErrorToast(`Kanal "${name}" erstellt!`, true);
+    }
     
     saveSyncConfig();
     renderSyncUI();
     closeModal('syncAddModal');
-    showErrorToast(`Kanal "${name}" gespeichert!`, true);
+    
+    // Reset Edit State
+    editingSyncId = null;
 }
-
-
 
 function deleteSyncChannel() {
     if(!activeSyncId) return;
@@ -12761,6 +12821,51 @@ function cycleAppMode() {
     }
     
     render(); // Aktualisiert Liste und Button-Text
+}
+
+/* === SYNC CONTEXT MENU === */
+function openSyncChannelMenu(event) {
+    if(!activeSyncId) return showErrorToast("Kein Kanal ausgewählt!");
+    
+    const ch = syncChannels.find(c => c.id === activeSyncId);
+    if(!ch) return;
+
+    // Menü Einträge definieren
+    const items = [
+        { 
+            label: 'Bearbeiten', 
+            icon: '✏️', 
+            action: `editSyncChannel('${ch.id}')` 
+        },
+        { 
+            label: 'Kanal-Key kopieren', 
+            icon: '📋', 
+            action: `copySyncKey()` 
+        },
+        { 
+            label: 'Passwort kopieren', 
+            icon: '🔑', 
+            action: `copySyncPass()` 
+        },
+        { 
+            label: 'Löschen', 
+            icon: '🗑️', 
+            action: `deleteSyncChannel()`, 
+            danger: true 
+        }
+    ];
+
+    // Positionierung des Menüs
+    let x = event.clientX || (event.touches ? event.touches[0].clientX : 0);
+    let y = event.clientY || (event.touches ? event.touches[0].clientY : 0);
+    
+    // Fallback falls Klick komisch war
+    if(x === 0 && y === 0) { 
+        const rect = event.target.getBoundingClientRect();
+        x = rect.left; y = rect.bottom;
+    }
+
+    openContextMenu(x, y, items);
 }
 
 // Start-Check
