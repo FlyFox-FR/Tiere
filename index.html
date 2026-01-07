@@ -4591,6 +4591,83 @@ body.dark .deck-card {
     height: 24px; 
     flex-shrink: 0;
 }
+
+/* === CLOUD SYNC STYLES === */
+.sync-card {
+    border: 1px solid rgba(0, 184, 148, 0.3);
+    background: linear-gradient(to bottom right, var(--card), rgba(0, 184, 148, 0.05));
+}
+
+.sync-topic-input-group {
+    display: flex; gap: 8px; margin-bottom: 15px;
+}
+
+.sync-topic-input {
+    flex: 1; 
+    font-family: monospace; 
+    font-size: 11px; 
+    background: var(--bg);
+    border: 1px solid var(--btn);
+    color: var(--accent);
+    padding: 10px;
+    border-radius: 12px;
+}
+
+.sync-list {
+    margin-top: 15px;
+    border-top: 1px solid var(--btn);
+    padding-top: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.sync-item {
+    background: var(--bg);
+    border: 1px solid var(--btn);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.sync-item-info {
+    font-size: 12px;
+}
+.sync-date { font-weight: bold; color: var(--text); }
+.sync-meta { font-size: 10px; opacity: 0.7; }
+
+/* Fortschritts-Modal Overlay */
+#syncProgressModal {
+    display: none;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    z-index: 25000; /* GANZ oben */
+    align-items: center; justify-content: center;
+    flex-direction: column;
+}
+
+.sync-progress-box {
+    background: var(--card-solid);
+    padding: 30px;
+    border-radius: 20px;
+    width: 80%; max-width: 300px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    border: 2px solid var(--accent);
+}
+
+.sync-bar-bg {
+    width: 100%; height: 10px; background: var(--btn);
+    border-radius: 5px; margin: 20px 0; overflow: hidden;
+}
+.sync-bar-fill {
+    height: 100%; background: var(--accent); width: 0%;
+    transition: width 0.3s linear;
+}
+
 </style>
 </head>
 <body>
@@ -4760,6 +4837,58 @@ body.dark .deck-card {
         </div>
     </div>
   </div>
+
+<!-- BUBBLE: CLOUD SYNC (ntfy) -->
+<div class="card-section sync-card">
+    <div class="accordion-header" onclick="toggleAccordion(this)">
+        <h3 style="color:#00b894;">☁️ Cloud Sync (Multi-Device)</h3>
+        <span class="acc-chevron">▼</span>
+    </div>
+    
+    <div class="accordion-content">
+        <div class="accordion-inner">
+            <p style="font-size:12px; opacity:0.8; margin-bottom:15px;">
+                Synchronisiere deine Geräte über einen geheimen Kanal. <br>
+                <span style="font-size:10px; opacity:0.6;">(Daten liegen nur temporär für 12h auf ntfy.sh)</span>
+            </p>
+
+            <!-- Topic Einstellung -->
+            <label style="font-size:11px; font-weight:bold; text-transform:uppercase; opacity:0.7;">Dein geheimer Kanal-Schlüssel</label>
+            <div class="sync-topic-input-group">
+                <input id="syncTopicInput" class="sync-topic-input" placeholder="Noch kein Schlüssel generiert..." onchange="saveSyncTopic()">
+                <button onclick="generateSyncTopic()" style="padding:0 12px;">🎲 Neu</button>
+            </div>
+
+            <!-- Aktionen -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button onclick="safeRun(startCloudPush)" style="background:var(--accent); color:#fff; border:none;">📤 Hochladen</button>
+                <button onclick="safeRun(checkForCloudBackups)" style="background:var(--card-solid); border:1px solid var(--btn);">🔄 Suchen</button>
+            </div>
+
+            <!-- Liste gefundener Backups -->
+            <div id="syncListContainer" class="sync-list" style="display:none;">
+                <div style="font-size:11px; font-weight:bold; margin-bottom:5px; opacity:0.5;">GEFUNDENE BACKUPS (Letzte 12h):</div>
+                <div id="syncListItems"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Das Fortschritts-Modal (Unsichtbar am Ende des Body einfügen) -->
+<div id="syncProgressModal">
+    <div class="sync-progress-box">
+        <div style="font-size:40px; margin-bottom:10px;" id="syncIcon">🚀</div>
+        <h3 id="syncTitle" style="margin:0;">Starte Sync...</h3>
+        <p id="syncStatus" style="font-size:12px; opacity:0.7; margin-top:5px;">Vorbereitung...</p>
+        
+        <div class="sync-bar-bg">
+            <div id="syncBar" class="sync-bar-fill"></div>
+        </div>
+        
+        <!-- Notfall Abbruch -->
+        <button onclick="abortSync()" style="font-size:11px; padding:5px 10px; background:transparent; color:var(--err-text); border:1px solid var(--err-text);">Abbrechen</button>
+    </div>
+</div>
 
   <!-- BUBBLE 3: DATEN (Akkordeon) -->
   <div class="card-section">
@@ -11897,7 +12026,333 @@ window.openStoryModal = function(e) {
     }
 };
 
+/* === CLOUD SYNC ENGINE (ntfy Chunking) === */
 
+let syncTopic = localStorage.getItem('tier_sync_topic') || '';
+if(syncTopic) document.getElementById('syncTopicInput').value = syncTopic;
+
+let isSyncing = false; // Flag um Mehrfachklicks zu verhindern
+let abortSyncFlag = false; // Notbremse
+
+// 1. Topic Generierung (Sicher & Lang)
+function generateSyncTopic() {
+    if(syncTopic && !confirm("Achtung: Wenn du den Schlüssel änderst, findest du alte Backups nicht mehr. Trotzdem neu würfeln?")) return;
+    
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+    let result = 'tierticker-sync-'; // Prefix damit man es erkennt
+    // Wir wollen mind. 40 Zeichen total -> Prefix ist 16, also noch ca 30-40 dazu
+    const len = 40 + Math.floor(Math.random() * 10); 
+    
+    const randomValues = new Uint8Array(len);
+    crypto.getRandomValues(randomValues);
+    
+    for (let i = 0; i < len; i++) {
+        result += chars[randomValues[i] % chars.length];
+    }
+    
+    syncTopic = result;
+    localStorage.setItem('tier_sync_topic', syncTopic);
+    document.getElementById('syncTopicInput').value = syncTopic;
+    showErrorToast("Neuer geheimer Schlüssel erstellt! 🔑", true);
+}
+
+function saveSyncTopic() {
+    syncTopic = document.getElementById('syncTopicInput').value.trim();
+    localStorage.setItem('tier_sync_topic', syncTopic);
+}
+
+function abortSync() {
+    abortSyncFlag = true;
+    document.getElementById('syncProgressModal').style.display = 'none';
+    showErrorToast("Vorgang abgebrochen.");
+    isSyncing = false;
+}
+
+// 2. HELPER: Daten sammeln (Refactored aus downloadBackup)
+async function getFullBackupString() {
+    // Wir nutzen die Logik von downloadBackup, geben aber den JSON String zurück statt zu downloaden
+    
+    // A) Daten sammeln
+    const fullHistory = {}; 
+    getAvailableYears().forEach(y => fullHistory[y] = getHistory(y));
+
+    const images = {};
+    const imageIdsToFetch = new Set();
+    animals.forEach(a => { if(a.imageId) imageIdsToFetch.add(a.imageId); });
+    Object.values(fullHistory).forEach(yearData => {
+        Object.values(yearData).forEach(dayData => {
+            if(dayData.perAnimal) {
+                Object.values(dayData.perAnimal).forEach(entries => {
+                    entries.forEach(entry => { if(entry.noteImageId) imageIdsToFetch.add(entry.noteImageId); });
+                });
+            }
+        });
+    });
+
+    for(let id of imageIdsToFetch) {
+        try {
+            const data = await dbGetImg(id);
+            if(data) images[id] = data;
+        } catch(e) {}
+    }
+
+    // B) Weitere DBs
+    let rfMessages = [];
+    try {
+        const db = await rfDbPromise;
+        rfMessages = await new Promise(r => {
+            const req = db.transaction(RF_STORE, 'readonly').objectStore(RF_STORE).getAll();
+            req.onsuccess = () => r(req.result); req.onerror = () => r([]);
+        });
+    } catch(e) {}
+
+    let customDecks = [];
+    try { customDecks = await dbGetDecks(); } catch(e) {}
+
+    const exportObj = { 
+        meta: { version: "SYNC-V1", date: new Date(), device: navigator.userAgent }, 
+        animals, locations, locCoords, fullHistory, images, notifyConfig, 
+        savedFacts, customDecks, activeDeckIDs, userFlavorTags, rfChannels, rfMessages 
+    };
+
+    return JSON.stringify(exportObj);
+}
+
+// 3. UPLOAD (PUSH) LOGIK
+async function startCloudPush() {
+    if(!syncTopic) return alert("Bitte erst einen Schlüssel generieren (Würfel)!");
+    if(isSyncing) return;
+    
+    try {
+        isSyncing = true;
+        abortSyncFlag = false;
+        
+        // UI Start
+        const modal = document.getElementById('syncProgressModal');
+        const bar = document.getElementById('syncBar');
+        const status = document.getElementById('syncStatus');
+        const title = document.getElementById('syncTitle');
+        
+        modal.style.display = 'flex';
+        title.innerText = "Sichere Daten...";
+        status.innerText = "Erstelle Backup-Paket...";
+        bar.style.width = "5%";
+
+        // 1. Daten holen
+        const jsonString = await getFullBackupString();
+        
+        // 2. Chunken (1.5 MB Stücke)
+        const CHUNK_SIZE = 1.5 * 1024 * 1024; 
+        const totalChunks = Math.ceil(jsonString.length / CHUNK_SIZE);
+        const backupID = 'bkp_' + Date.now(); // Eindeutige ID für diesen Upload
+        
+        status.innerText = `Zerlege in ${totalChunks} Pakete...`;
+        
+        // 3. HEADER senden (Info, dass ein Backup kommt)
+        const headerPayload = {
+            type: 'tier_sync_header',
+            id: backupID,
+            chunks: totalChunks,
+            size: jsonString.length,
+            date: Date.now(),
+            device: navigator.platform
+        };
+        
+        await fetch(`https://ntfy.sh/${syncTopic}`, {
+            method: 'POST',
+            body: JSON.stringify(headerPayload),
+            headers: { 'Title': 'TierTicker Backup Header', 'Priority': 'high' } // Header hat Prio
+        });
+
+        // 4. CHUNKS senden (Loop)
+        for (let i = 0; i < totalChunks; i++) {
+            if(abortSyncFlag) throw new Error("Abbruch durch User");
+
+            const start = i * CHUNK_SIZE;
+            const end = start + CHUNK_SIZE;
+            const chunkData = jsonString.substring(start, end);
+            
+            // UI Update
+            const pct = Math.round(((i + 1) / totalChunks) * 100);
+            bar.style.width = pct + '%';
+            status.innerText = `Sende Paket ${i+1} von ${totalChunks}...`;
+
+            // Upload an ntfy als Attachment (via Body)
+            // WICHTIG: Wir nutzen einen speziellen Filename Header, damit ntfy es zuordnen kann
+            await fetch(`https://ntfy.sh/${syncTopic}`, {
+                method: 'PUT',
+                body: chunkData,
+                headers: {
+                    'Filename': `${backupID}_part_${i}`, // Dateiname zur Identifikation
+                    'Title': `Backup Part ${i+1}/${totalChunks}`
+                }
+            });
+
+            // RATE LIMIT SCHUTZ: Pause machen!
+            await new Promise(r => setTimeout(r, 800)); // 800ms Pause pro Chunk
+        }
+
+        // 5. Fertig
+        title.innerText = "Fertig! ✅";
+        status.innerText = "Daten liegen für 12h bereit.";
+        bar.style.width = "100%";
+        setTimeout(() => { modal.style.display = 'none'; isSyncing = false; }, 2000);
+
+    } catch (e) {
+        if(!abortSyncFlag) alert("Fehler beim Upload: " + e.message);
+        document.getElementById('syncProgressModal').style.display = 'none';
+        isSyncing = false;
+    }
+}
+
+// 4. CHECK LOGIK (Liste abrufen)
+async function checkForCloudBackups() {
+    if(!syncTopic) return alert("Kein Schlüssel eingetragen!");
+    
+    const listCont = document.getElementById('syncListContainer');
+    const listItems = document.getElementById('syncListItems');
+    listCont.style.display = 'block';
+    listItems.innerHTML = '<div class="loader-spinner" style="margin:10px auto"></div>';
+
+    try {
+        // Wir holen JSON Nachrichten der letzten 12h
+        const response = await fetch(`https://ntfy.sh/${syncTopic}/json?since=12h&poll=0`);
+        const text = await response.text();
+        
+        // ntfy gibt JSON-Lines zurück (jede Zeile ein JSON Objekt)
+        const lines = text.trim().split('\n');
+        const backups = [];
+
+        lines.forEach(line => {
+            try {
+                const msg = JSON.parse(line);
+                // Prüfen ob es eine unserer Header-Nachrichten ist
+                if (msg.message) {
+                    const data = JSON.parse(msg.message);
+                    if (data.type === 'tier_sync_header') {
+                        backups.push(data);
+                    }
+                }
+            } catch(e) {}
+        });
+
+        // UI Rendern
+        listItems.innerHTML = '';
+        if (backups.length === 0) {
+            listItems.innerHTML = '<div style="opacity:0.5; font-size:12px; text-align:center;">Keine Backups gefunden.</div>';
+        } else {
+            // Neueste zuerst
+            backups.sort((a,b) => b.date - a.date);
+            
+            backups.forEach(b => {
+                const dateStr = new Date(b.date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) + ' Uhr';
+                const sizeMB = (b.size / (1024*1024)).toFixed(1);
+                
+                const div = document.createElement('div');
+                div.className = 'sync-item';
+                div.innerHTML = `
+                    <div class="sync-item-info">
+                        <div class="sync-date">📅 ${new Date(b.date).toLocaleDateString()} - ${dateStr}</div>
+                        <div class="sync-meta">📦 ${sizeMB} MB • ${b.chunks} Pakete</div>
+                    </div>
+                    <button onclick="restoreFromCloud('${b.id}', ${b.chunks})" style="background:var(--accent); color:white; border:none; padding:6px 12px; border-radius:15px; font-size:12px; font-weight:bold;">📥 Laden</button>
+                `;
+                listItems.appendChild(div);
+            });
+        }
+
+    } catch (e) {
+        listItems.innerHTML = '<div style="color:var(--err-text)">Fehler beim Abrufen.</div>';
+        console.error(e);
+    }
+}
+
+// 5. RESTORE LOGIK (PULL)
+async function restoreFromCloud(backupId, totalParts) {
+    if(isSyncing) return;
+    isSyncing = true;
+    abortSyncFlag = false;
+
+    // UI Start
+    const modal = document.getElementById('syncProgressModal');
+    const bar = document.getElementById('syncBar');
+    const status = document.getElementById('syncStatus');
+    const title = document.getElementById('syncTitle');
+    const icon = document.getElementById('syncIcon');
+    
+    modal.style.display = 'flex';
+    title.innerText = "Empfange Daten...";
+    icon.innerText = "📡";
+    bar.style.width = "0%";
+
+    try {
+        // Wir brauchen alle Nachrichten der letzten 12h und filtern dann nach Attachments für unsere ID
+        status.innerText = "Suche Pakete...";
+        const response = await fetch(`https://ntfy.sh/${syncTopic}/json?since=12h&poll=0`);
+        const text = await response.text();
+        const lines = text.trim().split('\n');
+        
+        let foundParts = [];
+
+        // 1. Relevante Nachrichten filtern (die Attachments haben und zu unserer ID gehören)
+        lines.forEach(line => {
+            try {
+                const msg = JSON.parse(line);
+                if (msg.attachment && msg.attachment.name.startsWith(backupId)) {
+                    // Dateiname Format: bkp_12345_part_0
+                    const parts = msg.attachment.name.split('_part_');
+                    const index = parseInt(parts[1]);
+                    foundParts.push({ index: index, url: msg.attachment.url });
+                }
+            } catch(e) {}
+        });
+
+        // 2. Vollständigkeit prüfen
+        if (foundParts.length < totalParts) {
+            throw new Error(`Unvollständig! Nur ${foundParts.length} von ${totalParts} Paketen gefunden.`);
+        }
+
+        // 3. Herunterladen & Zusammensetzen
+        foundParts.sort((a,b) => a.index - b.index); // Sortieren 0, 1, 2...
+        
+        let fullJsonString = "";
+
+        for (let i = 0; i < foundParts.length; i++) {
+            if(abortSyncFlag) throw new Error("Abbruch durch User");
+            
+            const part = foundParts[i];
+            status.innerText = `Lade Paket ${i+1} von ${totalParts}...`;
+            bar.style.width = Math.round(((i) / totalParts) * 100) + '%';
+
+            // Download des Chunks
+            const chunkRes = await fetch(part.url);
+            const chunkText = await chunkRes.text();
+            fullJsonString += chunkText;
+            
+            // Kleine Pause für UI Update
+            await new Promise(r => setTimeout(r, 100));
+        }
+
+        // 4. Abschluss & Übergabe an Import
+        status.innerText = "Zusammensetzen & Prüfen...";
+        bar.style.width = "100%";
+        
+        // JSON Parsen (Test ob valide)
+        tempImportData = JSON.parse(fullJsonString);
+        
+        modal.style.display = 'none';
+        isSyncing = false;
+        
+        // Das normale Import Modal öffnen
+        getEl('importModal').style.display = 'block';
+        showErrorToast("Download erfolgreich! Bitte Import-Methode wählen.", true);
+
+    } catch (e) {
+        if(!abortSyncFlag) alert("Sync Fehler: " + e.message);
+        modal.style.display = 'none';
+        isSyncing = false;
+    }
+}
 
 
 // Start-Check
