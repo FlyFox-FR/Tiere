@@ -12589,13 +12589,26 @@ async function confirmImport(mode) {
 
 // Cloud Engine (Ntfy Chunking) Ende
 
-/* === CRYPTO ENGINE (AES-GCM) === */
+/* === CRYPTO ENGINE (FIXED FOR LARGE FILES) === */
 
-// Hilfsfunktion: String zu ArrayBuffer
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
-// 1. Schlüssel aus Passwort generieren (PBKDF2)
+// Helper: Blob zu Base64 (Verhindert Stack Overflow bei großen Dateien)
+function bufferToBase64(buffer) {
+    return new Promise((resolve) => {
+        const blob = new Blob([buffer]);
+        const reader = new FileReader();
+        reader.onload = () => {
+            // "data:application/octet-stream;base64,....." -> Nur den Teil nach dem Komma nehmen
+            const base64 = reader.result.split(',')[1];
+            resolve(base64);
+        };
+        reader.readAsDataURL(blob);
+    });
+}
+
+// 1. Schlüssel ableiten
 async function getKey(password, salt) {
     const keyMaterial = await window.crypto.subtle.importKey(
         "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
@@ -12606,34 +12619,37 @@ async function getKey(password, salt) {
     );
 }
 
-// 2. VERSCHLÜSSELN
+// 2. VERSCHLÜSSELN (Robust)
 async function encryptText(text, password) {
-    const salt = window.crypto.getRandomValues(new Uint8Array(16)); // Zufalls-Salz
-    const iv = window.crypto.getRandomValues(new Uint8Array(12));   // Initialisierungsvektor
+    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
     const key = await getKey(password, salt);
     
     const encrypted = await window.crypto.subtle.encrypt(
         { name: "AES-GCM", iv: iv }, key, enc.encode(text)
     );
 
-    // Wir packen alles zusammen: Salt + IV + Verschlüsselte Daten
+    // Zusammenbauen: Salt (16) + IV (12) + Content
     const buffer = new Uint8Array(salt.byteLength + iv.byteLength + encrypted.byteLength);
     buffer.set(salt, 0);
     buffer.set(iv, 16);
     buffer.set(new Uint8Array(encrypted), 28);
 
-    // Als Base64 String zurückgeben (damit wir es wie Text behandeln können)
-    return btoa(String.fromCharCode(...buffer));
+    // HIER WAR DER FEHLER: Statt String.fromCharCode nutzen wir jetzt den FileReader
+    return await bufferToBase64(buffer);
 }
 
 // 3. ENTSCHLÜSSELN
 async function decryptText(base64Data, password) {
     try {
+        // Base64 zu Binary zurückwandeln
         const binaryStr = atob(base64Data);
         const bytes = new Uint8Array(binaryStr.length);
-        for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+        for (let i = 0; i < binaryStr.length; i++) {
+            bytes[i] = binaryStr.charCodeAt(i);
+        }
 
-        // Daten wieder auseinandernehmen
+        // Extrahieren
         const salt = bytes.slice(0, 16);
         const iv = bytes.slice(16, 28);
         const data = bytes.slice(28);
@@ -12646,7 +12662,8 @@ async function decryptText(base64Data, password) {
 
         return dec.decode(decrypted);
     } catch (e) {
-        throw new Error("Falsches Passwort oder beschädigte Daten!");
+        console.error(e);
+        throw new Error("Entschlüsselung fehlgeschlagen (Falsches Passwort?)");
     }
 }
 
