@@ -12144,37 +12144,95 @@ async function startCloudPush() {
 
 // --- CHECK & DOWNLOAD PROCESS ---
 
+/* === DEBUG VERSION: CHECK CLOUD === */
 async function checkForCloudBackups() {
     const ch = syncChannels.find(c => c.id === activeSyncId);
     if(!ch) return alert("Kein Kanal gewählt!");
     
     const listCont = document.getElementById('syncListContainer');
     const listItems = document.getElementById('syncListItems');
+    
+    // UI Reset
     listCont.style.display = 'block';
-    listItems.innerHTML = '<div class="loader-spinner" style="margin:10px auto"></div>';
+    
+    // Hilfsfunktion für Logs direkt in der UI
+    const logUI = (msg, color='var(--sub)') => {
+        console.log("[SYNC DEBUG]", msg);
+        listItems.innerHTML += `<div style="font-size:10px; color:${color}; font-family:monospace; margin-bottom:2px;">> ${msg}</div>`;
+    };
+
+    listItems.innerHTML = ''; // Start leer
+    logUI("Starte Prozess...", "var(--accent)");
+    logUI(`Kanal: ${ch.topic.substring(0, 15)}...`);
 
     try {
-        const response = await fetch(`https://ntfy.sh/${ch.topic}/json?since=12h&poll=0`);
-        const text = await response.text();
-        const lines = text.trim().split('\n');
-        const backups = [];
+        logUI("Sende Anfrage an ntfy.sh...");
+        
+        // Timeout Controller (falls ntfy hängt)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 Sek Timeout
 
-        lines.forEach(line => {
+        const response = await fetch(`https://ntfy.sh/${ch.topic}/json?since=12h&poll=0`, {
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        logUI(`Status: ${response.status} ${response.statusText}`, response.ok ? "#4cd137" : "red");
+
+        if (!response.ok) throw new Error("HTTP Fehler");
+
+        logUI("Lade Text-Body...");
+        const text = await response.text();
+        logUI(`Empfangen: ${text.length} Zeichen.`);
+
+        const lines = text.trim().split('\n');
+        logUI(`Zeilen: ${lines.length}`);
+        
+        const backups = [];
+        let fragmentCount = 0;
+
+        lines.forEach((line, idx) => {
+            if(!line.trim()) return;
             try {
                 const msg = JSON.parse(line);
-                if (msg.message) {
-                    const data = JSON.parse(msg.message);
-                    if (data.type === 'tier_sync_header') {
+                
+                // Zählen was wir finden
+                if (msg.attachment) fragmentCount++;
+
+                // Suchen nach Header
+                if (msg.event === 'message' && !msg.attachment && msg.message) {
+                    let data = null;
+                    try { data = JSON.parse(msg.message); } catch(e) {}
+
+                    if (data && data.type === 'tier_sync_header') {
                         backups.push(data);
+                        logUI(`Header gefunden! ID: ${data.id.substring(0,8)}`, "orange");
                     }
                 }
-            } catch(e) {}
+            } catch(e) {
+                // Fehler beim Parsen einer Zeile ignorieren
+            }
         });
 
-        listItems.innerHTML = '';
+        // === ERGEBNIS ANZEIGE ===
+        // Wir löschen das Log nach 2 Sekunden, wenn Backups da sind, sonst lassen wir es stehen
+        
         if (backups.length === 0) {
-            listItems.innerHTML = '<div style="opacity:0.5; font-size:12px; text-align:center; padding:10px;">Keine Backups in den letzten 12h.</div>';
+            logUI("--- DIAGNOSE ---", "white");
+            if (fragmentCount > 0) {
+                logUI(`⚠️ ${fragmentCount} Teile gefunden, aber kein Header!`, "red");
+                logUI("Ursache: Upload wurde unterbrochen oder Topic geändert.", "red");
+            } else {
+                logUI("Topic ist komplett leer.", "yellow");
+            }
+            
+            // Einen Button zum Leeren anbieten
+            listItems.innerHTML += `<button onclick="document.getElementById('syncListItems').innerHTML=''" style="margin-top:10px; width:100%; padding:5px;">Log schließen</button>`;
+            
         } else {
+            // Erfolg! Liste bauen
+            listItems.innerHTML = ''; // Log wegmachen
+            
             backups.sort((a,b) => b.date - a.date);
             backups.forEach(b => {
                 const dateStr = new Date(b.date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -12184,19 +12242,22 @@ async function checkForCloudBackups() {
                 div.className = 'sync-item';
                 div.innerHTML = `
                     <div class="sync-item-info">
-                        <div class="sync-date">📅 ${dateStr} Uhr</div>
-                        <div class="sync-meta">📦 ${sizeMB} MB • ${b.chunks} Pakete • von ${b.device||'?'}</div>
+                        <div class="sync-date">✅ Backup ${dateStr}</div>
+                        <div class="sync-meta">📦 ${sizeMB} MB • ${b.chunks} Pakete</div>
                     </div>
-                    <button onclick="restoreFromCloud('${b.id}', ${b.chunks})" style="background:var(--accent); color:white; border:none; padding:6px 12px; border-radius:12px; font-weight:bold; font-size:12px;">📥 Import</button>
+                    <button onclick="restoreFromCloud('${b.id}', ${b.chunks})" style="background:var(--accent); color:white; border:none; padding:6px 12px; border-radius:15px; font-size:12px; font-weight:bold;">📥 Laden</button>
                 `;
                 listItems.appendChild(div);
             });
         }
 
     } catch (e) {
-        listItems.innerHTML = '<div style="color:var(--err-text)">Verbindungsfehler.</div>';
+        logUI(`CRASH: ${e.message}`, "red");
+        console.error(e);
     }
 }
+
+
 
 async function restoreFromCloud(backupId, totalParts) {
     const ch = syncChannels.find(c => c.id === activeSyncId);
