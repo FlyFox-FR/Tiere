@@ -4914,7 +4914,38 @@ body.dark .deck-card {
     <div class="accordion-content">
         <div class="accordion-inner">
             <p style="font-size:12px; opacity:0.8; margin-bottom:15px;">
-                Synchronisiere deine Geräte. Wähle einen Kanal:
+                Synchronisiere deine Geräte (auf Wunsch 128bit AES-GCM verschlüsselt!). Wähle einen Kanal:
+<!-- HEADER MIT HILFE-TOGGLE -->
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
+ 
+    <button onclick="document.getElementById('syncHelpBox').style.display = document.getElementById('syncHelpBox').style.display==='none'?'block':'none'" 
+            style="font-size:11px; background:var(--bg); border:1px solid var(--accent); color:var(--accent); padding:4px 8px; border-radius:12px; cursor:pointer; font-weight:bold;">
+        ℹ️ Anleitung & Info
+    </button>
+</div>
+
+<!-- VERSTECKTE HILFE BOX -->
+<div id="syncHelpBox" style="display:none; background:var(--bg); padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid var(--btn); font-size:12px; line-height:1.5;">
+    <h4 style="margin:0 0 10px 0; color:var(--text);">So funktioniert's:</h4>
+    <ul style="margin:0; padding-left:15px; opacity:0.9;">
+        <li style="margin-bottom:8px;">
+            <b>📡 Der Briefkasten:</b> Wir nutzen <i>ntfy.sh</i> als temporären Speicher. Deine Daten liegen dort für <b>12 Stunden</b> bereit und werden dann automatisch gelöscht.
+        </li>
+        <li style="margin-bottom:8px;">
+            <b>🔐 Maximale Sicherheit:</b> Wenn du beim Kanal-Erstellen ein <b>Passwort</b> setzt, werden deine Daten auf deinem Handy verschlüsselt (AES-GCM). Der Server sieht nur Buchstabensalat. Nur du kannst es entschlüsseln.
+        </li>
+        <li style="margin-bottom:8px;">
+            <b>🔄 Der Ablauf:</b>
+            1. Erstelle hier einen Kanal (mit Passwort!).<br>
+            2. Gib <b>exakt denselben</b> Kanal & Passwort auf deinem anderen Gerät ein.<br>
+            3. Klicke hier auf <b>"Hochladen"</b> und drüben auf <b>"Prüfen" &rarr; "Laden"</b>.
+        </li>
+    </ul>
+    <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--btn); text-align:center; color:var(--sub); font-size:11px;">
+        Deine Daten verlassen niemals ungeschützt dein Gerät (bei gesetztem Passwort).
+    </div>
+</div>
+
             </p>
 
             <!-- Kanal Wahl & Management -->
