@@ -5584,66 +5584,89 @@ body.dark .deck-card {
 <!-- LEAFLET JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-<!-- === NEU: INFO MODAL (Mit Wiederholen-Button) === -->
 
-<!-- === INFO MODAL (UPDATED V3.0) === -->
+
+
+<!-- === INFO MODAL (ULTIMATE EDITION) === -->
 <div id="infoModal" class="modal">
   <div class="modal-content">
     <div class="sheet-handle"></div>
     <div class="close-btn" onclick="closeModal('infoModal')">✕</div>
     
-    <div style="text-align:center; margin-bottom:20px;">
-        <div style="font-size:40px; margin-bottom:10px;">📖</div>
-        <h2 style="margin:0;">Guide & Features</h2>
-        <p style="opacity:0.6; font-size:13px; margin:5px 0 0 0;">Dein Begleiter für die Natur</p>
+    <div style="text-align:center; margin-bottom:20px; border-bottom:1px solid var(--btn); padding-bottom:15px;">
+        <div style="font-size:40px; margin-bottom:5px;">📖</div>
+        <h2 style="margin:0;">Dein Ranger-Handbuch</h2>
+        <p style="opacity:0.6; font-size:13px; margin:5px 0 0 0;">Alle Funktionen im Überblick</p>
     </div>
 
-    <div style="background:var(--bg); padding:20px; border-radius:16px; font-size:14px; line-height:1.6; margin-bottom:20px; color:var(--text); text-align:left; max-height:60vh; overflow-y:auto;">
+    <div style="height:60vh; overflow-y:auto; padding-right:5px;">
         
-        <h4 style="margin:0 0 5px 0; color:var(--accent); display:flex; align-items:center; gap:8px;">
-            <span style="font-size:18px;">🐾</span> Beobachten & Zählen
-        </h4>
-        <p style="margin:0 0 15px 0; opacity:0.85;">
-            Nutze den großen <b>+ Button</b> in der Mitte, um schnell ein Tier zu erfassen. 
+        <!-- KAPITEL 1: BEOBACHTEN -->
+        <div style="background:var(--bg); padding:15px; border-radius:16px; margin-bottom:15px;">
+            <h4 style="margin:0 0 10px 0; color:var(--accent);">🐾 Beobachten & Zählen</h4>
+          Nutze den großen <b>+ Button</b> in der Mitte, um schnell ein Tier zu erfassen. 
             Tippe in der Liste auf ein Tier für <b>Details & Verlauf</b> oder auf das kleine <b>+</b> für eine schnelle Zählung. 
 Klicke auf ein Tier in der Liste oder auf eine Kachel um das Tier zu bearbeiten und Details zu sehen.
-        </p>
-        
-        <h4 style="margin:0 0 5px 0; color:var(--accent); display:flex; align-items:center; gap:8px;">
-            <span style="font-size:18px;">🧠</span> Wissen & Quiz
-        </h4>
-        <p style="margin:0 0 15px 0; opacity:0.85;">
-            Das Widget oben zeigt dir spannende Fakten. 
-            <br>• <b>Herzen (❤️):</b> Speichere Fakten in deiner Sammlung.
-            <br>• <b>Suche (🌍):</b> Finde Fakten über die globale Suche oder durchsuche deine gespeicherten Fakten.
-            <br>• <b>Quiz (🎮):</b> Klicke auf <b>⋮</b> im Widget, um dein Wissen zu testen und <b>XP</b> zu verdienen!
-        </p>
+        </div>
 
-        <h4 style="margin:0 0 5px 0; color:var(--accent); display:flex; align-items:center; gap:8px;">
-            <span style="font-size:18px;">📊</span> Statistik & Level
-        </h4>
-        <p style="margin:0 0 15px 0; opacity:0.85;">
-            Sammle XP durch Sichtungen, Fotos und Quiz-Siege. Steige im Level auf – vom "Ameisen-Zähler" zur Legende!
-            <br>Das <b>Solar-Widget</b> zeigt dir Sonnenaufgang und Dämmerung für deinen Standort.
-        </p>
+        <!-- KAPITEL 2: WISSEN & SPASS -->
+        <div style="background:var(--bg); padding:15px; border-radius:16px; margin-bottom:15px;">
+            <h4 style="margin:0 0 10px 0; color:#9c27b0;">🧠 Wissen & Quiz</h4>
+            <ul style="padding-left:15px; margin:0; font-size:13px; opacity:0.9; line-height:1.6;">
+                <li><b>Fakten-Widget:</b> Jeden Tag spannendes Wissen. Tippe auf ❤️ zum Speichern oder auf <b>⋮</b> für mehr Optionen.</li>
+                <li><b>Quiz-Master:</b> Teste dein Wissen! Es gibt verschiedene Modi (Lügendetektor, Foto-Rätsel...). Du verdienst damit XP!</li>
+                <li><b>Decks:</b> Du kannst eigene Wissens-Sammlungen importieren (z.B. "Vögel Europas").</li>
+            </ul>
+        </div>
 
-        <h4 style="margin:0 0 5px 0; color:var(--accent); display:flex; align-items:center; gap:8px;">
-            <span style="font-size:18px;">⚙️</span> Daten & Sicherheit
-        </h4>
-        <p style="margin:0 0 5px 0; opacity:0.85;">
-            Alle Daten liegen <b>100% offline</b> auf deinem Gerät. 
-            <br>⚠️ <b>Wichtig:</b> Erstelle regelmäßig ein <b>Backup</b> in den System-Einstellungen, damit deine Sammlung bei einem Handy-Wechsel sicher ist.
-        </p>
+        <!-- KAPITEL 3: LEVEL & STATS -->
+        <div style="background:var(--bg); padding:15px; border-radius:16px; margin-bottom:15px;">
+            <h4 style="margin:0 0 10px 0; color:#f1c40f;">🏆 Level & Statistik</h4>
+            <ul style="padding-left:15px; margin:0; font-size:13px; opacity:0.9; line-height:1.6;">
+                <li><b>XP System:</b> Jede Sichtung und jedes Quiz bringt Punkte. Steige auf vom "Ameisen-Zähler" zur Legende!</li>
+                <li><b>Astro-Wetter:</b> Das Widget zeigt dir Sonnenaufgang und Dämmerung für deinen Standort.</li>
+                <li><b>Karte:</b> Mit dem "Zeitreise-Schieberegler" siehst du, wo du im Sommer oder Winter unterwegs warst.</li>
+            </ul>
+        </div>
+
+        <!-- KAPITEL 4: CLOUD & SYNC -->
+        <div style="background:var(--bg); padding:15px; border-radius:16px; margin-bottom:15px;">
+            <h4 style="margin:0 0 10px 0; color:#00b894;">☁️ Cloud Sync & Funk</h4>
+            <ul style="padding-left:15px; margin:0; font-size:13px; opacity:0.9; line-height:1.6;">
+                <li><b>Ranger Funk:</b> Ein Chat für dich und deine Freunde. Tauscht Bilder und Nachrichten aus (benötigt Internet).</li>
+                <li><b>Cloud Sync (Neu!):</b> Synchronisiere deine App zwischen Handy und PC.
+                    <br><i>Sicherheit:</i> Nutze ein Passwort, dann werden deine Daten <b>verschlüsselt</b> übertragen. Niemand außer dir kann sie lesen.
+                </li>
+            </ul>
+        </div>
+
+        <!-- KAPITEL 5: DATEN -->
+        <div style="background:var(--bg); padding:15px; border-radius:16px; margin-bottom:15px;">
+            <h4 style="margin:0 0 10px 0; color:var(--text);">💾 Deine Daten</h4>
+            <p style="font-size:13px; margin:0;">
+                Alle Daten liegen <b>offline</b> auf deinem Gerät. Nichts wird automatisch ins Internet gesendet.<br>
+                ⚠️ <b>Wichtig:</b> Mache regelmäßig Backups (unter System > Daten), damit bei einem Handyverlust nichts verloren geht.
+            </p>
+        </div>
+
     </div>
 
-    <!-- DER KNOPF ZUM WIEDERHOLEN -->
-    <button onclick="startTutorial(true)" style="width:100%; background:var(--card); border:2px solid var(--accent); color:var(--accent); font-weight:bold; padding:15px; border-radius:16px; font-size:15px;">
-        🎓 Geführte Tour starten
+    <!-- ACTION BUTTON -->
+    <button onclick="startTutorial(true)" style="width:100%; background:var(--card); border:2px solid var(--accent); color:var(--accent); font-weight:bold; padding:15px; border-radius:16px; font-size:15px; margin-top:10px;">
+        🎓 Interaktive Tour starten
     </button>
     
-    <p style="text-align:center; font-size:11px; opacity:0.3; margin-top:15px;">Version 3.0 • Tier Ticker Ultimate</p>
+    <p style="text-align:center; font-size:11px; opacity:0.3; margin-top:15px;">Tier Ticker Ultimate • Version 7.0</p>
   </div>
 </div>
+
+
+
+
+
+
+
+
 
 <!-- === NEU: ONBOARDING CONTAINER === -->
 <!-- 1. Der dunkle Hintergrund (Klicksperre) -->
@@ -9828,17 +9851,50 @@ function openQuickSighting() {
 let currentStep = 0;
 
 // Definition der Tour (Bleibt gleich, nur zur Vollständigkeit)
+/* === UPDATED TOUR STEPS (V7.0) === */
 const tourSteps = [
-    { view: 'view-list', target: null, title: "Willkommen bei Tier Ticker! 🚀", text: "Die App ist riesig geworden! <br>Lass uns eine Runde drehen. Ich zeige dir den Workflow." },
-    { view: 'view-list', target: '#sfWrapper', title: "1. Deep Search 🔍", text: "Tippe einen Tiernamen (z.B. 'Fuchs'), um sofort in den <b>Filter-Modus</b> zu wechseln." },
-    { view: 'view-list', target: '.nav-main-fab', title: "2. Schnell-Erfassung ⚡", text: "Der wichtigste Knopf. Drücke ihn, um eine Tier-Sichtung in Sekunden festzuhalten." },
-    { view: 'view-list', target: '.nav-island', title: "3. Die Steuerzentrale 🧭", text: "Hier unten wechselst du die Ansichten. <br>Wir gehen jetzt mal rüber zu den <b>Statistiken</b>..." },
-  //  { view: 'view-stats', target: '#factWidget', title: "4. Dein Wissens-Feed 🧠", text: "Jeden Tag ein neuer Tier-Fakt! <br> Nutze das Herz ❤️ zum Speichern. Oder die <b>drei Punkte (⋮)</b> um: <b>Fakten zu durchsuchen </b> oder für das 🎮 <b>Quiz</b> ⬅️ Sehr empfehlenswert!." },
-    { view: 'view-stats', target: '#solarWidget', title: "5. Astro-Daten ☀️", text: "Passend zu deinem Standort: Sonnenaufgang, Dämmerung und Tageslicht." },
-    { view: 'view-map', target: '.map-slider-container', title: "6. Zeitreise ⏳", text: "Schau dir auf der Karte an, wo du im Sommer oder Winter unterwegs warst." },
-    { view: 'view-admin', target: '.admin-tools-grid', title: "7. Verwaltung ⚙️", text: "Hier oben findest du die Grundeinstellungen und die Hilfe." }
- //   { view: 'view-admin', target: '.card-section:nth-of-type(4)', title: "8. Daten & Sicherheit 💾", text: "Sehr wichtig! Hier erstellst du <b>Backups</b>. <br>Mach das regelmäßig, damit deine Sammlung sicher ist." },
-//    { view: 'view-admin', target: '#trashSection', title: "9. Der Papierkorb 🗑️", text: "Aus Versehen gelöscht? Kein Problem. <br>Hier kannst du Tiere 30 Tage lang wiederherstellen." }
+    { 
+        view: 'view-list', 
+        target: null, 
+        title: "Willkommen zurück! 🚀", 
+        text: "Tier Ticker ist jetzt noch mächtiger.<br>Ich zeige dir kurz die neuen Highlights." 
+    },
+    { 
+        view: 'view-list', 
+        target: '#sfWrapper', 
+        title: "1. Die Suche 🔍", 
+        text: "Hier findest du alles: Tiere, Notizen und deine Fotos.<br>Tipp: Gib einen Ort ein, um zu sehen, was du dort entdeckt hast." 
+    },
+    { 
+        view: 'view-list', 
+        target: '.nav-main-fab', // Das mittlere Plus
+        title: "2. Schnell-Erfassung ⚡", 
+        text: "Der wichtigste Knopf: Hier legst du neue Sichtungen an – jetzt auch direkt mit Foto!" 
+    },
+    { 
+        view: 'view-list', 
+        target: 'button[onclick="openRangerChat()"]', // Der Funk Button
+        title: "3. Ranger Funk 📻", 
+        text: "Neu! Kommuniziere mit Freunden. Erstelle Kanäle und teile deine Entdeckungen live." 
+    },
+    { 
+        view: 'view-stats', 
+        target: '#factWidget', 
+        title: "4. Wissen & Quiz 🧠", 
+        text: "Täglich neue Fakten. Klicke auf die <b>drei Punkte (⋮)</b>, um dein Wissen im Quiz zu testen und XP zu sammeln!" 
+    },
+    { 
+        view: 'view-admin', 
+        target: '.sync-card', // Die neue Sync Karte
+        title: "5. Cloud Sync ☁️", 
+        text: "Das Highlight: Synchronisiere deine Daten verschlüsselt zwischen Handy, Tablet und PC.<br>Ohne Anmeldung, sicher und einfach." 
+    },
+    { 
+        view: 'view-admin', 
+        target: '.admin-tools-grid', 
+        title: "6. Fertig! 🎉", 
+        text: "Du bist bereit. Viel Spaß beim Entdecken, Sammeln und Leveln!" 
+    }
 ];
 
 function startTutorial(force = false) {
