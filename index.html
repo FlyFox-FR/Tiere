@@ -4668,6 +4668,72 @@ body.dark .deck-card {
     transition: width 0.3s linear;
 }
 
+/* === SYNC MANAGER STYLES === */
+.sync-card {
+    border: 1px solid rgba(0, 184, 148, 0.3);
+    background: linear-gradient(to bottom right, var(--card), rgba(0, 184, 148, 0.05));
+}
+
+.sync-controls-row {
+    display: flex; gap: 8px; margin-bottom: 15px; align-items: center;
+}
+
+.sync-select {
+    flex: 1;
+    padding: 10px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--btn);
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 13px;
+    outline: none;
+}
+
+.sync-icon-btn {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--btn);
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 18px;
+    border: 1px solid transparent;
+}
+.sync-icon-btn:active { transform: scale(0.95); }
+
+.sync-action-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+
+.sync-main-btn {
+    padding: 15px; border-radius: 16px; border: none;
+    font-weight: bold; font-size: 13px;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+.sync-main-btn:active { transform: scale(0.96); }
+
+/* Progress Modal */
+#syncProgressModal {
+    display: none;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); z-index: 25000;
+    align-items: center; justify-content: center; backdrop-filter: blur(5px);
+}
+.sync-progress-box {
+    background: var(--card-solid); padding: 30px; border-radius: 24px;
+    width: 85%; max-width: 320px; text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6); border: 2px solid var(--accent);
+}
+.sync-bar-bg {
+    width: 100%; height: 12px; background: var(--btn);
+    border-radius: 6px; margin: 20px 0; overflow: hidden;
+}
+.sync-bar-fill {
+    height: 100%; background: linear-gradient(90deg, var(--accent), #00b894); 
+    width: 0%; transition: width 0.3s linear;
+}
 </style>
 </head>
 <body>
@@ -4838,35 +4904,44 @@ body.dark .deck-card {
     </div>
   </div>
 
-<!-- BUBBLE: CLOUD SYNC (ntfy) -->
+<!-- BUBBLE: CLOUD SYNC MANAGER -->
 <div class="card-section sync-card">
     <div class="accordion-header" onclick="toggleAccordion(this)">
-        <h3 style="color:#00b894;">☁️ Cloud Sync (Multi-Device)</h3>
+        <h3 style="color:#00b894;">☁️ Cloud Sync</h3>
         <span class="acc-chevron">▼</span>
     </div>
     
     <div class="accordion-content">
         <div class="accordion-inner">
             <p style="font-size:12px; opacity:0.8; margin-bottom:15px;">
-                Synchronisiere deine Geräte über einen geheimen Kanal. <br>
-                <span style="font-size:10px; opacity:0.6;">(Daten liegen nur temporär für 12h auf ntfy.sh)</span>
+                Synchronisiere deine Geräte. Wähle einen Kanal:
             </p>
 
-            <!-- Topic Einstellung -->
-            <label style="font-size:11px; font-weight:bold; text-transform:uppercase; opacity:0.7;">Dein geheimer Kanal-Schlüssel</label>
-            <div class="sync-topic-input-group">
-                <input id="syncTopicInput" class="sync-topic-input" placeholder="Noch kein Schlüssel generiert..." onchange="saveSyncTopic()">
-                <button onclick="generateSyncTopic()" style="padding:0 12px;">🎲 Neu</button>
+            <!-- Kanal Wahl & Management -->
+            <div class="sync-controls-row">
+                <select id="syncChannelSelect" class="sync-select" onchange="safeRun(onSyncChannelChange)">
+                    <option value="" disabled selected>-- Kein Kanal --</option>
+                </select>
+                
+                <div class="sync-icon-btn" onclick="openAddSyncModal()" title="Neuer Kanal" style="background:var(--accent); color:white;">+</div>
+                <div class="sync-icon-btn" onclick="copySyncKey()" title="Key kopieren">📋</div>
+                <div class="sync-icon-btn" onclick="deleteSyncChannel()" title="Löschen" style="color:var(--err-text);">🗑️</div>
             </div>
 
-            <!-- Aktionen -->
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <button onclick="safeRun(startCloudPush)" style="background:var(--accent); color:#fff; border:none;">📤 Hochladen</button>
-                <button onclick="safeRun(checkForCloudBackups)" style="background:var(--card-solid); border:1px solid var(--btn);">🔄 Suchen</button>
+            <!-- Haupt-Aktionen -->
+            <div class="sync-action-grid">
+                <button onclick="safeRun(startCloudPush)" class="sync-main-btn" style="background:linear-gradient(135deg, var(--accent), #2980b9); color:white;">
+                    <span style="font-size:24px">📤</span> 
+                    <span>Hochladen</span>
+                </button>
+                <button onclick="safeRun(checkForCloudBackups)" class="sync-main-btn" style="background:var(--card-solid); border:1px solid var(--btn); color:var(--text);">
+                    <span style="font-size:24px">🔄</span> 
+                    <span>Prüfen</span>
+                </button>
             </div>
 
             <!-- Liste gefundener Backups -->
-            <div id="syncListContainer" class="sync-list" style="display:none;">
+            <div id="syncListContainer" style="display:none; margin-top:15px; border-top:1px solid var(--btn); padding-top:10px;">
                 <div style="font-size:11px; font-weight:bold; margin-bottom:5px; opacity:0.5;">GEFUNDENE BACKUPS (Letzte 12h):</div>
                 <div id="syncListItems"></div>
             </div>
@@ -4874,21 +4949,43 @@ body.dark .deck-card {
     </div>
 </div>
 
-<!-- Das Fortschritts-Modal (Unsichtbar am Ende des Body einfügen) -->
+<!-- MODAL: NEUER KANAL -->
+<div id="syncAddModal" class="modal" style="display:none; z-index:22000; align-items:center; justify-content:center;">
+    <div class="modal-content" style="max-width:350px;">
+        <h3>Neuer Sync-Kanal</h3>
+        
+        <label style="font-size:12px; font-weight:bold;">Name (für dich):</label>
+        <input id="newSyncName" placeholder="z.B. Mein Desktop" style="margin-bottom:15px;">
+        
+        <label style="font-size:12px; font-weight:bold;">Topic-Schlüssel:</label>
+        <div style="display:flex; gap:8px; margin-bottom:5px;">
+            <input id="newSyncTopic" placeholder="Generieren oder einfügen..." style="font-family:monospace; font-size:11px;">
+            <button onclick="generateRandomTopic()" style="padding:0 10px;">🎲</button>
+        </div>
+        <p style="font-size:10px; opacity:0.6; margin-bottom:20px;">Mindestens 40 Zeichen empfohlen.</p>
+        
+        <div style="display:flex; gap:10px;">
+            <button onclick="saveNewSyncChannel()" style="flex:1; background:var(--accent); color:white;">Speichern</button>
+            <button onclick="closeModal('syncAddModal')" style="flex:1; background:transparent; border:1px solid var(--sub);">Abbrechen</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: FORTSCHRITT -->
 <div id="syncProgressModal">
     <div class="sync-progress-box">
         <div style="font-size:40px; margin-bottom:10px;" id="syncIcon">🚀</div>
-        <h3 id="syncTitle" style="margin:0;">Starte Sync...</h3>
-        <p id="syncStatus" style="font-size:12px; opacity:0.7; margin-top:5px;">Vorbereitung...</p>
+        <h3 id="syncTitle" style="margin:0;">Sync läuft...</h3>
+        <p id="syncStatus" style="font-size:12px; opacity:0.7; margin-top:5px;">Verbinde...</p>
         
         <div class="sync-bar-bg">
             <div id="syncBar" class="sync-bar-fill"></div>
         </div>
         
-        <!-- Notfall Abbruch -->
-        <button onclick="abortSync()" style="font-size:11px; padding:5px 10px; background:transparent; color:var(--err-text); border:1px solid var(--err-text);">Abbrechen</button>
+        <button onclick="abortSync()" style="font-size:11px; padding:5px 10px; background:transparent; color:var(--err-text); border:1px solid var(--err-text); border-radius:8px; cursor:pointer;">Vorgang abbrechen</button>
     </div>
 </div>
+
 
   <!-- BUBBLE 3: DATEN (Akkordeon) -->
   <div class="card-section">
@@ -8631,248 +8728,6 @@ function quickCreate(name) {
 }
 
 
-async function downloadBackup() {
-    showErrorToast("Vollständiges Backup wird erstellt...", true);
-    
-    // 1. Alle Jahre der Tier-Historie sammeln
-    const fullHistory = {}; 
-    getAvailableYears().forEach(y => fullHistory[y] = getHistory(y));
-
-    // 2. Bilder sammeln (Profilbilder + Notiz-Fotos)
-    const images = {};
-    const imageIdsToFetch = new Set();
-
-    // IDs von Profilbildern sammeln
-    animals.forEach(a => { if(a.imageId) imageIdsToFetch.add(a.imageId); });
-
-    // IDs von Notiz-Bildern aus der gesamten Historie fischen
-    Object.values(fullHistory).forEach(yearData => {
-        Object.values(yearData).forEach(dayData => {
-            if(dayData.perAnimal) {
-                Object.values(dayData.perAnimal).forEach(entries => {
-                    entries.forEach(entry => {
-                        if(entry.noteImageId) imageIdsToFetch.add(entry.noteImageId);
-                    });
-                });
-            }
-        });
-    });
-
-    // Alle gefundenen Bilder aus der IndexedDB laden
-    for(let id of imageIdsToFetch) {
-        try {
-            const data = await dbGetImg(id);
-            if(data) images[id] = data;
-        } catch(e) { console.error("Fehler bei Bild-Backup:", id); }
-    }
-
-    // 3. Ranger Funk Nachrichten aus IndexedDB sammeln
-    const rfMessages = [];
-    try {
-        const db = await rfDbPromise;
-        const msgs = await new Promise(r => {
-            const req = db.transaction(RF_STORE, 'readonly').objectStore(RF_STORE).getAll();
-            req.onsuccess = () => r(req.result);
-            req.onerror = () => r([]);
-        });
-        rfMessages.push(...msgs);
-    } catch(e) { console.log("Keine Funk-Daten gefunden."); }
-
-    // 4. Eigene Fakten-Decks aus IndexedDB sammeln
-    const customDecks = [];
-    try {
-        const decks = await dbGetDecks();
-        customDecks.push(...decks);
-    } catch(e) { console.log("Keine Custom Decks gefunden."); }
-
-    // 5. Finales Export-Objekt zusammenbauen
-    const exportObj = { 
-        meta: {
-            version: "7.0-ULTIMATE", 
-            date: new Date(),
-            device: navigator.userAgent
-        }, 
-        // Tier App Daten
-        animals, 
-        locations, 
-        locCoords, 
-        fullHistory, 
-        images, 
-        notifyConfig, 
-        
-        // Fakten & Wissen
-        savedFacts,
-        customDecks,
-        activeDeckIDs: JSON.parse(localStorage.getItem('activeDeckIDs')) || ['builtin'],
-        userFlavorTags,
-
-        // Ranger Funk
-        rfChannels, 
-        rfMessages 
-    };
-
-    // 6. Datei generieren und Download starten
-    try {
-        const blob = new Blob([JSON.stringify(exportObj)], {type:'application/json'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob); 
-        a.download = `tier-ticker-full-backup-${todayStr()}.json`; 
-        a.click();
-        
-        // Backup-Status speichern
-        localStorage.setItem('lastBackup', Date.now()); 
-        checkBackupHealth(); 
-        showErrorToast("Backup erfolgreich! Alles gesichert. 💾", true);
-    } catch(err) {
-        showErrorToast("Backup fehlgeschlagen!");
-        console.error(err);
-    }
-}
-
-function importBackup(e){
-    const file = e.target.files[0]; if(!file) return;
-    const reader = new FileReader();
-    reader.onload = evt => { try { tempImportData = JSON.parse(evt.target.result); getEl('importModal').style.display='block'; } catch(err) { showErrorToast("Datei beschädigt"); } };
-    reader.readAsText(file);
-}
-
-async function confirmImport(mode) {
-    getEl('importModal').style.display = 'none';
-    if (mode === 'cancel') return;
-
-    try {
-        const d = tempImportData;
-        showErrorToast("Import läuft... Bitte warten.", true);
-
-        // --- 1. VORBEREITUNG (Nur bei Overwrite) ---
-        if (mode === 'overwrite') {
-            // Bilder-DB leeren
-            const db = await dbPromise;
-            const tx = db.transaction(STORE_IMGS, 'readwrite');
-            await tx.objectStore(STORE_IMGS).clear();
-            
-            // Funk-DB leeren
-            const rfDb = await rfDbPromise;
-            const rfTx = rfDb.transaction(RF_STORE, 'readwrite');
-            await rfTx.objectStore(RF_STORE).clear();
-
-            // Fakten-Decks-DB leeren
-            const dbDecks = await dbPromise; // Nutzt dieselbe DB wie Bilder
-            const deckTx = dbDecks.transaction(STORE_DECKS, 'readwrite');
-            await deckTx.objectStore(STORE_DECKS).clear();
-
-            localStorage.clear();
-        }
-
-        // --- 2. BILDER IMPORTIEREN (Profil & Notiz-Fotos) ---
-        if (d.images) {
-            for (let [id, data] of Object.entries(d.images)) {
-                await dbSaveImg(id, data);
-            }
-        }
-
-        // --- 3. RANGER FUNK IMPORTIEREN ---
-        if (d.rfMessages) {
-            const rfDb = await rfDbPromise;
-            const rfTx = rfDb.transaction(RF_STORE, 'readwrite');
-            const rfStore = rfTx.objectStore(RF_STORE);
-            for (let m of d.rfMessages) {
-                await rfStore.put(m);
-            }
-        }
-
-        // --- 4. FAKTEN-DECKS IMPORTIEREN ---
-        if (d.customDecks) {
-            for (let deck of d.customDecks) {
-                await dbSaveDeck(deck);
-            }
-        }
-
-        // --- 5. DATEN STRUKTUR EINLESEN ---
-        if (mode === 'overwrite') {
-            // Basiskonfiguration
-            animals = d.animals || [];
-            locations = d.locations || [];
-            locCoords = d.locCoords || {};
-            notifyConfig = d.notifyConfig || { enabled: false, days: 7 };
-            savedFacts = d.savedFacts || [];
-            rfChannels = d.rfChannels || [];
-            userFlavorTags = d.userFlavorTags || [];
-            trashBin = []; // Papierkorb bei Overwrite immer leer
-
-            // Historie (Alle Jahre)
-            if (d.fullHistory) {
-                Object.entries(d.fullHistory).forEach(([y, h]) => saveHistory(y, h));
-            }
-
-            // Einstellungen in LocalStorage schreiben
-            localStorage.setItem('activeDeckIDs', JSON.stringify(d.activeDeckIDs || ['builtin']));
-            localStorage.setItem('userFlavorTags', JSON.stringify(userFlavorTags));
-            localStorage.setItem('ranger_channels', JSON.stringify(rfChannels));
-            localStorage.setItem('savedFacts', JSON.stringify(savedFacts));
-
-        } else {
-            // --- 6. MERGE LOGIK (Zusammenfügen) ---
-            
-            // Tiere mergen (nach Name)
-            d.animals?.forEach(impA => {
-                if (!animals.some(a => a.name === impA.name)) animals.push(impA);
-            });
-
-            // Orte mergen
-            d.locations?.forEach(l => {
-                if (!locations.includes(l)) locations.push(l);
-            });
-
-            // Fakten mergen
-            d.savedFacts?.forEach(sf => {
-                if (!savedFacts.some(local => local.text === sf.text)) savedFacts.push(sf);
-            });
-
-            // Historie mergen (mit Duplikats-Prüfung)
-            if (d.fullHistory) {
-                for (let yearData of Object.values(d.fullHistory)) {
-                    for (let [dateStr, dayContent] of Object.entries(yearData)) {
-                        if (dayContent.perAnimal) {
-                            for (let [idxStr, list] of Object.entries(dayContent.perAnimal)) {
-                                let targetIdx = parseInt(idxStr);
-                                // Index-Korrektur falls Namen verschoben sind
-                                if (d.animals && d.animals[idxStr]) {
-                                    const impName = d.animals[idxStr].name;
-                                    const localIdx = animals.findIndex(a => a.name === impName);
-                                    if (localIdx !== -1) targetIdx = localIdx;
-                                }
-                                
-                                for (let item of list) {
-                                    const y = dateStr.split('-')[0];
-                                    const h = getHistory(y);
-                                    let exists = h[dateStr]?.perAnimal?.[targetIdx]?.some(ex => 
-                                        ex.time === item.time && ex.location === item.location
-                                    );
-                                    if (!exists) writeEntry(dateStr, targetIdx, item);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            // Ranger Channels mergen
-            d.rfChannels?.forEach(ch => {
-                if (!rfChannels.some(local => local.topic === ch.topic)) rfChannels.push(ch);
-            });
-            localStorage.setItem('ranger_channels', JSON.stringify(rfChannels));
-        }
-
-        // --- 7. ABSCHLUSS ---
-        saveGlobals();
-        showErrorToast("Import erfolgreich! App wird neu geladen...", true);
-        setTimeout(() => location.reload(), 1500);
-
-    } catch (e) {
-        console.error("Import Fehler:", e);
-        showErrorToast("Kritischer Import Fehler: " + e.message);
-    }
-}
 
 function exportCSV() {
     let csv = "Datum;Uhrzeit;Tier;Ort;Notiz\n";
@@ -12026,59 +11881,117 @@ window.openStoryModal = function(e) {
     }
 };
 
-/* === CLOUD SYNC ENGINE (ntfy Chunking) === */
+/* === CLOUD SYNC ENGINE V2 (MULTI-CHANNEL Ntfy Chunking) === */
 
-let syncTopic = localStorage.getItem('tier_sync_topic') || '';
-if(syncTopic) document.getElementById('syncTopicInput').value = syncTopic;
+let syncChannels = JSON.parse(localStorage.getItem('tier_sync_channels')) || [];
+let activeSyncId = localStorage.getItem('tier_active_sync_id') || null;
+let isSyncing = false;
+let abortSyncFlag = false;
 
-let isSyncing = false; // Flag um Mehrfachklicks zu verhindern
-let abortSyncFlag = false; // Notbremse
+// Init beim Start
+setTimeout(renderSyncUI, 1000);
 
-// 1. Topic Generierung (Sicher & Lang)
-function generateSyncTopic() {
-    if(syncTopic && !confirm("Achtung: Wenn du den Schlüssel änderst, findest du alte Backups nicht mehr. Trotzdem neu würfeln?")) return;
+// --- UI & MANAGEMENT ---
+
+function renderSyncUI() {
+    const sel = document.getElementById('syncChannelSelect');
+    if(!sel) return;
     
+    sel.innerHTML = '<option value="" disabled>-- Wähle Kanal --</option>';
+    
+    syncChannels.forEach(ch => {
+        const opt = document.createElement('option');
+        opt.value = ch.id;
+        opt.innerText = ch.name;
+        if(ch.id === activeSyncId) opt.selected = true;
+        sel.appendChild(opt);
+    });
+    
+    if(syncChannels.length === 0) sel.innerHTML = '<option value="" disabled selected>Keine Kanäle - Klicke +</option>';
+}
+
+function onSyncChannelChange() {
+    activeSyncId = document.getElementById('syncChannelSelect').value;
+    localStorage.setItem('tier_active_sync_id', activeSyncId);
+    // Liste zurücksetzen, da neuer Kanal
+    document.getElementById('syncListContainer').style.display = 'none';
+}
+
+function openAddSyncModal() {
+    document.getElementById('newSyncName').value = '';
+    document.getElementById('newSyncTopic').value = '';
+    generateRandomTopic(); // Direkt einen vorschlagen
+    document.getElementById('syncAddModal').style.display = 'flex'; // Flex für Zentrierung
+}
+
+function generateRandomTopic() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
-    let result = 'tierticker-sync-'; // Prefix damit man es erkennt
-    // Wir wollen mind. 40 Zeichen total -> Prefix ist 16, also noch ca 30-40 dazu
-    const len = 40 + Math.floor(Math.random() * 10); 
-    
+    let result = 'tierticker-sync-';
+    // Länge zwischen 40 und 60
+    const len = 40 + Math.floor(Math.random() * 20); 
     const randomValues = new Uint8Array(len);
     crypto.getRandomValues(randomValues);
+    for (let i = 0; i < len; i++) result += chars[randomValues[i] % chars.length];
+    document.getElementById('newSyncTopic').value = result;
+}
+
+function saveNewSyncChannel() {
+    const name = document.getElementById('newSyncName').value.trim();
+    const topic = document.getElementById('newSyncTopic').value.trim();
     
-    for (let i = 0; i < len; i++) {
-        result += chars[randomValues[i] % chars.length];
+    if(!name || topic.length < 10) return alert("Bitte Namen und gültigen Key eingeben.");
+    
+    const newCh = { id: 'sync_' + Date.now(), name, topic };
+    syncChannels.push(newCh);
+    activeSyncId = newCh.id; // Sofort auswählen
+    
+    saveSyncConfig();
+    renderSyncUI();
+    closeModal('syncAddModal');
+    showErrorToast(`Kanal "${name}" gespeichert!`, true);
+}
+
+function deleteSyncChannel() {
+    if(!activeSyncId) return;
+    const ch = syncChannels.find(c => c.id === activeSyncId);
+    if(confirm(`Kanal "${ch.name}" wirklich aus deiner Liste löschen?`)) {
+        syncChannels = syncChannels.filter(c => c.id !== activeSyncId);
+        activeSyncId = syncChannels.length > 0 ? syncChannels[0].id : null;
+        saveSyncConfig();
+        renderSyncUI();
     }
-    
-    syncTopic = result;
-    localStorage.setItem('tier_sync_topic', syncTopic);
-    document.getElementById('syncTopicInput').value = syncTopic;
-    showErrorToast("Neuer geheimer Schlüssel erstellt! 🔑", true);
 }
 
-function saveSyncTopic() {
-    syncTopic = document.getElementById('syncTopicInput').value.trim();
-    localStorage.setItem('tier_sync_topic', syncTopic);
+function copySyncKey() {
+    if(!activeSyncId) return showErrorToast("Kein Kanal gewählt");
+    const ch = syncChannels.find(c => c.id === activeSyncId);
+    if(ch) {
+        navigator.clipboard.writeText(ch.topic).then(() => showErrorToast("Key in Zwischenablage!", true));
+    }
 }
 
-function abortSync() {
-    abortSyncFlag = true;
-    document.getElementById('syncProgressModal').style.display = 'none';
-    showErrorToast("Vorgang abgebrochen.");
-    isSyncing = false;
+function saveSyncConfig() {
+    localStorage.setItem('tier_sync_channels', JSON.stringify(syncChannels));
+    localStorage.setItem('tier_active_sync_id', activeSyncId || '');
 }
 
-// 2. HELPER: Daten sammeln (Refactored aus downloadBackup)
-async function getFullBackupString() {
-    // Wir nutzen die Logik von downloadBackup, geben aber den JSON String zurück statt zu downloaden
-    
-    // A) Daten sammeln
+// --- DATA PREPARATION (PRIVACY FILTER) ---
+
+// WICHTIG: Das hier ersetzt deine bisherige getFullBackupString (falls schon eingebaut)
+// === ZENTRALE BACKUP SAMMELSTELLE ===
+async function getFullBackupString(forCloud = false) {
+    // 1. Historie aller Jahre sammeln
     const fullHistory = {}; 
     getAvailableYears().forEach(y => fullHistory[y] = getHistory(y));
 
+    // 2. Bilder sammeln (Profil & Notizen)
     const images = {};
     const imageIdsToFetch = new Set();
+    
+    // Profilbilder
     animals.forEach(a => { if(a.imageId) imageIdsToFetch.add(a.imageId); });
+    
+    // Notizbilder in Historie suchen
     Object.values(fullHistory).forEach(yearData => {
         Object.values(yearData).forEach(dayData => {
             if(dayData.perAnimal) {
@@ -12089,14 +12002,15 @@ async function getFullBackupString() {
         });
     });
 
+    // Bilder aus DB laden
     for(let id of imageIdsToFetch) {
         try {
             const data = await dbGetImg(id);
             if(data) images[id] = data;
-        } catch(e) {}
+        } catch(e) { console.error("Bild-Fehler:", id); }
     }
 
-    // B) Weitere DBs
+    // 3. Ranger Funk Nachrichten
     let rfMessages = [];
     try {
         const db = await rfDbPromise;
@@ -12106,65 +12020,82 @@ async function getFullBackupString() {
         });
     } catch(e) {}
 
+    // 4. Custom Decks
     let customDecks = [];
     try { customDecks = await dbGetDecks(); } catch(e) {}
 
+    // 5. Objekt bauen
     const exportObj = { 
-        meta: { version: "SYNC-V1", date: new Date(), device: navigator.userAgent }, 
+        meta: { version: "SYNC-V2-ULTIMATE", date: new Date(), device: navigator.userAgent }, 
+        
+        // Core Data
         animals, locations, locCoords, fullHistory, images, notifyConfig, 
-        savedFacts, customDecks, activeDeckIDs, userFlavorTags, rfChannels, rfMessages 
+        
+        // Wissen & Decks
+        savedFacts, customDecks, activeDeckIDs, userFlavorTags,
+        
+        // Ranger Funk
+        rfChannels, rfMessages,
+        
+        // NEU: Sync Kanäle (Nur speichern wenn NICHT Cloud-Upload)
+        // forCloud = true  -> Leeres Array (Schutz)
+        // forCloud = false -> Echte Liste (Backup)
+        syncChannels: forCloud ? [] : syncChannels 
     };
 
     return JSON.stringify(exportObj);
 }
 
-// 3. UPLOAD (PUSH) LOGIK
+// --- UPLOAD PROCESS ---
+
 async function startCloudPush() {
-    if(!syncTopic) return alert("Bitte erst einen Schlüssel generieren (Würfel)!");
+    const ch = syncChannels.find(c => c.id === activeSyncId);
+    if(!ch) return alert("Bitte erst einen Kanal auswählen oder erstellen!");
     if(isSyncing) return;
     
+    if(!confirm(`Backup auf "${ch.name}" hochladen?`)) return;
+
     try {
         isSyncing = true;
         abortSyncFlag = false;
         
-        // UI Start
+        // UI
         const modal = document.getElementById('syncProgressModal');
         const bar = document.getElementById('syncBar');
         const status = document.getElementById('syncStatus');
         const title = document.getElementById('syncTitle');
         
         modal.style.display = 'flex';
-        title.innerText = "Sichere Daten...";
-        status.innerText = "Erstelle Backup-Paket...";
+        title.innerText = "Hochladen...";
         bar.style.width = "5%";
 
-        // 1. Daten holen
-        const jsonString = await getFullBackupString();
+        // 1. Daten holen (MIT PRIVACY FILTER = true)
+        status.innerText = "Packe Daten (ohne Keys)...";
+        const jsonString = await getFullBackupString(true); 
         
-        // 2. Chunken (1.5 MB Stücke)
+        // 2. Chunking
         const CHUNK_SIZE = 1.5 * 1024 * 1024; 
         const totalChunks = Math.ceil(jsonString.length / CHUNK_SIZE);
-        const backupID = 'bkp_' + Date.now(); // Eindeutige ID für diesen Upload
+        const backupID = 'bkp_' + Date.now(); 
         
-        status.innerText = `Zerlege in ${totalChunks} Pakete...`;
-        
-        // 3. HEADER senden (Info, dass ein Backup kommt)
+        // 3. Header senden
         const headerPayload = {
             type: 'tier_sync_header',
             id: backupID,
             chunks: totalChunks,
             size: jsonString.length,
             date: Date.now(),
-            device: navigator.platform
+            device: navigator.platform,
+            name: ch.name // Optional: Sender Name
         };
         
-        await fetch(`https://ntfy.sh/${syncTopic}`, {
+        await fetch(`https://ntfy.sh/${ch.topic}`, {
             method: 'POST',
             body: JSON.stringify(headerPayload),
-            headers: { 'Title': 'TierTicker Backup Header', 'Priority': 'high' } // Header hat Prio
+            headers: { 'Title': 'TierTicker Sync Header', 'Priority': 'high' }
         });
 
-        // 4. CHUNKS senden (Loop)
+        // 4. Chunks Loop
         for (let i = 0; i < totalChunks; i++) {
             if(abortSyncFlag) throw new Error("Abbruch durch User");
 
@@ -12172,42 +12103,38 @@ async function startCloudPush() {
             const end = start + CHUNK_SIZE;
             const chunkData = jsonString.substring(start, end);
             
-            // UI Update
             const pct = Math.round(((i + 1) / totalChunks) * 100);
             bar.style.width = pct + '%';
-            status.innerText = `Sende Paket ${i+1} von ${totalChunks}...`;
+            status.innerText = `Sende Paket ${i+1}/${totalChunks}...`;
 
-            // Upload an ntfy als Attachment (via Body)
-            // WICHTIG: Wir nutzen einen speziellen Filename Header, damit ntfy es zuordnen kann
-            await fetch(`https://ntfy.sh/${syncTopic}`, {
+            await fetch(`https://ntfy.sh/${ch.topic}`, {
                 method: 'PUT',
                 body: chunkData,
                 headers: {
-                    'Filename': `${backupID}_part_${i}`, // Dateiname zur Identifikation
+                    'Filename': `${backupID}_part_${i}`,
                     'Title': `Backup Part ${i+1}/${totalChunks}`
                 }
             });
 
-            // RATE LIMIT SCHUTZ: Pause machen!
-            await new Promise(r => setTimeout(r, 800)); // 800ms Pause pro Chunk
+            await new Promise(r => setTimeout(r, 800)); // Rate Limit Bremse
         }
 
-        // 5. Fertig
         title.innerText = "Fertig! ✅";
-        status.innerText = "Daten liegen für 12h bereit.";
-        bar.style.width = "100%";
+        status.innerText = "Daten sind für 12h online.";
         setTimeout(() => { modal.style.display = 'none'; isSyncing = false; }, 2000);
 
     } catch (e) {
-        if(!abortSyncFlag) alert("Fehler beim Upload: " + e.message);
+        if(!abortSyncFlag) alert("Upload Fehler: " + e.message);
         document.getElementById('syncProgressModal').style.display = 'none';
         isSyncing = false;
     }
 }
 
-// 4. CHECK LOGIK (Liste abrufen)
+// --- CHECK & DOWNLOAD PROCESS ---
+
 async function checkForCloudBackups() {
-    if(!syncTopic) return alert("Kein Schlüssel eingetragen!");
+    const ch = syncChannels.find(c => c.id === activeSyncId);
+    if(!ch) return alert("Kein Kanal gewählt!");
     
     const listCont = document.getElementById('syncListContainer');
     const listItems = document.getElementById('syncListItems');
@@ -12215,18 +12142,14 @@ async function checkForCloudBackups() {
     listItems.innerHTML = '<div class="loader-spinner" style="margin:10px auto"></div>';
 
     try {
-        // Wir holen JSON Nachrichten der letzten 12h
-        const response = await fetch(`https://ntfy.sh/${syncTopic}/json?since=12h&poll=0`);
+        const response = await fetch(`https://ntfy.sh/${ch.topic}/json?since=12h&poll=0`);
         const text = await response.text();
-        
-        // ntfy gibt JSON-Lines zurück (jede Zeile ein JSON Objekt)
         const lines = text.trim().split('\n');
         const backups = [];
 
         lines.forEach(line => {
             try {
                 const msg = JSON.parse(line);
-                // Prüfen ob es eine unserer Header-Nachrichten ist
                 if (msg.message) {
                     const data = JSON.parse(msg.message);
                     if (data.type === 'tier_sync_header') {
@@ -12236,70 +12159,59 @@ async function checkForCloudBackups() {
             } catch(e) {}
         });
 
-        // UI Rendern
         listItems.innerHTML = '';
         if (backups.length === 0) {
-            listItems.innerHTML = '<div style="opacity:0.5; font-size:12px; text-align:center;">Keine Backups gefunden.</div>';
+            listItems.innerHTML = '<div style="opacity:0.5; font-size:12px; text-align:center; padding:10px;">Keine Backups in den letzten 12h.</div>';
         } else {
-            // Neueste zuerst
             backups.sort((a,b) => b.date - a.date);
-            
             backups.forEach(b => {
-                const dateStr = new Date(b.date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) + ' Uhr';
+                const dateStr = new Date(b.date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
                 const sizeMB = (b.size / (1024*1024)).toFixed(1);
                 
                 const div = document.createElement('div');
                 div.className = 'sync-item';
                 div.innerHTML = `
                     <div class="sync-item-info">
-                        <div class="sync-date">📅 ${new Date(b.date).toLocaleDateString()} - ${dateStr}</div>
-                        <div class="sync-meta">📦 ${sizeMB} MB • ${b.chunks} Pakete</div>
+                        <div class="sync-date">📅 ${dateStr} Uhr</div>
+                        <div class="sync-meta">📦 ${sizeMB} MB • ${b.chunks} Pakete • von ${b.device||'?'}</div>
                     </div>
-                    <button onclick="restoreFromCloud('${b.id}', ${b.chunks})" style="background:var(--accent); color:white; border:none; padding:6px 12px; border-radius:15px; font-size:12px; font-weight:bold;">📥 Laden</button>
+                    <button onclick="restoreFromCloud('${b.id}', ${b.chunks})" style="background:var(--accent); color:white; border:none; padding:6px 12px; border-radius:12px; font-weight:bold; font-size:12px;">📥 Import</button>
                 `;
                 listItems.appendChild(div);
             });
         }
 
     } catch (e) {
-        listItems.innerHTML = '<div style="color:var(--err-text)">Fehler beim Abrufen.</div>';
-        console.error(e);
+        listItems.innerHTML = '<div style="color:var(--err-text)">Verbindungsfehler.</div>';
     }
 }
 
-// 5. RESTORE LOGIK (PULL)
 async function restoreFromCloud(backupId, totalParts) {
-    if(isSyncing) return;
+    const ch = syncChannels.find(c => c.id === activeSyncId);
+    if(isSyncing || !ch) return;
+    
     isSyncing = true;
     abortSyncFlag = false;
 
-    // UI Start
     const modal = document.getElementById('syncProgressModal');
     const bar = document.getElementById('syncBar');
     const status = document.getElementById('syncStatus');
-    const title = document.getElementById('syncTitle');
-    const icon = document.getElementById('syncIcon');
     
     modal.style.display = 'flex';
-    title.innerText = "Empfange Daten...";
-    icon.innerText = "📡";
+    document.getElementById('syncTitle').innerText = "Lade Daten...";
     bar.style.width = "0%";
 
     try {
-        // Wir brauchen alle Nachrichten der letzten 12h und filtern dann nach Attachments für unsere ID
-        status.innerText = "Suche Pakete...";
-        const response = await fetch(`https://ntfy.sh/${syncTopic}/json?since=12h&poll=0`);
+        status.innerText = "Suche Pakete im Kanal...";
+        const response = await fetch(`https://ntfy.sh/${ch.topic}/json?since=12h&poll=0`);
         const text = await response.text();
         const lines = text.trim().split('\n');
         
         let foundParts = [];
-
-        // 1. Relevante Nachrichten filtern (die Attachments haben und zu unserer ID gehören)
         lines.forEach(line => {
             try {
                 const msg = JSON.parse(line);
                 if (msg.attachment && msg.attachment.name.startsWith(backupId)) {
-                    // Dateiname Format: bkp_12345_part_0
                     const parts = msg.attachment.name.split('_part_');
                     const index = parseInt(parts[1]);
                     foundParts.push({ index: index, url: msg.attachment.url });
@@ -12307,53 +12219,215 @@ async function restoreFromCloud(backupId, totalParts) {
             } catch(e) {}
         });
 
-        // 2. Vollständigkeit prüfen
-        if (foundParts.length < totalParts) {
-            throw new Error(`Unvollständig! Nur ${foundParts.length} von ${totalParts} Paketen gefunden.`);
-        }
+        if (foundParts.length < totalParts) throw new Error(`Fehler: Nur ${foundParts.length}/${totalParts} Pakete gefunden.`);
 
-        // 3. Herunterladen & Zusammensetzen
-        foundParts.sort((a,b) => a.index - b.index); // Sortieren 0, 1, 2...
-        
+        foundParts.sort((a,b) => a.index - b.index);
         let fullJsonString = "";
 
         for (let i = 0; i < foundParts.length; i++) {
-            if(abortSyncFlag) throw new Error("Abbruch durch User");
+            if(abortSyncFlag) throw new Error("Abbruch");
             
-            const part = foundParts[i];
-            status.innerText = `Lade Paket ${i+1} von ${totalParts}...`;
+            status.innerText = `Lade Paket ${i+1}/${totalParts}...`;
             bar.style.width = Math.round(((i) / totalParts) * 100) + '%';
 
-            // Download des Chunks
-            const chunkRes = await fetch(part.url);
-            const chunkText = await chunkRes.text();
-            fullJsonString += chunkText;
-            
-            // Kleine Pause für UI Update
-            await new Promise(r => setTimeout(r, 100));
+            const chunkRes = await fetch(foundParts[i].url);
+            fullJsonString += await chunkRes.text();
+            await new Promise(r => setTimeout(r, 50));
         }
 
-        // 4. Abschluss & Übergabe an Import
-        status.innerText = "Zusammensetzen & Prüfen...";
+        status.innerText = "Verarbeite...";
         bar.style.width = "100%";
-        
-        // JSON Parsen (Test ob valide)
         tempImportData = JSON.parse(fullJsonString);
         
         modal.style.display = 'none';
         isSyncing = false;
         
-        // Das normale Import Modal öffnen
         getEl('importModal').style.display = 'block';
-        showErrorToast("Download erfolgreich! Bitte Import-Methode wählen.", true);
+        showErrorToast("Daten bereit zum Import!", true);
 
     } catch (e) {
-        if(!abortSyncFlag) alert("Sync Fehler: " + e.message);
+        if(!abortSyncFlag) alert("Download Fehler: " + e.message);
         modal.style.display = 'none';
         isSyncing = false;
     }
 }
 
+function abortSync() {
+    abortSyncFlag = true;
+    document.getElementById('syncProgressModal').style.display = 'none';
+    isSyncing = false;
+    showErrorToast("Abgebrochen");
+}
+
+// === WICHTIG: UPDATE DER ORIGINALEN DOWNLOAD FUNKTION ===
+// Diese Funktion musst du in deinem Code FINDEN und ERSETZEN,
+// damit beim lokalen Backup die Sync-Kanäle mitgespeichert werden!
+
+async function downloadBackup() {
+    showErrorToast("Erstelle Full-Backup...", true);
+    
+    try {
+        // Hier rufen wir den Sammler auf. 
+        // false = Wir wollen ALLES, auch die Sync-Kanäle, weil es eine lokale Datei ist.
+        const jsonString = await getFullBackupString(false); 
+        
+        const blob = new Blob([jsonString], {type:'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); 
+        a.download = `tier-ticker-ultimate-backup-${todayStr()}.json`; 
+        a.click();
+        
+        localStorage.setItem('lastBackup', Date.now()); 
+        if(typeof checkBackupHealth === 'function') checkBackupHealth(); 
+        showErrorToast("Datei-Backup erstellt 💾", true);
+        
+    } catch(err) {
+        console.error(err);
+        showErrorToast("Fehler beim Backup erstellen!");
+    }
+}
+
+function importBackup(e){
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = evt => { try { tempImportData = JSON.parse(evt.target.result); getEl('importModal').style.display='block'; } catch(err) { showErrorToast("Datei beschädigt"); } };
+    reader.readAsText(file);
+}
+
+    async function confirmImport(mode) {
+    getEl('importModal').style.display = 'none';
+    if (mode === 'cancel') return;
+
+    try {
+        const d = tempImportData;
+        showErrorToast("Import läuft... Bitte warten.", true);
+
+        // --- 1. VORBEREITUNG (Nur bei Overwrite) ---
+        if (mode === 'overwrite') {
+            // DBs leeren
+            const db = await dbPromise;
+            await db.transaction(STORE_IMGS, 'readwrite').objectStore(STORE_IMGS).clear();
+            await db.transaction(STORE_DECKS, 'readwrite').objectStore(STORE_DECKS).clear();
+            
+            const rfDb = await rfDbPromise;
+            await rfDb.transaction(RF_STORE, 'readwrite').objectStore(RF_STORE).clear();
+
+            localStorage.clear();
+        }
+
+        // --- 2. DB INHALTE WIEDERHERSTELLEN ---
+        // Bilder
+        if (d.images) {
+            for (let [id, data] of Object.entries(d.images)) await dbSaveImg(id, data);
+        }
+        // Ranger Funk Messages
+        if (d.rfMessages) {
+            const rfStore = (await rfDbPromise).transaction(RF_STORE, 'readwrite').objectStore(RF_STORE);
+            for (let m of d.rfMessages) await rfStore.put(m);
+        }
+        // Decks
+        if (d.customDecks) {
+            for (let deck of d.customDecks) await dbSaveDeck(deck);
+        }
+
+        // --- 3. LOCALSTORAGE DATEN ---
+        if (mode === 'overwrite') {
+            // Alles überschreiben
+            animals = d.animals || [];
+            locations = d.locations || [];
+            locCoords = d.locCoords || {};
+            notifyConfig = d.notifyConfig || { enabled: false, days: 7 };
+            savedFacts = d.savedFacts || [];
+            rfChannels = d.rfChannels || [];
+            userFlavorTags = d.userFlavorTags || [];
+            trashBin = []; 
+            
+            // NEU: Sync Channels wiederherstellen
+            syncChannels = d.syncChannels || [];
+
+            // Historie
+            if (d.fullHistory) {
+                Object.entries(d.fullHistory).forEach(([y, h]) => saveHistory(y, h));
+            }
+
+            // Configs speichern
+            localStorage.setItem('activeDeckIDs', JSON.stringify(d.activeDeckIDs || ['builtin']));
+            
+        } else {
+            // --- MERGE MODE (Zusammenfügen) ---
+            
+            // Tiere
+            d.animals?.forEach(impA => {
+                if (!animals.some(a => a.name === impA.name)) animals.push(impA);
+            });
+            // Orte
+            d.locations?.forEach(l => {
+                if (!locations.includes(l)) locations.push(l);
+            });
+            // Fakten
+            d.savedFacts?.forEach(sf => {
+                if (!savedFacts.some(local => local.text === sf.text)) savedFacts.push(sf);
+            });
+            // Ranger Channels
+            d.rfChannels?.forEach(ch => {
+                if (!rfChannels.some(local => local.topic === ch.topic)) rfChannels.push(ch);
+            });
+            
+            // NEU: Sync Channels mergen (Keine doppelten Topics!)
+            if(d.syncChannels) {
+                d.syncChannels.forEach(ch => {
+                    if (!syncChannels.some(local => local.topic === ch.topic)) syncChannels.push(ch);
+                });
+            }
+
+            // Historie mergen
+            if (d.fullHistory) {
+                for (let yearData of Object.values(d.fullHistory)) {
+                    for (let [dateStr, dayContent] of Object.entries(yearData)) {
+                        if (dayContent.perAnimal) {
+                            for (let [idxStr, list] of Object.entries(dayContent.perAnimal)) {
+                                let targetIdx = parseInt(idxStr);
+                                // Smart Mapping: Wenn Tiername existiert, nimm dessen ID
+                                if (d.animals && d.animals[idxStr]) {
+                                    const impName = d.animals[idxStr].name;
+                                    const localIdx = animals.findIndex(a => a.name === impName);
+                                    if (localIdx !== -1) targetIdx = localIdx;
+                                }
+                                
+                                for (let item of list) {
+                                    const y = dateStr.split('-')[0];
+                                    const h = getHistory(y);
+                                    // Dubletten-Check (gleiche Zeit & Ort)
+                                    let exists = h[dateStr]?.perAnimal?.[targetIdx]?.some(ex => 
+                                        ex.time === item.time && ex.location === item.location
+                                    );
+                                    if (!exists) writeEntry(dateStr, targetIdx, item);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- 4. FINALE SPEICHERUNG ---
+        saveGlobals();
+        // Ranger Funk Channels explizit speichern
+        localStorage.setItem('ranger_channels', JSON.stringify(rfChannels));
+        // NEU: Sync Channels speichern & UI updaten
+        localStorage.setItem('tier_sync_channels', JSON.stringify(syncChannels));
+        localStorage.setItem('userFlavorTags', JSON.stringify(userFlavorTags));
+        localStorage.setItem('savedFacts', JSON.stringify(savedFacts));
+
+        showErrorToast("Import erfolgreich! App wird neu geladen...", true);
+        setTimeout(() => location.reload(), 1500);
+
+    } catch (e) {
+        console.error("Import Fehler:", e);
+        showErrorToast("Kritischer Import Fehler: " + e.message);
+    }
+}
+// Cloud Engine (Ntfy Chunking) Ende
 
 // Start-Check
 setTimeout(() => { startTutorial(); }, 1500);
