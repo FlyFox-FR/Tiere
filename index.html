@@ -5922,9 +5922,14 @@ function closeRfAddModal() {
 }
 
 function generateRfTopic() {
-    getEl('rfNewTopic').value = 'ranger_' + Math.random().toString(36).substring(2, 7);
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const randomBytes = new Uint8Array(40);
+    crypto.getRandomValues(randomBytes);
+    const randomPart = Array.from(randomBytes, byte => chars[byte % chars.length]).join('');
+    getEl('rfNewTopic').value = 'ranger_' + randomPart;
     updateRfLinkPreview();
-}
+}   
+
 
 function toggleRfServerInput() {
     const sel = getEl('rfServerSelect');
