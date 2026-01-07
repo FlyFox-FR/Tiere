@@ -3490,13 +3490,19 @@ body:not(.dark) .nav-island {
     outline: none;
 }
 
-#solWidgetResults {
-    max-height: 150px; overflow-y: auto; border-radius: 0 0 8px 8px;
-}
+/* Suche diesen Block und ändere die Farbe: */
 #solWidgetResults .suggestion-item {
-    color: #333; border-bottom: 1px solid #eee;
+    color: var(--text); /* Vorher stand hier #333 */
+    border-bottom: 1px solid var(--btn);
 }
 
+/* Außerdem sicherstellen, dass der Hintergrund passt: */
+#solWidgetResults {
+    background: var(--card-solid); /* Passt sich automatisch an Dark/Light an */
+    max-height: 150px; 
+    overflow-y: auto; 
+    border-radius: 0 0 8px 8px;
+}
 /* === FACT WIDGET SCROLLING === */
 
 .fact-content-col {
@@ -8108,9 +8114,11 @@ function updateTrashUI(){
 
 // HELPER: Autocomplete für Orte
 /* === INTELLIGENTE ORTS-SUCHE (Lokal + Web) === */
+
+/* === INTELLIGENTE ORTS-SUCHE (Mit Untertiteln) === */
 function setupLocationAutocomplete() {
-    const inp = getEl('noteLoc');
-    const res = getEl('noteLocResults');
+    const inp = document.getElementById('noteLoc');
+    const res = document.getElementById('noteLocResults');
     let osmTimer; // Timer für die Internet-Suche
 
     inp.oninput = (e) => {
@@ -8123,68 +8131,87 @@ function setupLocationAutocomplete() {
         res.style.display = 'block';
 
         // 1. LOKALE SUCHE (Sofort)
-        // Wir filtern deine gespeicherten Orte
         const localMatches = locations.filter(l => l.toLowerCase().includes(val.toLowerCase()));
 
-        // Funktion zum Erstellen einer Zeile
-        const addRow = (text, type) => {
+        localMatches.forEach(l => {
             const div = document.createElement('div');
             div.className = 'suggestion-item';
             
-            // Icon Logik: 📍 für Eigene, 🌍 für Web
-            const icon = type === 'local' ? '📍' : '🌍';
-            const label = type === 'local' 
-                ? `<b>${text}</b> <span style="font-size:10px; opacity:0.6">(Gespeichert)</span>`
-                : `${text}`;
-
-            div.innerHTML = `${icon} ${label}`;
+            // Design für lokale Orte (mit "Gespeichert" Badge)
+            div.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:18px;">📍</span>
+                    <div>
+                        <div style="font-weight:bold; color:var(--text); font-size:14px;">${l}</div>
+                        <div style="font-size:10px; color:var(--accent); font-weight:bold; opacity:0.8;">Gespeichert</div>
+                    </div>
+                </div>`;
             
             div.onclick = () => {
-                inp.value = text;
+                inp.value = l;
                 res.style.display = 'none';
             };
             res.appendChild(div);
-        };
+        });
 
-        // Lokale Ergebnisse sofort anzeigen
-        localMatches.forEach(l => addRow(l, 'local'));
-
-        // 2. WEB SUCHE (Verzögert, um Daten zu sparen)
+        // 2. WEB SUCHE (Verzögert)
         clearTimeout(osmTimer);
         osmTimer = setTimeout(() => {
-            // Nur suchen, wenn wir online sind
             if(!navigator.onLine) return;
 
-            // Anfrage an OpenStreetMap (Nominatim)
-            // limit=3 sorgt dafür, dass die Liste nicht explodiert
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&addressdetails=1&limit=3&accept-language=de`)
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&addressdetails=1&limit=4&accept-language=de`)
             .then(r => r.json())
             .then(data => {
-                // Wir filtern Duplikate heraus (falls der Ort schon lokal existiert)
+                // Duplikate filtern (falls Ort schon lokal existiert)
                 const newOsmMatches = data.filter(item => {
                     const cleanName = item.display_name.split(',')[0]; 
                     return !locations.includes(cleanName) && !locations.includes(item.display_name);
                 });
 
                 if(newOsmMatches.length > 0) {
-                    // Trennlinie, falls wir schon lokale Ergebnisse haben
+                    // Trennlinie
                     if(localMatches.length > 0) {
                         const sep = document.createElement('div');
-                        sep.style.cssText = "font-size:10px; font-weight:bold; opacity:0.5; padding:4px 12px; background:var(--bg); border-top:1px solid var(--btn); text-transform:uppercase;";
+                        sep.style.cssText = "font-size:10px; font-weight:bold; opacity:0.5; padding:4px 12px; background:var(--bg); border-top:1px solid var(--btn); text-transform:uppercase; margin-top:5px;";
                         sep.innerText = "Aus dem Web:";
                         res.appendChild(sep);
                     }
 
                     newOsmMatches.forEach(item => {
-                        // Wir nehmen nur den vorderen Teil des Namens (z.B. "Berlin" statt "Berlin, Deutschland...")
-                        // Das sieht sauberer aus.
+                        const div = document.createElement('div');
+                        div.className = 'suggestion-item';
+                        
+                        // Titel: Nur der Name (z.B. "Dresden")
                         const shortName = item.display_name.split(',')[0];
-                        addRow(shortName, 'web');
+                        
+                        // Untertitel: Der ganze Rest (z.B. "Dresden, Sachsen, Deutschland")
+                        // Wir entfernen den shortName aus dem Untertitel, damit es nicht doppelt steht
+                        let subText = item.display_name.replace(shortName + ", ", ""); 
+
+                        // === HIER IST DAS NEUE DESIGN ===
+                        div.innerHTML = `
+                            <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
+                                <span style="font-size:18px;">🌍</span>
+                                <div style="flex:1; overflow:hidden;">
+                                    <div style="font-weight:bold; color:var(--text); font-size:14px;">${shortName}</div>
+                                    <div style="font-size:11px; color:var(--sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
+                                        ${subText}
+                                    </div>
+                                </div>
+                            </div>`;
+
+                        div.onclick = () => {
+                            inp.value = shortName; // Wir übernehmen den kurzen Namen
+                            // Koordinaten speichern für die Karte
+                            locCoords[shortName] = {lat:parseFloat(item.lat), lon:parseFloat(item.lon)};
+                            res.style.display = 'none';
+                        };
+                        res.appendChild(div);
                     });
                 }
             })
             .catch(err => console.log("OSM Suche fehlgeschlagen", err));
-        }, 400); // 400ms warten nach dem Tippen
+        }, 400); // 400ms warten nach Tippen
     };
     
     // Schließen beim Klick woanders hin
