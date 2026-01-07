@@ -6638,7 +6638,7 @@ function initSwipeGestures() {
 
         // === HIER IST DER FIX ===
         // Diese Modals dürfen NICHT gewischt werden (nur Scrollen erlaubt):
-        const lockedModals = ['detailModal', 'libraryModal', 'flavorModal', 'deckModal', 'noteViewModal'];
+        const lockedModals = ['detailModal', 'libraryModal', 'flavorModal', 'deckModal', 'noteViewModal', 'storageModal'];
         
         // Wenn wir in einem dieser Modals sind -> Abbrechen!
         if (lockedModals.includes(content.parentElement.id)) return;
