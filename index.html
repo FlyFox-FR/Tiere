@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-//Aktuelle Version mit Ntfy sync unverschlüsselt
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -4950,7 +4949,8 @@ body.dark .deck-card {
     </div>
 </div>
 
-<!-- MODAL: NEUER KANAL -->
+
+<!-- MODAL: NEUER KANAL (Updated) -->
 <div id="syncAddModal" class="modal" style="display:none; z-index:22000; align-items:center; justify-content:center;">
     <div class="modal-content" style="max-width:350px;">
         <h3>Neuer Sync-Kanal</h3>
@@ -4960,10 +4960,18 @@ body.dark .deck-card {
         
         <label style="font-size:12px; font-weight:bold;">Topic-Schlüssel:</label>
         <div style="display:flex; gap:8px; margin-bottom:5px;">
-            <input id="newSyncTopic" placeholder="Generieren oder einfügen..." style="font-family:monospace; font-size:11px;">
+            <input id="newSyncTopic" placeholder="Generieren..." style="font-family:monospace; font-size:11px;">
             <button onclick="generateRandomTopic()" style="padding:0 10px;">🎲</button>
         </div>
-        <p style="font-size:10px; opacity:0.6; margin-bottom:20px;">Mindestens 40 Zeichen empfohlen.</p>
+        
+        <!-- NEU: PASSWORT FELD -->
+        <hr style="border:0; border-top:1px dashed var(--btn); margin:15px 0;">
+        <label style="font-size:12px; font-weight:bold;">🔒 Verschlüsselung (Optional):</label>
+        <input id="newSyncPass" type="password" placeholder="Passwort festlegen..." style="margin-bottom:5px;">
+        <p style="font-size:10px; opacity:0.6; margin-bottom:20px;">
+            Wenn gesetzt, wird alles unlesbar verschlüsselt.<br>
+            ⚠️ Passwort muss auf allen Geräten gleich sein!
+        </p>
         
         <div style="display:flex; gap:10px;">
             <button onclick="saveNewSyncChannel()" style="flex:1; background:var(--accent); color:white;">Speichern</button>
@@ -9411,7 +9419,35 @@ function closeModal(id){
     // Position vom Body fix lösen (optional, falls es springt, kann man das verfeinern)
     // Aber meistens reicht das Entfernen der Klasse.
 }
-function hardReset(){ if(confirm("ALLES LÖSCHEN?")) { localStorage.clear(); location.reload(); } }
+
+async function hardReset(){ 
+    if(confirm("ALLES LÖSCHEN?\n\nDeine Tiere und Bilder werden gelöscht.\nDeine Cloud-Sync-Keys bleiben erhalten.")) { 
+        // 1. Keys retten
+        const savedChannels = localStorage.getItem('tier_sync_channels');
+        const savedActiveId = localStorage.getItem('tier_active_sync_id');
+
+        // 2. LocalStorage leeren
+        localStorage.clear(); 
+
+        // 3. Keys wiederherstellen
+        if(savedChannels) localStorage.setItem('tier_sync_channels', savedChannels);
+        if(savedActiveId) localStorage.setItem('tier_active_sync_id', savedActiveId);
+
+        // 4. Datenbanken killen
+        const db = await dbPromise;
+        const tx = db.transaction([STORE_IMGS, STORE_DECKS], 'readwrite');
+        tx.objectStore(STORE_IMGS).clear();
+        tx.objectStore(STORE_DECKS).clear();
+        
+        try {
+            const rfDb = await rfDbPromise;
+            const txRf = rfDb.transaction(RF_STORE, 'readwrite');
+            txRf.objectStore(RF_STORE).clear();
+        } catch(e) {}
+
+        location.reload(); 
+    } 
+}
 
 // === GPS ===
 function locateMe(){
@@ -11897,18 +11933,18 @@ setTimeout(renderSyncUI, 1000);
 function renderSyncUI() {
     const sel = document.getElementById('syncChannelSelect');
     if(!sel) return;
-    
     sel.innerHTML = '<option value="" disabled>-- Wähle Kanal --</option>';
     
     syncChannels.forEach(ch => {
         const opt = document.createElement('option');
         opt.value = ch.id;
-        opt.innerText = ch.name;
+        // Schloss anzeigen, wenn Passwort gesetzt ist
+        opt.innerText = (ch.password ? "🔒 " : "") + ch.name; 
         if(ch.id === activeSyncId) opt.selected = true;
         sel.appendChild(opt);
     });
     
-    if(syncChannels.length === 0) sel.innerHTML = '<option value="" disabled selected>Keine Kanäle - Klicke +</option>';
+    if(syncChannels.length === 0) sel.innerHTML = '<option value="" disabled selected>Keine Kanäle</option>';
 }
 
 function onSyncChannelChange() {
@@ -11951,18 +11987,21 @@ function generateRandomTopic() {
 function saveNewSyncChannel() {
     const name = document.getElementById('newSyncName').value.trim();
     const topic = document.getElementById('newSyncTopic').value.trim();
+    const password = document.getElementById('newSyncPass').value.trim(); // NEU
     
     if(!name || topic.length < 10) return alert("Bitte Namen und gültigen Key eingeben.");
     
-    const newCh = { id: 'sync_' + Date.now(), name, topic };
+    const newCh = { id: 'sync_' + Date.now(), name, topic, password }; // Password speichern
     syncChannels.push(newCh);
-    activeSyncId = newCh.id; // Sofort auswählen
+    activeSyncId = newCh.id; 
     
     saveSyncConfig();
     renderSyncUI();
     closeModal('syncAddModal');
     showErrorToast(`Kanal "${name}" gespeichert!`, true);
 }
+
+
 
 function deleteSyncChannel() {
     if(!activeSyncId) return;
@@ -12063,7 +12102,7 @@ async function getFullBackupString(forCloud = false) {
 
 async function startCloudPush() {
     const ch = syncChannels.find(c => c.id === activeSyncId);
-    if(!ch) return alert("Bitte erst einen Kanal auswählen oder erstellen!");
+    if(!ch) return alert("Kein Kanal gewählt!");
     if(isSyncing) return;
     
     if(!confirm(`Backup auf "${ch.name}" hochladen?`)) return;
@@ -12072,23 +12111,32 @@ async function startCloudPush() {
         isSyncing = true;
         abortSyncFlag = false;
         
-        // UI
         const modal = document.getElementById('syncProgressModal');
         const bar = document.getElementById('syncBar');
         const status = document.getElementById('syncStatus');
-        const title = document.getElementById('syncTitle');
         
         modal.style.display = 'flex';
-        title.innerText = "Hochladen...";
-        bar.style.width = "5%";
+        document.getElementById('syncTitle').innerText = "Hochladen...";
+        bar.style.width = "1%";
 
-        // 1. Daten holen (MIT PRIVACY FILTER = true)
-        status.innerText = "Packe Daten (ohne Keys)...";
-        const jsonString = await getFullBackupString(true); 
+        // 1. JSON holen
+        status.innerText = "Packe Daten...";
+        await new Promise(r => setTimeout(r, 100));
+        let payloadString = await getFullBackupString(true); 
         
+        // --- NEU: VERSCHLÜSSELUNG ---
+        let isEncrypted = false;
+        if(ch.password) {
+            status.innerText = "🔒 Verschlüssele Daten...";
+            await new Promise(r => setTimeout(r, 100)); // UI Update erlauben
+            payloadString = await encryptText(payloadString, ch.password);
+            isEncrypted = true;
+        }
+        // -----------------------------
+
         // 2. Chunking
-        const CHUNK_SIZE = 1.5 * 1024 * 1024; 
-        const totalChunks = Math.ceil(jsonString.length / CHUNK_SIZE);
+        const CHUNK_SIZE = 1.4 * 1024 * 1024; // Etwas kleiner wegen Base64 Overhead
+        const totalChunks = Math.ceil(payloadString.length / CHUNK_SIZE);
         const backupID = 'bkp_' + Date.now(); 
         
         // 3. Header senden
@@ -12096,25 +12144,26 @@ async function startCloudPush() {
             type: 'tier_sync_header',
             id: backupID,
             chunks: totalChunks,
-            size: jsonString.length,
+            size: payloadString.length,
             date: Date.now(),
             device: navigator.platform,
-            name: ch.name // Optional: Sender Name
+            name: ch.name,
+            encrypted: isEncrypted // Flag setzen!
         };
         
         await fetch(`https://ntfy.sh/${ch.topic}`, {
-            method: 'POST',
+            method: 'PUT', 
             body: JSON.stringify(headerPayload),
-            headers: { 'Title': 'TierTicker Sync Header', 'Priority': 'high' }
+            headers: { 'Title': 'TierTicker Sync Header', 'Priority': 'high', 'Content-Type': 'text/plain' }
         });
 
-        // 4. Chunks Loop
+        // 4. Chunks senden
         for (let i = 0; i < totalChunks; i++) {
-            if(abortSyncFlag) throw new Error("Abbruch durch User");
+            if(abortSyncFlag) throw new Error("Abbruch");
 
             const start = i * CHUNK_SIZE;
             const end = start + CHUNK_SIZE;
-            const chunkData = jsonString.substring(start, end);
+            const chunkData = payloadString.substring(start, end);
             
             const pct = Math.round(((i + 1) / totalChunks) * 100);
             bar.style.width = pct + '%';
@@ -12125,18 +12174,20 @@ async function startCloudPush() {
                 body: chunkData,
                 headers: {
                     'Filename': `${backupID}_part_${i}`,
-                    'Title': `Backup Part ${i+1}/${totalChunks}`
+                    'Title': `Part ${i+1}/${totalChunks}`,
+                    'Content-Type': 'text/plain' 
                 }
             });
 
-            await new Promise(r => setTimeout(r, 800)); // Rate Limit Bremse
+            await new Promise(r => setTimeout(r, 800)); 
         }
 
-        title.innerText = "Fertig! ✅";
-        status.innerText = "Daten sind für 12h online.";
-        setTimeout(() => { modal.style.display = 'none'; isSyncing = false; }, 2000);
+        document.getElementById('syncTitle').innerText = "Fertig! ✅";
+        status.innerText = isEncrypted ? "🔒 Sicher hochgeladen." : "Hochgeladen.";
+        setTimeout(() => { modal.style.display = 'none'; isSyncing = false; }, 1500);
 
     } catch (e) {
+        console.error(e);
         if(!abortSyncFlag) alert("Upload Fehler: " + e.message);
         document.getElementById('syncProgressModal').style.display = 'none';
         isSyncing = false;
@@ -12155,8 +12206,6 @@ async function checkForCloudBackups() {
     const listItems = document.getElementById('syncListItems');
     
     listCont.style.display = 'block';
-    
-    // UI Reset
     listItems.innerHTML = ''; 
     const logUI = (msg, color='var(--sub)') => {
         console.log("[SYNC]", msg);
@@ -12167,10 +12216,9 @@ async function checkForCloudBackups() {
 
     try {
         const controller = new AbortController();
-        // 15 Sek Timeout reicht jetzt locker, da die Verbindung sofort beendet wird
         const timeoutId = setTimeout(() => controller.abort(), 15000); 
 
-        // === HIER IST DER FIX: poll=1 ===
+        // Anfrage mit poll=1
         const response = await fetch(`https://ntfy.sh/${ch.topic}/json?since=12h&poll=1`, {
             signal: controller.signal
         });
@@ -12187,13 +12235,10 @@ async function checkForCloudBackups() {
 
         while (true) {
             const { done, value } = await reader.read();
-            if (value) {
-                receivedText += decoder.decode(value, { stream: true });
-            }
-            if (done) break; // Jetzt wird das hier sofort feuern!
+            if (value) receivedText += decoder.decode(value, { stream: true });
+            if (done) break;
         }
         
-        // --- PARSING ---
         const lines = receivedText.trim().split('\n');
         logUI(`${lines.length} Nachrichten geladen.`);
         
@@ -12217,16 +12262,12 @@ async function checkForCloudBackups() {
             } catch(e) {}
         });
 
-        // --- ANZEIGE ---
-        listItems.innerHTML = ''; // Log löschen
+        // UI Leeren und neu aufbauen
+        listItems.innerHTML = ''; 
 
         if (backups.length === 0) {
             if (fragmentCount > 0) {
-                listItems.innerHTML = `<div style="color:orange; font-size:12px; padding:10px; text-align:center;">
-                    ⚠️ <b>Header fehlt!</b><br>
-                    ${fragmentCount} Dateiteile gefunden.<br>
-                    Bitte <b>jetzt neu hochladen</b>.
-                </div>`;
+                listItems.innerHTML = `<div style="color:orange; font-size:12px; padding:10px; text-align:center;">⚠️ <b>Header fehlt!</b><br>${fragmentCount} Dateiteile gefunden.<br>Bitte neu hochladen.</div>`;
             } else {
                 listItems.innerHTML = `<div style="opacity:0.5; font-size:12px; padding:10px; text-align:center;">Keine Backups gefunden.</div>`;
             }
@@ -12238,14 +12279,22 @@ async function checkForCloudBackups() {
                 const dayStr = dateObj.toLocaleDateString();
                 const sizeMB = (b.size / (1024*1024)).toFixed(1);
                 
+                // === HIER IST DER TEIL, DER DICH VERWIRRT HAT ===
+                // Wir wandeln den Boolean (true/false) in einen String um ('true'/'false'),
+                // damit er im HTML onclick="" Attribut richtig funktioniert.
+                const isEncryptedStr = b.encrypted ? 'true' : 'false'; 
+                
                 const div = document.createElement('div');
                 div.className = 'sync-item';
                 div.innerHTML = `
                     <div class="sync-item-info">
-                        <div class="sync-date">✅ Backup ${dayStr}</div>
-                        <div class="sync-meta">${dateStr} Uhr • 📦 ${sizeMB} MB • ${b.name || 'Gerät'}</div>
+                        <div class="sync-date">
+                            ✅ ${dayStr} ${dateStr} ${b.encrypted ? '🔒' : ''}
+                        </div>
+                        <div class="sync-meta">📦 ${sizeMB} MB • ${b.chunks} Teile • ${b.name || 'Gerät'}</div>
                     </div>
-                    <button onclick="restoreFromCloud('${b.id}', ${b.chunks})" style="background:var(--accent); color:white; border:none; padding:6px 12px; border-radius:15px; font-size:12px; font-weight:bold; cursor:pointer;">📥 Laden</button>
+                    <!-- Hier wird der String übergeben -->
+                    <button onclick="restoreFromCloud('${b.id}', ${b.chunks}, ${isEncryptedStr})" style="background:var(--accent); color:white; border:none; padding:6px 12px; border-radius:15px; font-size:12px; font-weight:bold; cursor:pointer;">📥 Laden</button>
                 `;
                 listItems.appendChild(div);
             });
@@ -12258,14 +12307,19 @@ async function checkForCloudBackups() {
 
     
 /* === FIX: RESTORE MIT POLL=1 (Kein Hängenbleiben) === */
-async function restoreFromCloud(backupId, totalParts) {
+/* === RESTORE MIT DECRYPTION === */
+async function restoreFromCloud(backupId, totalParts, isEncrypted) {
     const ch = syncChannels.find(c => c.id === activeSyncId);
     if(isSyncing || !ch) return;
     
+    // Sicherheits-Check
+    if(isEncrypted && !ch.password) {
+        return alert("Dieses Backup ist verschlüsselt! 🔒\nDu hast für diesen Kanal aber kein Passwort hinterlegt.\nBitte Kanal bearbeiten (löschen/neu) und Passwort setzen.");
+    }
+
     isSyncing = true;
     abortSyncFlag = false;
 
-    // UI Setup
     const modal = document.getElementById('syncProgressModal');
     const bar = document.getElementById('syncBar');
     const status = document.getElementById('syncStatus');
@@ -12276,31 +12330,24 @@ async function restoreFromCloud(backupId, totalParts) {
 
     try {
         status.innerText = "Suche Pakete...";
-        
-        // Timeout Schutz (15s)
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-        // === FIX: poll=1 hinzugefügt ===
         const response = await fetch(`https://ntfy.sh/${ch.topic}/json?since=12h&poll=1`, {
             signal: controller.signal
         });
-        
         clearTimeout(timeoutId);
 
-        if (!response.ok) throw new Error("Verbindungsfehler beim Suchen");
+        if (!response.ok) throw new Error("Verbindungsfehler");
 
         const text = await response.text();
         const lines = text.trim().split('\n');
-        
         let foundParts = [];
 
-        // 1. Liste filtern nach unseren Teilen
         lines.forEach(line => {
             try {
                 const msg = JSON.parse(line);
                 if (msg.attachment && msg.attachment.name.startsWith(backupId)) {
-                    // Name Format: bkp_123_part_0
                     const parts = msg.attachment.name.split('_part_');
                     const index = parseInt(parts[1]);
                     foundParts.push({ index: index, url: msg.attachment.url });
@@ -12308,49 +12355,44 @@ async function restoreFromCloud(backupId, totalParts) {
             } catch(e) {}
         });
 
-        // 2. Prüfung
-        if (foundParts.length < totalParts) {
-            throw new Error(`Fehler: Nur ${foundParts.length} von ${totalParts} Paketen gefunden. (Upload evtl. unvollständig?)`);
-        }
+        if (foundParts.length < totalParts) throw new Error(`Nur ${foundParts.length}/${totalParts} Teile gefunden.`);
 
-        // 3. Download der Teile
         foundParts.sort((a,b) => a.index - b.index);
-        let fullJsonString = "";
+        let rawDataString = "";
 
         for (let i = 0; i < foundParts.length; i++) {
-            if(abortSyncFlag) throw new Error("Abbruch durch User");
-            
-            status.innerText = `Lade Paket ${i+1} von ${totalParts}...`;
-            // Fortschrittsbalken aktualisieren
-            const pct = Math.round(((i) / totalParts) * 100);
-            bar.style.width = pct + '%';
+            if(abortSyncFlag) throw new Error("Abbruch");
+            status.innerText = `Lade Paket ${i+1}/${totalParts}...`;
+            bar.style.width = Math.round(((i) / totalParts) * 100) + '%';
 
-            // Den eigentlichen Teil herunterladen
             const chunkRes = await fetch(foundParts[i].url);
-            if(!chunkRes.ok) throw new Error(`Fehler beim Laden von Teil ${i+1}`);
-            
-            fullJsonString += await chunkRes.text();
-            
-            // Kurze Atempause für UI
+            rawDataString += await chunkRes.text();
             await new Promise(r => setTimeout(r, 50));
         }
 
-        // 4. Fertig
-        status.innerText = "Zusammensetzen...";
-        bar.style.width = "100%";
-        
-        // Test-Parse (ist das JSON valide?)
-        tempImportData = JSON.parse(fullJsonString);
+        // --- ENTSCHLÜSSELN ---
+        if(isEncrypted) {
+            status.innerText = "🔓 Entschlüssele...";
+            await new Promise(r => setTimeout(r, 100)); // UI Render
+            try {
+                rawDataString = await decryptText(rawDataString, ch.password);
+            } catch(e) {
+                throw new Error("Falsches Passwort! Entschlüsselung fehlgeschlagen.");
+            }
+        }
+        // ----------------------
+
+        status.innerText = "Verarbeite...";
+        tempImportData = JSON.parse(rawDataString);
         
         modal.style.display = 'none';
         isSyncing = false;
         
-        // Import Modal öffnen
         getEl('importModal').style.display = 'block';
-        showErrorToast("Daten bereit zum Import!", true);
+        showErrorToast("Daten bereit!", true);
 
     } catch (e) {
-        if(!abortSyncFlag) alert("Download Fehler: " + e.message);
+        alert("Fehler: " + e.message);
         modal.style.display = 'none';
         isSyncing = false;
     }
@@ -12398,7 +12440,8 @@ function importBackup(e){
     reader.readAsText(file);
 }
 
-    async function confirmImport(mode) {
+ 
+async function confirmImport(mode) {
     getEl('importModal').style.display = 'none';
     if (mode === 'cancel') return;
 
@@ -12408,19 +12451,43 @@ function importBackup(e){
 
         // --- 1. VORBEREITUNG (Nur bei Overwrite) ---
         if (mode === 'overwrite') {
-            // DBs leeren
-            const db = await dbPromise;
-            await db.transaction(STORE_IMGS, 'readwrite').objectStore(STORE_IMGS).clear();
-            await db.transaction(STORE_DECKS, 'readwrite').objectStore(STORE_DECKS).clear();
-            
-            const rfDb = await rfDbPromise;
-            await rfDb.transaction(RF_STORE, 'readwrite').objectStore(RF_STORE).clear();
+            // A) SYNC KANÄLE RETTEN! (Wichtig!)
+            const savedChannels = localStorage.getItem('tier_sync_channels');
+            const savedActiveId = localStorage.getItem('tier_active_sync_id');
 
+            // B) LocalStorage leeren
             localStorage.clear();
+
+            // C) SYNC KANÄLE WIEDERHERSTELLEN
+            if(savedChannels) localStorage.setItem('tier_sync_channels', savedChannels);
+            if(savedActiveId) localStorage.setItem('tier_active_sync_id', savedActiveId);
+            
+            // Globale Variablen im Speicher aktualisieren, damit die App nicht crasht
+            syncChannels = savedChannels ? JSON.parse(savedChannels) : [];
+            activeSyncId = savedActiveId || null;
+
+            // D) DATENBANKEN LEEREN (Bilder, Funk, Decks)
+            const db = await dbPromise;
+            // Wichtig: Wir warten (await) auf den Abschluss!
+            const txImg = db.transaction(STORE_IMGS, 'readwrite');
+            await txImg.objectStore(STORE_IMGS).clear();
+            await new Promise(r => { txImg.oncomplete = r; txImg.onerror = r; });
+
+            const txDeck = db.transaction(STORE_DECKS, 'readwrite');
+            await txDeck.objectStore(STORE_DECKS).clear();
+            await new Promise(r => { txDeck.oncomplete = r; txDeck.onerror = r; });
+            
+            // Funk DB leeren
+            try {
+                const rfDb = await rfDbPromise;
+                const txRf = rfDb.transaction(RF_STORE, 'readwrite');
+                await txRf.objectStore(RF_STORE).clear();
+                await new Promise(r => { txRf.oncomplete = r; txRf.onerror = r; });
+            } catch(e) { console.log("Funk DB leer/nicht da"); }
         }
 
         // --- 2. DB INHALTE WIEDERHERSTELLEN ---
-        // Bilder
+        // Bilder importieren
         if (d.images) {
             for (let [id, data] of Object.entries(d.images)) await dbSaveImg(id, data);
         }
@@ -12436,7 +12503,7 @@ function importBackup(e){
 
         // --- 3. LOCALSTORAGE DATEN ---
         if (mode === 'overwrite') {
-            // Alles überschreiben
+            // Alles überschreiben (außer Sync Kanäle, die sind schon da)
             animals = d.animals || [];
             locations = d.locations || [];
             locCoords = d.locCoords || {};
@@ -12445,40 +12512,32 @@ function importBackup(e){
             rfChannels = d.rfChannels || [];
             userFlavorTags = d.userFlavorTags || [];
             trashBin = []; 
-            
-            // NEU: Sync Channels wiederherstellen
-            syncChannels = d.syncChannels || [];
 
-            // Historie
+            // Historie schreiben
             if (d.fullHistory) {
                 Object.entries(d.fullHistory).forEach(([y, h]) => saveHistory(y, h));
             }
 
-            // Configs speichern
+            // Configs
             localStorage.setItem('activeDeckIDs', JSON.stringify(d.activeDeckIDs || ['builtin']));
             
         } else {
-            // --- MERGE MODE (Zusammenfügen) ---
-            
-            // Tiere
+            // --- MERGE MODE (Wie gehabt) ---
             d.animals?.forEach(impA => {
                 if (!animals.some(a => a.name === impA.name)) animals.push(impA);
             });
-            // Orte
             d.locations?.forEach(l => {
                 if (!locations.includes(l)) locations.push(l);
             });
-            // Fakten
             d.savedFacts?.forEach(sf => {
                 if (!savedFacts.some(local => local.text === sf.text)) savedFacts.push(sf);
             });
-            // Ranger Channels
             d.rfChannels?.forEach(ch => {
                 if (!rfChannels.some(local => local.topic === ch.topic)) rfChannels.push(ch);
             });
             
-            // NEU: Sync Channels mergen (Keine doppelten Topics!)
-            if(d.syncChannels) {
+            // Sync Channels mergen (falls im Backup welche waren - optional)
+            if(d.syncChannels && Array.isArray(d.syncChannels)) {
                 d.syncChannels.forEach(ch => {
                     if (!syncChannels.some(local => local.topic === ch.topic)) syncChannels.push(ch);
                 });
@@ -12491,17 +12550,14 @@ function importBackup(e){
                         if (dayContent.perAnimal) {
                             for (let [idxStr, list] of Object.entries(dayContent.perAnimal)) {
                                 let targetIdx = parseInt(idxStr);
-                                // Smart Mapping: Wenn Tiername existiert, nimm dessen ID
                                 if (d.animals && d.animals[idxStr]) {
                                     const impName = d.animals[idxStr].name;
                                     const localIdx = animals.findIndex(a => a.name === impName);
                                     if (localIdx !== -1) targetIdx = localIdx;
                                 }
-                                
                                 for (let item of list) {
                                     const y = dateStr.split('-')[0];
                                     const h = getHistory(y);
-                                    // Dubletten-Check (gleiche Zeit & Ort)
                                     let exists = h[dateStr]?.perAnimal?.[targetIdx]?.some(ex => 
                                         ex.time === item.time && ex.location === item.location
                                     );
@@ -12516,22 +12572,84 @@ function importBackup(e){
 
         // --- 4. FINALE SPEICHERUNG ---
         saveGlobals();
-        // Ranger Funk Channels explizit speichern
         localStorage.setItem('ranger_channels', JSON.stringify(rfChannels));
-        // NEU: Sync Channels speichern & UI updaten
+        // WICHTIG: Sync Channels auch wieder speichern (falls Merge neue gebracht hat)
         localStorage.setItem('tier_sync_channels', JSON.stringify(syncChannels));
         localStorage.setItem('userFlavorTags', JSON.stringify(userFlavorTags));
         localStorage.setItem('savedFacts', JSON.stringify(savedFacts));
 
         showErrorToast("Import erfolgreich! App wird neu geladen...", true);
-        setTimeout(() => location.reload(), 1500);
+        setTimeout(() => location.reload(), 1000);
 
     } catch (e) {
         console.error("Import Fehler:", e);
-        showErrorToast("Kritischer Import Fehler: " + e.message);
+        showErrorToast("Fehler: " + e.message);
     }
 }
+
 // Cloud Engine (Ntfy Chunking) Ende
+
+/* === CRYPTO ENGINE (AES-GCM) === */
+
+// Hilfsfunktion: String zu ArrayBuffer
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+
+// 1. Schlüssel aus Passwort generieren (PBKDF2)
+async function getKey(password, salt) {
+    const keyMaterial = await window.crypto.subtle.importKey(
+        "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
+    );
+    return window.crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+        keyMaterial, { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]
+    );
+}
+
+// 2. VERSCHLÜSSELN
+async function encryptText(text, password) {
+    const salt = window.crypto.getRandomValues(new Uint8Array(16)); // Zufalls-Salz
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));   // Initialisierungsvektor
+    const key = await getKey(password, salt);
+    
+    const encrypted = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv }, key, enc.encode(text)
+    );
+
+    // Wir packen alles zusammen: Salt + IV + Verschlüsselte Daten
+    const buffer = new Uint8Array(salt.byteLength + iv.byteLength + encrypted.byteLength);
+    buffer.set(salt, 0);
+    buffer.set(iv, 16);
+    buffer.set(new Uint8Array(encrypted), 28);
+
+    // Als Base64 String zurückgeben (damit wir es wie Text behandeln können)
+    return btoa(String.fromCharCode(...buffer));
+}
+
+// 3. ENTSCHLÜSSELN
+async function decryptText(base64Data, password) {
+    try {
+        const binaryStr = atob(base64Data);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+
+        // Daten wieder auseinandernehmen
+        const salt = bytes.slice(0, 16);
+        const iv = bytes.slice(16, 28);
+        const data = bytes.slice(28);
+
+        const key = await getKey(password, salt);
+        
+        const decrypted = await window.crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv }, key, data
+        );
+
+        return dec.decode(decrypted);
+    } catch (e) {
+        throw new Error("Falsches Passwort oder beschädigte Daten!");
+    }
+}
+
 
 // Start-Check
 setTimeout(() => { startTutorial(); }, 1500);
