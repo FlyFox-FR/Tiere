@@ -4775,6 +4775,64 @@ body.dark .deck-card {
 .rf-header-clickable:active {
     background: rgba(255,255,255,0.1);
 }
+
+/* === RANGER SIDEBAR ITEMS === */
+.rf-channel-item {
+    padding: 12px; 
+    margin-bottom: 8px; 
+    border-radius: 12px; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    gap: 10px;
+    transition: background 0.2s;
+    border: 1px solid transparent;
+}
+
+.rf-channel-info {
+    flex: 1; 
+    overflow: hidden; /* Wichtig für ... */
+}
+
+.rf-channel-name {
+    font-weight: bold; 
+    color: white; 
+    font-size: 14px;
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; /* Macht ... bei langem Text */
+}
+
+.rf-channel-topic {
+    font-size: 10px; 
+    opacity: 0.5; 
+    color: white; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis;
+    font-family: monospace;
+}
+
+.rf-channel-menu-btn {
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    color: var(--sub);
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.rf-channel-menu-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+
+/* === FIX: KONTEXT MENÜ LEVEL (Über Ranger Chat) === */
+.context-menu {
+    /* Muss höher sein als Ranger Chat (20000) und Sync Modal (22000) */
+    z-index: 30000 !important; 
+}
+
+.context-backdrop {
+    z-index: 29999 !important;
+}
+
 </style>
 </head>
 <body>
@@ -6352,36 +6410,267 @@ async function switchRfChannel(id) {
 }
 
 
+/* === RENDER SIDEBAR (Name + Context Menu) === */
 function renderRfChannels() {
-    const list = getEl('rfChannelList');
+    const list = document.getElementById('rfChannelList');
     if(!list) return;
     list.innerHTML = '';
+    
     rfChannels.forEach(ch => {
+        const isActive = (ch.id === rfActiveId);
         const div = document.createElement('div');
-        div.style.cssText = `padding:14px; margin-bottom:10px; border-radius:15px; cursor:pointer; background:${ch.id===rfActiveId?'rgba(0,184,148,0.2)':'rgba(255,255,255,0.03)'}; border:1px solid ${ch.id===rfActiveId?'#00b894':'rgba(255,255,255,0.05)'}`;
+        
+        // Styling Klasse nutzen
+        div.className = 'rf-channel-item';
+        
+        // Active State Styling inline (für dynamische Farben)
+        if(isActive) {
+            div.style.background = 'rgba(0,184,148,0.15)';
+            div.style.borderColor = '#00b894';
+        } else {
+            div.style.background = 'rgba(255,255,255,0.03)';
+            div.style.borderColor = 'rgba(255,255,255,0.05)';
+        }
+
+        // HTML Aufbau: Name oben, ID unten klein, Menü rechts
         div.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-weight:bold; color:white; font-size:15px;">#${ch.topic}</div>
-                <div onclick="deleteRfChannel('${ch.id}', event)" style="color:#ff4757; font-size:18px; padding:5px; line-height:1;">×</div>
+            <div class="rf-channel-info">
+                <div class="rf-channel-name">${ch.name}</div>
+                <div class="rf-channel-topic">#${ch.topic}</div>
             </div>
-            <div style="font-size:11px; opacity:0.5; color:white; margin-top:4px;">${ch.name}</div>
+            
+            <!-- 3 Punkte Menü -->
+            <div class="rf-channel-menu-btn" onclick="openRfSidebarMenu('${ch.id}', event)">
+                ⋮
+            </div>
         `;
-        div.onclick = (e) => { if(!e.target.innerText.includes('×')) { switchRfChannel(ch.id); toggleRangerSidebar(); } };
+        
+        // Klick auf das Item wechselt den Kanal
+        div.onclick = (e) => { 
+            // Verhindern, dass Klick auf Menü den Kanal wechselt (Bubbling)
+            if(!e.target.classList.contains('rf-channel-menu-btn') && !e.target.parentElement.classList.contains('rf-channel-menu-btn')) {
+                switchRfChannel(ch.id); 
+                toggleRangerSidebar(); 
+            }
+        };
+        
         list.appendChild(div);
     });
 }
 
+/* === RANGER SIDEBAR CONTEXT MENU === */
+
+/* === RANGER SIDEBAR CONTEXT MENU (Fixed) === */
+
+// Globale Variable für den Edit-Modus (bitte oben zu den anderen "let" hinzufügen oder hier lassen)
+let editingRfId = null;
+
+/* === 1. MENÜ ÖFFNEN (Korrigierte Action) === */
+function openRfSidebarMenu(id, event) {
+    if(event && typeof event.stopPropagation === 'function') event.stopPropagation();
+    
+    const items = [
+        { 
+            label: 'Bearbeiten', 
+            icon: '✏️', 
+            // Ruft jetzt die richtige Funktion auf!
+            action: `openRfEditModal('${id}')` 
+        },
+        { 
+            label: 'Kanal löschen', 
+            icon: '🗑️', 
+            action: `deleteRfChannel('${id}', null)`, 
+            danger: true 
+        }
+    ];
+
+    let x = event.clientX || 0;
+    let y = event.clientY || 0;
+    openContextMenu(x + 10, y, items);
+}
+
+/* === 2. MODAL ÖFFNEN & FÜLLEN (Bearbeiten) === */
+function openRfEditModal(id) {
+    const ch = rfChannels.find(c => c.id === id);
+    if(!ch) return;
+
+    // Modus setzen
+    editingRfId = id;
+
+    // Inputs mit den alten Werten füllen
+    document.getElementById('rfNewChName').value = ch.name;
+    document.getElementById('rfNewTopic').value = ch.topic;
+    document.getElementById('rfNewUser').value = ch.user;
+    
+    // Server-Auswahl logik
+    const sel = document.getElementById('rfServerSelect');
+    const customInp = document.getElementById('rfCustomServerInput');
+    
+    if (ch.server === 'ntfy.sh') {
+        sel.value = 'ntfy.sh';
+        customInp.style.display = 'none';
+    } else {
+        sel.value = 'custom';
+        customInp.style.display = 'block';
+        customInp.value = ch.server;
+    }
+
+    // Modal anzeigen (Über dem Chat!)
+    const modal = document.getElementById('rfAddModal');
+    modal.querySelector('h3').innerText = "Kanal bearbeiten"; // Titel ändern
+    modal.style.zIndex = "22000";
+    modal.style.display = 'flex';
+}
+
+/* === 3. MODAL ÖFFNEN (Neu erstellen - Reset) === */
+// Bitte sicherstellen, dass dein "+ Neuer Kanal" Button diese Funktion aufruft!
+function openRfAddModal() {
+    editingRfId = null; // Reset: Wir erstellen neu
+    
+    document.getElementById('rfNewChName').value = '';
+    document.getElementById('rfNewTopic').value = '';
+    document.getElementById('rfNewUser').value = '';
+    
+    // Standard Server Reset
+    document.getElementById('rfServerSelect').value = 'ntfy.sh';
+    document.getElementById('rfCustomServerInput').style.display = 'none';
+    
+    generateRfTopic(); // Neuen Code generieren
+    
+    const modal = document.getElementById('rfAddModal');
+    modal.querySelector('h3').innerText = "Neuer Funk-Kanal";
+    modal.style.zIndex = "22000";
+    modal.style.display = 'flex';
+}
+
+/* === 4. SPEICHERN (Ersetzt saveRfNewChannel komplett) === */
+function saveRfNewChannel() {
+    const name = document.getElementById('rfNewChName').value.trim();
+    const topic = document.getElementById('rfNewTopic').value.trim();
+    const user = document.getElementById('rfNewUser').value.trim();
+    const serverSelect = document.getElementById('rfServerSelect').value;
+    const serverCustom = document.getElementById('rfCustomServerInput').value.trim();
+    const server = serverSelect === 'custom' ? serverCustom : 'ntfy.sh';
+
+    if (!name || !topic || !user || !server) return alert("Bitte alle Felder ausfüllen!");
+
+    if (editingRfId) {
+        // === UPDATE MODUS ===
+        const idx = rfChannels.findIndex(c => c.id === editingRfId);
+        if (idx !== -1) {
+            rfChannels[idx].name = name;
+            rfChannels[idx].topic = topic;
+            rfChannels[idx].user = user;
+            rfChannels[idx].server = server;
+            
+            // Falls wir den aktiven Kanal bearbeitet haben, Header updaten
+            if (rfActiveId === editingRfId) {
+                document.getElementById('rfTitle').innerText = name;
+                // Live Stream neu starten, falls Topic sich geändert hat
+                startRfStream(rfChannels[idx]); 
+            }
+        }
+        editingRfId = null; // Reset
+    } else {
+        // === NEU ERSTELLEN MODUS ===
+        const newCh = { id: Date.now().toString(), name, topic, user, server };
+        rfChannels.push(newCh);
+        switchRfChannel(newCh.id); // Direkt hinwechseln
+    }
+
+    localStorage.setItem('ranger_channels', JSON.stringify(rfChannels));
+    renderRfChannels();
+    
+    // Modal schließen
+    document.getElementById('rfAddModal').style.display = 'none';
+    
+    // Sidebar schließen (optional, wirkt sauberer)
+    toggleRangerSidebar();
+}
+
+/* === EDIT HELPER (Muss global verfügbar sein) === */
+function editRfChannelFromChat(id) {
+    // 1. Die normale Edit-Funktion aufrufen (füllt die Inputs)
+    if(typeof editSyncChannel === 'function') {
+        editSyncChannel(id);
+    } else {
+        console.error("Funktion editSyncChannel nicht gefunden!");
+        return;
+    }
+    
+    // 2. Das Modal über den Chat legen (Z-Index Fix)
+    const modal = document.getElementById('syncAddModal');
+    if(modal) {
+        modal.style.zIndex = "22000"; // Muss höher sein als Chat (20000)
+        modal.style.display = "flex"; // Sicherstellen, dass es sichtbar ist
+    }
+}
+
+// Wrapper um das Edit-Modal über den Chat zu legen
+function editRfChannelFromChat(id) {
+    // 1. Standard Edit Funktion aufrufen (füllt die Werte)
+    editSyncChannel(id);
+    
+    // 2. Modal Z-Index erhöhen (Chat ist 20000, AddModal muss höher sein)
+    const modal = document.getElementById('syncAddModal');
+    if(modal) {
+        modal.style.zIndex = "22000";
+    }
+}
+
+// Update der delete Funktion, damit sie auch ohne Event-Objekt funktioniert
+// (Falls du die alte noch hast, ersetze sie hiermit, sonst einfach hinzufügen)
 function deleteRfChannel(id, e) {
-    e.stopPropagation();
-    if (!confirm("Diesen Kanal dauerhaft aus der Funkliste löschen?")) return;
+    if(e) e.stopPropagation();
+    
+    const ch = rfChannels.find(c => c.id === id);
+    // Sicherheitsabfrage mit Name statt ID
+    if (!confirm(`Kanal "${ch ? ch.name : id}" wirklich löschen?`)) return;
+    
     rfChannels = rfChannels.filter(c => c.id !== id);
     localStorage.setItem('ranger_channels', JSON.stringify(rfChannels));
+    
     if (rfActiveId === id) {
         rfActiveId = null;
+        localStorage.removeItem('ranger_active_id'); // Auch aus Storage löschen
         if(rfEventSource) rfEventSource.close();
-        getEl('rfHistory').innerHTML = '<div style="text-align:center; padding:50px; opacity:0.3; color:white;">Kein Kanal gewählt.</div>';
-        getEl('rfTitle').innerText = 'Funkstille';
+        
+        const historyList = document.getElementById('rfHistory');
+        const title = document.getElementById('rfTitle');
+        if(historyList) historyList.innerHTML = '<div style="text-align:center; padding:50px; opacity:0.3; color:white;">Kein Kanal gewählt.</div>';
+        if(title) title.innerText = 'Funkstille';
     }
+    
+    renderRfChannels();
+}
+
+
+/* === SAFE DELETE FUNCTION === */
+function deleteRfChannel(id, e) {
+    // FIX: Nur stoppen, wenn e wirklich ein Event ist
+    if(e && typeof e.stopPropagation === 'function') {
+        e.stopPropagation();
+    }
+    
+    const ch = rfChannels.find(c => c.id === id);
+    // Sicherheitsabfrage
+    if (!confirm(`Kanal "${ch ? ch.name : id}" wirklich löschen?`)) return;
+    
+    rfChannels = rfChannels.filter(c => c.id !== id);
+    localStorage.setItem('ranger_channels', JSON.stringify(rfChannels));
+    
+    // Wenn der aktive Kanal gelöscht wurde -> Reset
+    if (rfActiveId === id) {
+        rfActiveId = null;
+        localStorage.removeItem('ranger_active_id');
+        if(typeof rfEventSource !== 'undefined' && rfEventSource) rfEventSource.close();
+        
+        const historyList = document.getElementById('rfHistory');
+        const title = document.getElementById('rfTitle');
+        if(historyList) historyList.innerHTML = '<div style="text-align:center; padding:50px; opacity:0.3; color:white;">Kein Kanal gewählt.</div>';
+        if(title) title.innerText = 'Funkstille';
+    }
+    
     renderRfChannels();
 }
 
