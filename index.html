@@ -4926,6 +4926,9 @@ body.dark .deck-card {
     to { opacity: 1; transform: translateY(0) scale(1); } 
 }
 
+
+
+
 </style>
 </head>
 <body>
@@ -5282,6 +5285,10 @@ body.dark .deck-card {
                 <button onclick="safeRun(downloadBackup)">📦 Backup</button>
                 <button onclick="safeRun(exportCSV)">📄 CSV Export</button>
                 <button onclick="document.getElementById('importFile').click()">📥 Import</button>
+<!-- FÜGE DAS ZU DEN ANDEREN EXPORT BUTTONS HINZU (z.B. unter CSV Export) -->
+<button onclick="safeRun(exportToKML)" style="grid-column: span 2; background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; margin-top: 5px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);">
+    🌍 Google Earth Tour (KML)
+</button>
 <!-- In der "Daten & Sicherung" Sektion einfügen -->
 <button onclick="openStorageExplorer()" solid var(--accent-glow);">
     🔍 Datenbank Explorer öffnen
@@ -13447,6 +13454,138 @@ function updateMicroUI() {
     // (Hier könnte man noch spezifische Klassen pro Item setzen, 
     // aber das Feedback im Button reicht meistens aus)
 }
+
+/* === GOOGLE EARTH KML EXPORT ENGINE === */
+
+async function exportToKML() {
+    showErrorToast("🌍 Generiere 3D-Tour...", true);
+
+    // 1. KML Header
+    let kml = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Tier Ticker Expedition</name>
+    <description>Generiert vom Tier Ticker Ultimate.</description>
+    
+    <!-- Styles für Pins -->
+    <Style id="pin-normal">
+      <IconStyle><scale>1.1</scale><Icon><href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href></Icon></IconStyle>
+      <LabelStyle><scale>0.8</scale></LabelStyle>
+    </Style>
+`;
+
+    let count = 0;
+    const years = getAvailableYears();
+
+    // 2. Durch alle Daten loopen
+    for (const year of years) {
+        const h = getHistory(year);
+        
+        for (const [dateStr, dayData] of Object.entries(h)) {
+            if (!dayData.perAnimal) continue;
+
+            for (const [idxStr, entries] of Object.entries(dayData.perAnimal)) {
+                const idx = parseInt(idxStr);
+                const animal = animals[idx];
+                if (!animal) continue;
+
+                for (const entry of entries) {
+                    // WICHTIG: Nur exportieren, wenn wir Koordinaten haben!
+                    // Google Earth braucht zwingend Geodaten.
+                    if (!entry.location || !locCoords[entry.location]) continue;
+
+                    const coords = locCoords[entry.location];
+                    const timeStr = entry.time || "12:00";
+                    
+                    // Zeitstempel für den Slider (ISO 8601)
+                    // Format: YYYY-MM-DDTHH:MM:SSZ
+                    const isoTime = `${dateStr}T${timeStr}:00Z`;
+
+                    // Bild laden (falls vorhanden)
+                    let imgTag = "";
+                    let imgId = entry.noteImageId || animal.imageId;
+                    
+                    if (imgId) {
+                        try {
+                            const b64 = await dbGetImg(imgId);
+                            if (b64) {
+                                // Google Earth mag riesige Base64 Strings nicht immer, 
+                                // aber für lokale Dateien ist das der einzige Weg ohne Webserver.
+                                // Wir begrenzen die Anzeigebreite im Popup.
+                                imgTag = `<br><img src="${b64}" width="300" style="margin-top:10px; border-radius:5px;">`;
+                            }
+                        } catch (e) { console.log("Bildfehler KML", e); }
+                    }
+
+                    // Beschreibungstext (HTML im Popup)
+                    const desc = `
+                        <div style="font-family:sans-serif; width:300px;">
+                            <h2 style="margin:0; color:#2196f3;">${animal.emoji} ${animal.name}</h2>
+                            <p style="color:#666; font-size:12px;"><b>📅 ${dateStr} • ⌚ ${timeStr}</b></p>
+                            <p style="font-size:14px;">${entry.note || "<i>Keine Notiz</i>"}</p>
+                            ${imgTag}
+                            <hr>
+                            <small style="color:#999">Ort: ${entry.location}</small>
+                        </div>
+                    `;
+
+                    // 3. Placemark erstellen
+                    // KML Koordinaten sind: LON, LAT, ALT (Achtung: Andersrum als Leaflet!)
+                    kml += `
+    <Placemark>
+      <name>${escapeXml(animal.name)}</name>
+      <description><![CDATA[${desc}]]></description>
+      <styleUrl>#pin-normal</styleUrl>
+      <TimeStamp>
+        <when>${isoTime}</when>
+      </TimeStamp>
+      <Point>
+        <coordinates>${coords.lon},${coords.lat},0</coordinates>
+      </Point>
+    </Placemark>`;
+                    
+                    count++;
+                }
+            }
+        }
+    }
+
+    // 4. Footer & Download
+    kml += `
+  </Document>
+</kml>`;
+
+    if (count === 0) {
+        showErrorToast("Keine Sichtungen mit GPS-Daten gefunden!", false);
+        return;
+    }
+
+    // Datei Download auslösen
+    const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tier-ticker-tour-${new Date().toISOString().slice(0,10)}.kml`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    showErrorToast(`🌍 ${count} Orte exportiert! Öffne die Datei in Google Earth.`, true);
+}
+
+// Helper: XML Sonderzeichen maskieren
+function escapeXml(unsafe) {
+    return unsafe.replace(/[<>&'"]/g, function (c) {
+        switch (c) {
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '&': return '&amp;';
+            case '\'': return '&apos;';
+            case '"': return '&quot;';
+        }
+    });
+}
+
 
 // Start-Check
 setTimeout(() => { startTutorial(); }, 1500);
