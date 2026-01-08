@@ -13457,6 +13457,10 @@ function updateMicroUI() {
 
 /* === GOOGLE EARTH KML EXPORT ENGINE === */
 
+/* === GOOGLE EARTH KML EXPORT ENGINE (FIXED) === */
+/* Fix: Bilder entfernt (da Google Earth keine lokalen Base64 Daten unterstützt) */
+/* Fix: TimeStamp Formatierung gehärtet */
+
 async function exportToKML() {
     showErrorToast("🌍 Generiere 3D-Tour...", true);
 
@@ -13465,12 +13469,21 @@ async function exportToKML() {
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <name>Tier Ticker Expedition</name>
-    <description>Generiert vom Tier Ticker Ultimate.</description>
+    <description>Export aus der Tier Ticker App</description>
+    <open>1</open>
     
-    <!-- Styles für Pins -->
     <Style id="pin-normal">
-      <IconStyle><scale>1.1</scale><Icon><href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href></Icon></IconStyle>
+      <IconStyle>
+        <scale>1.1</scale>
+        <Icon><href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href></Icon>
+      </IconStyle>
       <LabelStyle><scale>0.8</scale></LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[
+          <b>$[name]</b><br/><br/>
+          $[description]
+        ]]></text>
+      </BalloonStyle>
     </Style>
 `;
 
@@ -13490,55 +13503,42 @@ async function exportToKML() {
                 if (!animal) continue;
 
                 for (const entry of entries) {
-                    // WICHTIG: Nur exportieren, wenn wir Koordinaten haben!
-                    // Google Earth braucht zwingend Geodaten.
                     if (!entry.location || !locCoords[entry.location]) continue;
 
                     const coords = locCoords[entry.location];
-                    const timeStr = entry.time || "12:00";
                     
-                    // Zeitstempel für den Slider (ISO 8601)
-                    // Format: YYYY-MM-DDTHH:MM:SSZ
-                    const isoTime = `${dateStr}T${timeStr}:00Z`;
+                    // Zeitstempel Formatierung (Sicherstellen: YYYY-MM-DD)
+                    // Wir fügen eine fiktive Uhrzeit hinzu, falls keine da ist, damit der Slider funktioniert
+                    const timePart = entry.time ? `${entry.time}:00` : "12:00:00";
+                    const isoTime = `${dateStr}T${timePart}Z`;
 
-                    // Bild laden (falls vorhanden)
-                    let imgTag = "";
-                    let imgId = entry.noteImageId || animal.imageId;
-                    
-                    if (imgId) {
-                        try {
-                            const b64 = await dbGetImg(imgId);
-                            if (b64) {
-                                // Google Earth mag riesige Base64 Strings nicht immer, 
-                                // aber für lokale Dateien ist das der einzige Weg ohne Webserver.
-                                // Wir begrenzen die Anzeigebreite im Popup.
-                                imgTag = `<br><img src="${b64}" width="300" style="margin-top:10px; border-radius:5px;">`;
-                            }
-                        } catch (e) { console.log("Bildfehler KML", e); }
-                    }
-
-                    // Beschreibungstext (HTML im Popup)
+                    // Beschreibungstext (Ohne Bild, dafür sauber)
+                    // CDATA sorgt dafür, dass HTML korrekt interpretiert wird
                     const desc = `
-                        <div style="font-family:sans-serif; width:300px;">
-                            <h2 style="margin:0; color:#2196f3;">${animal.emoji} ${animal.name}</h2>
-                            <p style="color:#666; font-size:12px;"><b>📅 ${dateStr} • ⌚ ${timeStr}</b></p>
-                            <p style="font-size:14px;">${entry.note || "<i>Keine Notiz</i>"}</p>
-                            ${imgTag}
-                            <hr>
-                            <small style="color:#999">Ort: ${entry.location}</small>
+                        <div style="font-family:sans-serif; min-width:200px;">
+                            <h2 style="margin:0 0 5px 0; color:#2196f3;">${animal.emoji} ${animal.name}</h2>
+                            <div style="color:#666; font-size:12px; margin-bottom:10px;">
+                                📅 <b>${dateStr.split('-').reverse().join('.')}</b> &nbsp;|&nbsp; ⌚ ${entry.time || '-'}
+                            </div>
+                            <div style="font-size:14px; line-height:1.4; padding:10px; background:#f5f5f5; border-radius:5px; border-left:3px solid #2196f3;">
+                                ${entry.note ? entry.note : "<i>Keine Notiz</i>"}
+                            </div>
+                            <div style="margin-top:10px; color:#999; font-size:11px;">
+                                📍 ${entry.location}
+                            </div>
                         </div>
                     `;
 
-                    // 3. Placemark erstellen
-                    // KML Koordinaten sind: LON, LAT, ALT (Achtung: Andersrum als Leaflet!)
+                    // 3. Placemark erstellen (Strikte Reihenfolge für KML!)
+                    // Name -> TimeStamp -> StyleUrl -> Description -> Point
                     kml += `
     <Placemark>
       <name>${escapeXml(animal.name)}</name>
-      <description><![CDATA[${desc}]]></description>
-      <styleUrl>#pin-normal</styleUrl>
       <TimeStamp>
         <when>${isoTime}</when>
       </TimeStamp>
+      <styleUrl>#pin-normal</styleUrl>
+      <description><![CDATA[${desc}]]></description>
       <Point>
         <coordinates>${coords.lon},${coords.lat},0</coordinates>
       </Point>
@@ -13560,30 +13560,17 @@ async function exportToKML() {
         return;
     }
 
-    // Datei Download auslösen
+    // Datei Download
     const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `tier-ticker-tour-${new Date().toISOString().slice(0,10)}.kml`;
+    a.download = `tier-expedition-${new Date().toISOString().slice(0,10)}.kml`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     
-    showErrorToast(`🌍 ${count} Orte exportiert! Öffne die Datei in Google Earth.`, true);
-}
-
-// Helper: XML Sonderzeichen maskieren
-function escapeXml(unsafe) {
-    return unsafe.replace(/[<>&'"]/g, function (c) {
-        switch (c) {
-            case '<': return '&lt;';
-            case '>': return '&gt;';
-            case '&': return '&amp;';
-            case '\'': return '&apos;';
-            case '"': return '&quot;';
-        }
-    });
+    showErrorToast(`🌍 ${count} Orte exportiert! (Ohne Bilder)`, true);
 }
 
 
