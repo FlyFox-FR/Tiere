@@ -4833,6 +4833,99 @@ body.dark .deck-card {
     z-index: 29999 !important;
 }
 
+/* === MICRO MENU STYLES === */
+
+/* WICHTIG: Damit das Menü aus der Leiste ragen kann */
+.search-fusion-wrapper {
+    overflow: visible !important; 
+}
+
+/* Container für Button + Menü */
+.micro-btn-wrap {
+    position: relative;
+    height: 100%;
+    display: flex; align-items: center;
+}
+
+/* Der Button selbst */
+.micro-btn {
+    background: transparent;
+    border: none;
+    font-size: 11px; font-weight: 800;
+    color: var(--sub);
+    padding: 0 8px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+    transition: all 0.2s;
+    user-select: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.micro-btn:active, .micro-btn.is-open {
+    background: var(--btn);
+    color: var(--text);
+}
+
+/* Aktiver Zustand (z.B. wenn Filter an ist) */
+.micro-btn.active-state {
+    color: var(--accent);
+}
+
+/* Das Dropdown Menü */
+.micro-menu {
+    position: absolute;
+    top: 40px; /* Abstand von oben */
+    right: 0;  /* Rechtsbündig */
+    
+    background: var(--card-solid);
+    border: 1px solid var(--btn);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    
+    display: none; /* Standard: unsichtbar */
+    flex-direction: column;
+    min-width: 150px;
+    padding: 6px;
+    z-index: 10000; /* Ganz oben! */
+    
+    animation: popMenu 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.micro-menu.show { display: flex; }
+
+/* Menü Einträge */
+.mm-item {
+    padding: 10px 12px;
+    font-size: 13px; font-weight: 600;
+    color: var(--text);
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    transition: background 0.1s;
+}
+
+.mm-item:active { background: var(--btn); }
+
+/* Ausgewählter Eintrag */
+.mm-item.selected { 
+    color: var(--accent); 
+    background: rgba(33, 150, 243, 0.1); 
+    font-weight: 800;
+}
+
+/* Trennstrich zwischen Buttons */
+.micro-sep {
+    width: 1px; height: 16px; background: var(--btn); margin: 0 2px;
+}
+
+@keyframes popMenu { 
+    from { opacity: 0; transform: translateY(-10px) scale(0.95); } 
+    to { opacity: 1; transform: translateY(0) scale(1); } 
+}
+
 </style>
 </head>
 <body>
@@ -4863,24 +4956,62 @@ body.dark .deck-card {
 <!-- === VIEW: LIST (Startseite) === -->
 <div id="view-list" class="view-section active">
     
-    <!-- VIEW LIST HEADER -->
-    <div class="list-header">
+  <!-- VIEW LIST HEADER (Micro-Menu Version) -->
+<div class="list-header">
+    
+    <!-- SEARCH FUSION -->
+    <div class="search-fusion-wrapper" id="sfWrapper">
+        <input id="listSearch" class="sf-input" placeholder="Suche..." oninput="safeRun(debouncedRender)">
         
-        <!-- SEARCH FUSION -->
-        <div class="search-fusion-wrapper" id="sfWrapper">
-            <input id="listSearch" class="sf-input" placeholder="Suche..." oninput="safeRun(debouncedRender)">
-            
-            <!-- Status Feedback Element -->
-            <div class="status-overlay" id="sfStatus">Sortiert: A-Z</div>
+        <!-- Status Feedback Element -->
+        <div class="status-overlay" id="sfStatus">...</div>
 
-            <!-- Semantic Controls -->
-            <div class="sem-controls">
-                <div class="sem-btn" onclick="safeRun(toggleViewMode)" id="viewToggleBtn" style="min-width:40px;">LIST</div>
-                <div class="sem-btn" onclick="safeRun(cycleAppMode)" id="modeToggleBtn" style="min-width:45px;">TIERE</div>
-                <div class="sem-btn active" onclick="safeRun(cycleSort)" id="sortBtn">★</div>
-            </div>    
-        </div>
+        <!-- RECHTE SEITE: MICRO MENUS -->
+        <div class="sem-controls" style="gap:0; padding-left:4px;">
+            
+            <!-- 1. VIEW MENU (List/Grid) -->
+            <div class="micro-btn-wrap">
+                <div id="btn-view" class="micro-btn" onclick="toggleMicroMenu('menu-view')">
+                    <span id="lbl-view">LIST</span> ▾
+                </div>
+                <div id="menu-view" class="micro-menu">
+                    <div class="mm-item" onclick="setMicroView('list')"><span style="font-size:16px">📄</span> Liste</div>
+                    <div class="mm-item" onclick="setMicroView('grid')"><span style="font-size:16px">田</span> Raster</div>
+                </div>
+            </div>
+
+            <div class="micro-sep"></div>
+
+            <!-- 2. MODE MENU (Animals/Notes/Photos) -->
+            <div class="micro-btn-wrap">
+                <div id="btn-mode" class="micro-btn active-state" onclick="toggleMicroMenu('menu-mode')">
+                    <span id="lbl-mode">TIERE</span> ▾
+                </div>
+                <div id="menu-mode" class="micro-menu" style="min-width:160px;">
+                    <div class="mm-item" onclick="setMicroMode('animals')"><span style="font-size:16px">🐾</span> Tiere</div>
+                    <div class="mm-item" onclick="setMicroMode('notes')"><span style="font-size:16px">📝</span> Notizen</div>
+                    <div class="mm-item" onclick="setMicroMode('gallery')"><span style="font-size:16px">📷</span> Fotos</div>
+                </div>
+            </div>
+
+            <div class="micro-sep"></div>
+
+            <!-- 3. SORT MENU -->
+            <div class="micro-btn-wrap">
+                <div id="btn-sort" class="micro-btn active-state" onclick="toggleMicroMenu('menu-sort')">
+                    <span id="lbl-sort">★</span> ▾
+                </div>
+                <div id="menu-sort" class="micro-menu">
+                    <div class="mm-item" onclick="setMicroSort('fav')"><span style="font-size:16px">⭐</span> Favoriten</div>
+                    <div class="mm-item" onclick="setMicroSort('last')"><span style="font-size:16px">📅</span> Neueste</div>
+                    <div class="mm-item" onclick="setMicroSort('name')"><span style="font-size:16px">🔤</span> Name (A-Z)</div>
+                    <div class="mm-item" onclick="setMicroSort('count')"><span style="font-size:16px">📊</span> Anzahl</div>
+                </div>
+            </div>
+
+        </div>    
     </div>
+</div>
 
     <!-- 1. TAG FILTER LEISTE -->
     <div id="tagFilterContainer" class="tag-scroll"></div>
@@ -7541,14 +7672,16 @@ function favsWithCount(favArray, historyData) {
 /* === ULTIMATE RENDER ENGINE (Animals, Notes, Gallery) === */
 
 /* === ULTIMATE RENDER ENGINE (Fixed: Toggle & Expand) === */
+
+
 function render() {
-    // 1. UI Setup & Safety Check
+    // ... deine bestehenden Checks ...
     if(typeof renderLocations === 'function') renderLocations();
-    
     const list = document.getElementById('list'); 
-    
-    // NOTBREMSE: Wenn HTML kaputt, abbrechen
     if (!list) return; 
+
+    // NEU: UI Buttons aktualisieren
+    if(typeof updateMicroUI === 'function') updateMicroUI();
     
     const favCont = document.getElementById('favContainer');
     const toggleCont = document.getElementById('listToggleContainer');
@@ -13222,6 +13355,97 @@ function applyTimeFilterPreset(mode) {
     document.getElementById('tfEnd').value = timeFilter.end;
     
     render();
+}
+
+/* === MICRO MENU LOGIC === */
+
+// Öffnet/Schließt ein Menü und schließt alle anderen
+function toggleMicroMenu(id) {
+    const menus = ['menu-view', 'menu-mode', 'menu-sort'];
+    
+    menus.forEach(mId => {
+        const m = document.getElementById(mId);
+        const btn = document.getElementById(mId.replace('menu-', 'btn-'));
+        
+        if (mId === id) {
+            // Togglen
+            if (m.classList.contains('show')) {
+                m.classList.remove('show');
+                btn.classList.remove('is-open');
+            } else {
+                m.classList.add('show');
+                btn.classList.add('is-open');
+            }
+        } else {
+            // Andere schließen
+            m.classList.remove('show');
+            btn.classList.remove('is-open');
+        }
+    });
+}
+
+// Globaler Klick-Listener: Schließt Menüs, wenn man daneben klickt
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.micro-btn-wrap')) {
+        document.querySelectorAll('.micro-menu').forEach(el => el.classList.remove('show'));
+        document.querySelectorAll('.micro-btn').forEach(el => el.classList.remove('is-open'));
+    }
+});
+
+/* --- ACTIONS --- */
+
+function setMicroView(mode) {
+    viewMode = mode;
+    localStorage.setItem('viewMode', mode);
+    updateMicroUI();
+    render();
+    toggleMicroMenu('close-all'); // Schließen erzwingen
+}
+
+function setMicroMode(mode) {
+    appMode = mode;
+    updateMicroUI();
+    render();
+    toggleMicroMenu('close-all');
+}
+
+function setMicroSort(mode) {
+    sortMode = mode;
+    localStorage.setItem('sortMode', mode);
+    updateMicroUI();
+    render();
+    toggleMicroMenu('close-all');
+}
+
+/* --- UI UPDATE HELPER --- */
+// Aktualisiert die Button-Beschriftungen und Selection-States
+function updateMicroUI() {
+    // 1. VIEW
+    const lblView = document.getElementById('lbl-view');
+    if(lblView) lblView.innerText = (viewMode === 'grid') ? 'GRID' : 'LIST';
+    
+    // 2. MODE
+    const lblMode = document.getElementById('lbl-mode');
+    if(lblMode) {
+        if(appMode === 'animals') lblMode.innerText = 'TIERE';
+        else if(appMode === 'notes') lblMode.innerText = 'NOTIZ';
+        else if(appMode === 'gallery') lblMode.innerText = 'FOTOS';
+    }
+
+    // 3. SORT
+    const lblSort = document.getElementById('lbl-sort');
+    if(lblSort) {
+        if(sortMode === 'fav') lblSort.innerText = '★';
+        else if(sortMode === 'last') lblSort.innerText = 'NEU';
+        else if(sortMode === 'name') lblSort.innerText = 'A-Z';
+        else lblSort.innerText = '1-9';
+    }
+
+    // Highlighting im Menü (Optional, aber schick)
+    // Entfernt 'selected' von allen und setzt es neu (Logik vereinfacht)
+    document.querySelectorAll('.mm-item').forEach(el => el.classList.remove('selected'));
+    // (Hier könnte man noch spezifische Klassen pro Item setzen, 
+    // aber das Feedback im Button reicht meistens aus)
 }
 
 // Start-Check
