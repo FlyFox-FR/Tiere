@@ -4926,9 +4926,6 @@ body.dark .deck-card {
     to { opacity: 1; transform: translateY(0) scale(1); } 
 }
 
-
-
-
 </style>
 </head>
 <body>
@@ -5285,10 +5282,6 @@ body.dark .deck-card {
                 <button onclick="safeRun(downloadBackup)">📦 Backup</button>
                 <button onclick="safeRun(exportCSV)">📄 CSV Export</button>
                 <button onclick="document.getElementById('importFile').click()">📥 Import</button>
-<!-- FÜGE DAS ZU DEN ANDEREN EXPORT BUTTONS HINZU (z.B. unter CSV Export) -->
-<button onclick="safeRun(exportToKML)" style="grid-column: span 2; background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; margin-top: 5px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);">
-    🌍 Google Earth Tour (KML)
-</button>
 <!-- In der "Daten & Sicherung" Sektion einfügen -->
 <button onclick="openStorageExplorer()" solid var(--accent-glow);">
     🔍 Datenbank Explorer öffnen
@@ -13454,125 +13447,6 @@ function updateMicroUI() {
     // (Hier könnte man noch spezifische Klassen pro Item setzen, 
     // aber das Feedback im Button reicht meistens aus)
 }
-
-/* === GOOGLE EARTH KML EXPORT ENGINE === */
-
-/* === GOOGLE EARTH KML EXPORT ENGINE (FIXED) === */
-/* Fix: Bilder entfernt (da Google Earth keine lokalen Base64 Daten unterstützt) */
-/* Fix: TimeStamp Formatierung gehärtet */
-
-async function exportToKML() {
-    showErrorToast("🌍 Generiere 3D-Tour...", true);
-
-    // 1. KML Header
-    let kml = `<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://www.opengis.net/kml/2.2">
-  <Document>
-    <name>Tier Ticker Expedition</name>
-    <description>Export aus der Tier Ticker App</description>
-    <open>1</open>
-    
-    <Style id="pin-normal">
-      <IconStyle>
-        <scale>1.1</scale>
-        <Icon><href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href></Icon>
-      </IconStyle>
-      <LabelStyle><scale>0.8</scale></LabelStyle>
-      <BalloonStyle>
-        <text><![CDATA[
-          <b>$[name]</b><br/><br/>
-          $[description]
-        ]]></text>
-      </BalloonStyle>
-    </Style>
-`;
-
-    let count = 0;
-    const years = getAvailableYears();
-
-    // 2. Durch alle Daten loopen
-    for (const year of years) {
-        const h = getHistory(year);
-        
-        for (const [dateStr, dayData] of Object.entries(h)) {
-            if (!dayData.perAnimal) continue;
-
-            for (const [idxStr, entries] of Object.entries(dayData.perAnimal)) {
-                const idx = parseInt(idxStr);
-                const animal = animals[idx];
-                if (!animal) continue;
-
-                for (const entry of entries) {
-                    if (!entry.location || !locCoords[entry.location]) continue;
-
-                    const coords = locCoords[entry.location];
-                    
-                    // Zeitstempel Formatierung (Sicherstellen: YYYY-MM-DD)
-                    // Wir fügen eine fiktive Uhrzeit hinzu, falls keine da ist, damit der Slider funktioniert
-                    const timePart = entry.time ? `${entry.time}:00` : "12:00:00";
-                    const isoTime = `${dateStr}T${timePart}Z`;
-
-                    // Beschreibungstext (Ohne Bild, dafür sauber)
-                    // CDATA sorgt dafür, dass HTML korrekt interpretiert wird
-                    const desc = `
-                        <div style="font-family:sans-serif; min-width:200px;">
-                            <h2 style="margin:0 0 5px 0; color:#2196f3;">${animal.emoji} ${animal.name}</h2>
-                            <div style="color:#666; font-size:12px; margin-bottom:10px;">
-                                📅 <b>${dateStr.split('-').reverse().join('.')}</b> &nbsp;|&nbsp; ⌚ ${entry.time || '-'}
-                            </div>
-                            <div style="font-size:14px; line-height:1.4; padding:10px; background:#f5f5f5; border-radius:5px; border-left:3px solid #2196f3;">
-                                ${entry.note ? entry.note : "<i>Keine Notiz</i>"}
-                            </div>
-                            <div style="margin-top:10px; color:#999; font-size:11px;">
-                                📍 ${entry.location}
-                            </div>
-                        </div>
-                    `;
-
-                    // 3. Placemark erstellen (Strikte Reihenfolge für KML!)
-                    // Name -> TimeStamp -> StyleUrl -> Description -> Point
-                    kml += `
-    <Placemark>
-      <name>${escapeXml(animal.name)}</name>
-      <TimeStamp>
-        <when>${isoTime}</when>
-      </TimeStamp>
-      <styleUrl>#pin-normal</styleUrl>
-      <description><![CDATA[${desc}]]></description>
-      <Point>
-        <coordinates>${coords.lon},${coords.lat},0</coordinates>
-      </Point>
-    </Placemark>`;
-                    
-                    count++;
-                }
-            }
-        }
-    }
-
-    // 4. Footer & Download
-    kml += `
-  </Document>
-</kml>`;
-
-    if (count === 0) {
-        showErrorToast("Keine Sichtungen mit GPS-Daten gefunden!", false);
-        return;
-    }
-
-    // Datei Download
-    const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `tier-expedition-${new Date().toISOString().slice(0,10)}.kml`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    showErrorToast(`🌍 ${count} Orte exportiert! (Ohne Bilder)`, true);
-}
-
 
 // Start-Check
 setTimeout(() => { startTutorial(); }, 1500);
